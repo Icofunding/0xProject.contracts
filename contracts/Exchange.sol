@@ -21,8 +21,8 @@ contract Exchange is SafeMath {
     address indexed feeRecipient,
     uint256 feeM,
     uint256 feeT,
-    uint256 amountM,
-    uint256 claimedM
+    uint256 fillValue,
+    uint256 remainingValue
   );
 
   event LogClaimByToken(
@@ -37,20 +37,71 @@ contract Exchange is SafeMath {
     address feeRecipient,
     uint256 feeM,
     uint256 feeT,
-    uint256 amountM,
-    uint256 claimedM
+    uint256 fillValue,
+    uint256 remainingValue
   );
 
   event LogCancel(
     address indexed maker,
-    bytes32 hash,
     address indexed tokenM,
     address indexed tokenT,
-    uint cancelValue
+    uint256 valueM,
+    uint256 valueT,
+    uint256 expiration,
+    bytes32 hash,
+    uint256 cancelValue,
+    uint256 remainingValue
   );
 
-  function fill(address maker, address feeRecipient, address[2] tokens, uint256[2] values, uint256 fillValue,  uint256 expiration, uint256[2] fees, uint8 v, bytes32[2] rs) returns(bool success) {
-    assert(block.timestamp < expiration);
+  //tokens = [tokenM, tokenT]
+  //values = [valueM, valueT]
+  //fees = [feeM, feeT]
+  //rs = [r, s]
+  function fill(address maker, address feeRecipient, address[2] tokens, uint256[2] values,  uint256[2] fees, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns(bool success) {
+   assert(block.timestamp < expiration);
+
+   bytes32 orderHash = sha3(
+     this,
+     maker,
+     tokens[0],
+     tokens[1],
+     values[0],
+     values[1],
+     expiration
+   );
+
+   assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
+   assert(validSignature(maker, sha3(
+     orderHash,
+     feeRecipient,
+     fees[0],
+     fees[1]
+   ), v, rs[0], rs[1]));
+
+   assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
+   assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill([values[0], values[1]], fillValue)));
+   assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, fees[0]));
+   assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, fees[1]));
+   fills[orderHash] = safeAdd(fills[orderHash], fillValue);
+
+   // log events
+   LogFillEvents([maker, msg.sender, tokens[0], tokens[1], feeRecipient],
+             [values[0], values[1], expiration, fees[0], fees[1], fillValue, values[0] - fills[orderHash]],
+             orderHash
+   );
+
+   return true;
+ }
+
+  //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
+  //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
+  function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash) {
+    LogClaimByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+    LogClaimByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+  }
+
+  function cancel(address maker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 cancelValue) returns(bool success) {
+    assert(msg.sender == maker);
 
     bytes32 orderHash = sha3(
       this,
@@ -62,90 +113,13 @@ contract Exchange is SafeMath {
       expiration
     );
 
-    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
-
-    assert(validSignature(maker, sha3(
-      orderHash,
-      feeRecipient,
-      fees[0],
-      fees[1]
-    ), v, rs[0], rs[1]));
-
-    assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
-    assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill([values[0], values[1]], fillValue)));
-    assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, fees[0]));
-    assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, fees[1]));
-    fills[orderHash] = safeAdd(fills[orderHash], fillValue);
-    // log events
-    LogEvents([maker, msg.sender, tokens[0], tokens[1], feeRecipient],
-              [values[0], values[1], expiration, fees[0], fees[1], fillValue],
-              orderHash
-    );
-    /*LogClaimByUser(maker, msg.sender, feeRecipient, orderHash, tokens[0], tokens[1], values[0], values[1], expiration, fillValue, fills[orderHash]);
-    LogClaimByToken(maker, msg.sender, feeRecipient, orderHash, tokens[0], tokens[1], values[0], values[1], expiration, fillValue, fills[orderHash]);*/
-    return true;
-  }
-
-  function LogEvents(address[5] addresses, uint256[6] values, bytes32 orderHash) {
-    LogClaimByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], fills[orderHash]);
-    LogClaimByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], fills[orderHash]);
-  }
-  //NOTE: local var limit not affected by addresses, but affected by uint256?
-  function fill(address maker, address feeRecipient, address tokenM, address tokenT, uint256[5] values,  uint256 expiration, uint8 v, bytes32[2] rs) returns(bool success) {
-    assert(block.timestamp < expiration);
-
-    bytes32 orderHash = sha3(
-      this,
-      maker,
-      tokenM,
-      tokenT,
-      values[0],
-      values[1],
-      expiration
-    );
-
-    assert(safeAdd(fills[orderHash], values[2]) <= values[1]);
-
-    assert(validSignature(maker, sha3(
-      orderHash,
-      feeRecipient,
-      values[3],
-      values[4]
-    ), v, rs[0], rs[1]));
-
-    assert(Token(tokenM).transferFrom(maker, msg.sender, values[2]));
-    assert(Token(tokenT).transferFrom(msg.sender, maker, partialFill([values[0], values[1]], values[2])));
-    assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, values[3]));
-    assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, values[4]));
-    fills[orderHash] = safeAdd(fills[orderHash], values[2]);
-    // log events
-    LogClaimByUser(maker, msg.sender, feeRecipient, orderHash, tokenM, tokenT, values[0], values[1], expiration, values[2], fills[orderHash]);
-    LogClaimByToken(maker, msg.sender, feeRecipient, orderHash, tokenM, tokenT, values[0], values[1], expiration, values[2], fills[orderHash]);
-    return true;
-  }
-
-  // addresses = [ maker, tokenM, tokenT ]
-  // values = [ valueM, valueT, expiration ]
-  // should you be able to cancel fee specific orders only?
-  // can cancel specific signatures
-  function cancel(address[3] addresses, uint256[3] values, uint256 cancelValue) returns(bool success) {
-    assert(msg.sender == addresses[0]);
-
-    bytes32 orderHash = sha3(
-      this,
-      addresses[0],
-      addresses[1],
-      addresses[2],
-      values[0],
-      values[1],
-      values[2]
-    );
-
     fills[orderHash] = safeAdd(fills[orderHash], cancelValue);
+    
     // log events
-    LogCancel(addresses[0], orderHash, addresses[1], addresses[2], cancelValue);
+    LogCancel(maker, tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelValue, values[0] - fills[orderHash]);
     return true;
   }
+
   // values = [ valueM, valueT ]
   function partialFill(uint256[2] values, uint256 fillValue) constant internal returns(uint256) {
     if (fillValue > values[0] || fillValue == 0) {
