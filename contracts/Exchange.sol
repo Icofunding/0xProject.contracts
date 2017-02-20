@@ -72,6 +72,13 @@ contract Exchange is SafeMath {
      expiration
    );
 
+   /*bytes32 msgHash = sha3(
+     orderHash,
+     feeRecipient,
+     fees[0],
+     fees[1]
+   );*/
+
    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
    assert(validSignature(maker, sha3(
      orderHash,
@@ -80,17 +87,16 @@ contract Exchange is SafeMath {
      fees[1]
    ), v, rs[0], rs[1]));
 
-   //TODO: check if values > 0 and check if feeRecipient == '0x0'
    assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
-   assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill([values[0], values[1]], fillValue)));
+   assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill(values, fillValue)));
    fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
    if (feeRecipient != address(0)) {
      if (fees[0] > 0) {
-       assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, fees[0]));
+       assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, partialFill(values, fees[0])));
      }
      if (fees[1] > 0) {
-       assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, fees[1]));
+       assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, partialFill(values, fees[1])));
      }
    }
 
@@ -185,11 +191,10 @@ contract Exchange is SafeMath {
     assert(validSignature(maker, orderHash, v, rs[0], rs[1]));
 
     assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
-    assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill([values[0], values[1]], fillValue)));
+    assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill(values, fillValue)));
     fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
     //log events
-
     LogFillEvents([maker, msg.sender, tokens[0], tokens[1], address(0)],
               [values[0], values[1], expiration, 0, 0, fillValue, values[0] - fills[orderHash]],
               orderHash
