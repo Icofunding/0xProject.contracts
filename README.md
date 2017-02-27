@@ -1,1 +1,1 @@
-# 0x-Smart-Contracts
+# 0x Smart Contracts

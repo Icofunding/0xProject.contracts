@@ -10,7 +10,7 @@ contract Exchange is SafeMath {
 
   //need to rethink which params get indexed
   //should p2p fills log different events?
-  event LogClaimByUser(
+  event LogFillByUser(
     address indexed maker,
     address indexed taker,
     address tokenM,
@@ -26,7 +26,7 @@ contract Exchange is SafeMath {
     uint256 remainingValue
   );
 
-  event LogClaimByToken(
+  event LogFillByToken(
     address maker,
     address taker,
     address indexed tokenM,
@@ -72,13 +72,6 @@ contract Exchange is SafeMath {
      expiration
    );
 
-   /*bytes32 msgHash = sha3(
-     orderHash,
-     feeRecipient,
-     fees[0],
-     fees[1]
-   );*/
-
    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
    assert(validSignature(maker, sha3(
      orderHash,
@@ -108,59 +101,6 @@ contract Exchange is SafeMath {
 
    return true;
  }
-
-  /**
-    fill function with optional taker specification
-  **/
-
-  /*function fillOptionalParams(address[2] traders, address feeRecipient, address[2] tokens, uint256[2] values,  uint256[2] fees, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns (bool success) {
-    assert(block.timestamp < expiration);
-    assert(fillValue > 0);
-
-    if (traders[1] != address(0)) {
-      assert(msg.sender == traders[1]);
-    }
-
-    bytes32 orderHash = sha3(
-      this,
-      traders[0],
-      traders[1],
-      tokens[0],
-      tokens[1],
-      values[0],
-      values[1],
-      expiration
-    );
-
-    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
-    assert(validSignature(traders[0], sha3(
-      orderHash,
-      feeRecipient,
-      fees[0],
-      fees[1]
-    ), v, rs[0], rs[1]));
-
-    assert(Token(tokens[0]).transferFrom(traders[0], msg.sender, fillValue));
-    assert(Token(tokens[1]).transferFrom(msg.sender, traders[0], partialFill([values[0], values[1]], fillValue)));
-    fills[orderHash] = safeAdd(fills[orderHash], fillValue);
-
-    if (feeRecipient != address(0)) {
-      if (fees[0] > 0) {
-        assert(Token(PROTOCOL_TOKEN).transferFrom(traders[0], feeRecipient, fees[0]));
-      }
-      if (fees[1] > 0) {
-        assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, fees[1]));
-      }
-    }
-
-    // log events
-    LogFillEvents([traders[0], msg.sender, tokens[0], tokens[1], feeRecipient],
-              [values[0], values[1], expiration, fees[0], fees[1], fillValue, values[0] - fills[orderHash]],
-              orderHash
-    );
-
-    return true;
-  }*/
 
   //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
   //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
@@ -211,7 +151,7 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  function cancel(address maker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 cancelValue) returns(bool success) {
+  function cancel(address maker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 cancelValue) returns (bool success) {
     assert(msg.sender == maker);
     assert(cancelValue > 0);
 
@@ -244,8 +184,8 @@ contract Exchange is SafeMath {
     return safeMul(fillValue, values[1]) / values[0];
   }
 
-  function validSignature(address maker, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) constant returns(bool) {
-    return maker == ecrecover(sha3("\x19Ethereum Signed Message:\n32", msgHash), v, r, s);
+  function validSignature(address maker, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) constant returns (bool success) {
+    return maker == ecrecover(sha3('\x19Ethereum Signed Message:\n32', msgHash), v, r, s);
   }
 
   function assert(bool assertion) internal {

@@ -8,6 +8,7 @@ contract Owned {
     owner = msg.sender;
   }
 
+  // only the owner address can invoke functions with this modifier
   modifier onlyOwner() {
     if (msg.sender != owner)
     throw;
