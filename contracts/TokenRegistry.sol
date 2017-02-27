@@ -1,18 +1,20 @@
-pragma solidity ^0.4.2;
-import "Token.sol";
+pragma solidity ^0.4.8;
 
-contract TokenRegistry {
+import "Token.sol";
+import "Ownable.sol";
+
+contract TokenRegistry is Ownable {
 
     address[] public tokenContracts;
     mapping (address => uint) public tokenIndex;
     mapping (address => TokenInfo) public tokens;
+
 
     struct TokenInfo {
         address addr;
         bytes32 symbol;
         bytes32 name;
         uint8 decimals;
-        bool enabled;
     }
 
     function addToken(
@@ -27,8 +29,7 @@ contract TokenRegistry {
             addr: _addr,
             symbol: _symbol,
             name: _name,
-            decimals: _decimals,
-            enabled: true
+            decimals: _decimals
         });
         return true;
     }
@@ -39,35 +40,6 @@ contract TokenRegistry {
         delete tokens[_addr];
         return true;
     }
-
-    /*
-
-    function editToken(
-        address _addr,
-        bytes32 _symbol,
-        bytes32 _name,
-        uint _decimals
-        ) auth() returns (bool success) {
-        if (msg.sender != ContractProvider(CONTRACT_REGISTRY).contracts("TokenRegistryController")) {
-            return false;
-        }
-
-        // get current token info
-        tokenContracts[tokenIndex[_addr]];
-
-        // set new token info
-        Token memory token;
-        token.addr = _addr;
-        token.symbol = _symbol;
-        token.name = _name;
-        token.decimals = _decimals;
-
-        // update
-        tokens[_addr] = token;
-        return true;
-    }
-
-    */
 
     //////////////////////////////////////////////////////////////////////////////
 
@@ -135,10 +107,6 @@ contract TokenRegistry {
 
     function getDecimals(address _addr) constant returns (uint8 decimals) {
       return tokens[_addr].decimals;
-    }
-
-    function isEnabled(address _addr) constant returns (bool) {
-      return tokens[_addr].enabled;
     }
 
 }

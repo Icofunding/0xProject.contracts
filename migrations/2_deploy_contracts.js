@@ -1,11 +1,9 @@
-var ConvertLib = artifacts.require("./ConvertLib.sol");
-var MetaCoin = artifacts.require("./MetaCoin.sol");
-var Proxy = artifacts.require("./Proxy.sol");
+var Proxy = artifacts.require('./Proxy.sol');
+var Exchange = artifacts.require('./Exchange.sol');
+var ProtocolToken = artifacts.require('./ProtocolToken.sol');
 
 module.exports = function(deployer) {
-  // deployer.deploy(ConvertLib);
-  // deployer.link(ConvertLib, MetaCoin);
-  // deployer.deploy(MetaCoin);
-
-  deployer.deploy(Proxy);
+  deployer.deploy(Proxy)
+    .then(() => deployer.deploy(ProtocolToken))
+    .then(() => deployer.deploy(Exchange, ProtocolToken.address, Proxy.address));
 };

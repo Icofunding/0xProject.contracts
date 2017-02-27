@@ -114,7 +114,7 @@ contract Exchange is SafeMath {
   //tokens = [tokenM, tokenT]
   //values = [valueM, valueT]
   //rs = [r, s]
-  function fillOTC(address maker, address taker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns (bool success) {
+  function fill(address maker, address taker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns (bool success) {
     assert(msg.sender == taker);
     assert(fillValue > 0);
 
@@ -145,7 +145,7 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  function fillAll(address[] makers, address[] feeRecipients, address[2][] tokens, uint256[2][] values, uint256[2][] fees, uint256[] expirations, uint256[] fillValues, uint8[] v, bytes32[2][] rs) returns (bool success) {
+  function fill(address[] makers, address[] feeRecipients, address[2][] tokens, uint256[2][] values, uint256[2][] fees, uint256[] expirations, uint256[] fillValues, uint8[] v, bytes32[2][] rs) returns (bool success) {
     for (uint8 i = 0; i < makers.length; i++) {
       assert(fill(makers[i], feeRecipients[i], tokens[i], values[i], fees[i], expirations[i], fillValues[i], v[i], rs[i]));
     }
