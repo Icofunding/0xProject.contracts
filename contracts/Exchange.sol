@@ -1,10 +1,13 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
+
 import "Token.sol";
 import "SafeMath.sol";
+import "Proxy.sol";
 
 contract Exchange is SafeMath {
 
   address PROTOCOL_TOKEN;
+  address PROXY;
 
   mapping (bytes32 => uint256) public fills;
 
@@ -54,6 +57,11 @@ contract Exchange is SafeMath {
     uint256 remainingValue
   );
 
+  function Exchange(address _protocolToken, address _proxy) {
+    PROTOCOL_TOKEN = _protocolToken;
+    PROXY = _proxy;
+  }
+
   //tokens = [tokenM, tokenT]
   //values = [valueM, valueT]
   //fees = [feeM, feeT]
@@ -80,16 +88,17 @@ contract Exchange is SafeMath {
      fees[1]
    ), v, rs[0], rs[1]));
 
-   assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
-   assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill(values, fillValue)));
+   assert(transferFrom(tokens[0], maker, msg.sender, fillValue));
+   assert(transferFrom(tokens[1], msg.sender, maker, partialFill(values, fillValue)));
+
    fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
    if (feeRecipient != address(0)) {
      if (fees[0] > 0) {
-       assert(Token(PROTOCOL_TOKEN).transferFrom(maker, feeRecipient, partialFill(values, fees[0])));
+       assert(transferFrom(PROTOCOL_TOKEN, maker, feeRecipient, partialFill(values, fees[0])));
      }
      if (fees[1] > 0) {
-       assert(Token(PROTOCOL_TOKEN).transferFrom(msg.sender, feeRecipient, partialFill(values, fees[1])));
+       assert(transferFrom(PROTOCOL_TOKEN, msg.sender, feeRecipient, partialFill(values, fees[1])));
      }
    }
 
@@ -100,13 +109,6 @@ contract Exchange is SafeMath {
    );
 
    return true;
- }
-
-  //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
-  //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
-  function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash) {
-    LogClaimByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
-    LogClaimByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
   }
 
   //tokens = [tokenM, tokenT]
@@ -130,8 +132,8 @@ contract Exchange is SafeMath {
     assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
     assert(validSignature(maker, orderHash, v, rs[0], rs[1]));
 
-    assert(Token(tokens[0]).transferFrom(maker, msg.sender, fillValue));
-    assert(Token(tokens[1]).transferFrom(msg.sender, maker, partialFill(values, fillValue)));
+    assert(transferFrom(tokens[0], maker, msg.sender, fillValue));
+    assert(transferFrom(tokens[1], msg.sender, maker, partialFill(values, fillValue)));
     fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
     //log events
@@ -172,6 +174,13 @@ contract Exchange is SafeMath {
     return true;
   }
 
+  //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
+  //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
+  function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash) {
+    LogFillByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+    LogFillByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+  }
+
   // values = [ valueM, valueT ]
   function partialFill(uint256[2] values, uint256 fillValue) constant internal returns (uint256) {
     if (fillValue > values[0] || fillValue == 0) {
@@ -185,11 +194,11 @@ contract Exchange is SafeMath {
   }
 
   function validSignature(address maker, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) constant returns (bool success) {
-    return maker == ecrecover(sha3('\x19Ethereum Signed Message:\n32', msgHash), v, r, s);
+    return maker == ecrecover(sha3("\x19Ethereum Signed Message:\n32", msgHash), v, r, s);
   }
 
-  function assert(bool assertion) internal {
-    if (!assertion) throw;
+  function transferFrom(address _token, address _from, address _to, uint256 _value) returns (bool success) {
+    return Proxy(PROXY).transferFrom(_token, _from, _to, _value);
   }
 
 }

@@ -1,36 +1,35 @@
-pragma solidity ^0.4.7;
+pragma solidity ^0.4.8;
+
 import "Token.sol";
-import "Owned.sol";
+import "Ownable.sol";
 
-contract Proxy is Owned {
+contract Proxy is Ownable {
 
-  // address of decentralized governance contract (multi-sig, DAO, ...)
-  address public owner;
+  // stores authorized addresses
+  mapping (address => bool) public authorities;
 
-  // maps addresses of Exchange contracts to true
-  mapping (address => bool) public whitelist;
+  event LogAuthorizationChange(address indexed target, bool value, address indexed caller);
 
-  // only the owner address can invoke functions with this modifier
-  modifier onlyOwner {
-    if (msg.sender != owner) throw;
+  // only authorized addresses can invoke functions with this modifier
+  modifier onlyAuthorized {
+    if (authorities[msg.sender] != true) throw;
     _;
-  }
-
-  // only whitelisted addresses can invoke functions with this modifier
-  modifier onlyWhitelist {
-    if (whitelist[msg.sender] != true) throw;
-    _;
-  }
-
-  // constructor
-  function Proxy() {
-    //
   }
 
   // Proxy calls into ERC20 Token contract, invoking transferFrom
-  function transferFrom(address _token, address _from, address _to, uint _value) onlyWhitelist  returns (bool success) {
-    Token(_token).transferFrom(_from,_to,_value);
+  function transferFrom(address _token, address _from, address _to, uint256 _value) onlyAuthorized returns (bool success) {
+    Token(_token).transferFrom(_from, _to, _value);
     return true;
+  }
+
+  function setAuthorization(address _target, bool _value) onlyOwner returns (bool success) {
+    authorities[_target] = _value;
+    LogAuthorizationChange(_target, _value, msg.sender);
+    return true;
+  }
+
+  function isAuthorized(address _target) constant returns (bool _value) {
+    return authorities[_target];
   }
 
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
 import "StandardToken.sol";
 
 /// @title Token contract - Token exchanging Ether 1:1.
@@ -45,4 +45,4 @@ contract EtherToken is StandardToken {
         }
         LogSellTokens(msg.sender, balances[msg.sender]);
     }
-} 
+}
