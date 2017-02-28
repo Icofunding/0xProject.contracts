@@ -6,8 +6,8 @@ import "Proxy.sol";
 
 contract Exchange is SafeMath {
 
-  address PROTOCOL_TOKEN;
-  address PROXY;
+  address public PROTOCOL_TOKEN;
+  address public PROXY;
 
   mapping (bytes32 => uint256) public fills;
 
@@ -66,7 +66,18 @@ contract Exchange is SafeMath {
   //values = [valueM, valueT]
   //fees = [feeM, feeT]
   //rs = [r, s]
-  function fill(address maker, address feeRecipient, address[2] tokens, uint256[2] values,  uint256[2] fees, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns (bool success) {
+  function fill(
+    address maker,
+    address feeRecipient,
+    address[2] tokens,
+    uint256[2] values,
+    uint256[2] fees,
+    uint256 expiration,
+    uint256 fillValue,
+    uint8 v,
+    bytes32[2] rs)
+    returns (bool success)
+  {
    assert(block.timestamp < expiration);
    assert(fillValue > 0);
 
@@ -114,7 +125,17 @@ contract Exchange is SafeMath {
   //tokens = [tokenM, tokenT]
   //values = [valueM, valueT]
   //rs = [r, s]
-  function fill(address maker, address taker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 fillValue, uint8 v, bytes32[2] rs) returns (bool success) {
+  function fill(
+    address maker,
+    address taker,
+    address[2] tokens,
+    uint256[2] values,
+    uint256 expiration,
+    uint256 fillValue,
+    uint8 v,
+    bytes32[2] rs)
+    returns (bool success)
+  {
     assert(msg.sender == taker);
     assert(fillValue > 0);
 
@@ -145,7 +166,18 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  function fill(address[] makers, address[] feeRecipients, address[2][] tokens, uint256[2][] values, uint256[2][] fees, uint256[] expirations, uint256[] fillValues, uint8[] v, bytes32[2][] rs) returns (bool success) {
+  function fill(
+    address[] makers,
+    address[] feeRecipients,
+    address[2][] tokens,
+    uint256[2][] values,
+    uint256[2][] fees,
+    uint256[] expirations,
+    uint256[] fillValues,
+    uint8[] v,
+    bytes32[2][] rs)
+    returns (bool success)
+  {
     for (uint8 i = 0; i < makers.length; i++) {
       assert(fill(makers[i], feeRecipients[i], tokens[i], values[i], fees[i], expirations[i], fillValues[i], v[i], rs[i]));
     }
@@ -153,10 +185,16 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  function cancel(address maker, address[2] tokens, uint256[2] values, uint256 expiration, uint256 cancelValue) returns (bool success) {
+  function cancel(
+    address maker,
+    address[2] tokens,
+    uint256[2] values,
+    uint256 expiration,
+    uint256 cancelValue)
+    returns (bool success)
+  {
     assert(msg.sender == maker);
     assert(cancelValue > 0);
-
     bytes32 orderHash = sha3(
       this,
       maker,
@@ -166,10 +204,8 @@ contract Exchange is SafeMath {
       values[1],
       expiration
     );
-
+    // NOTE: check that fills[orderHash] + cancelValue <= valueM
     fills[orderHash] = safeAdd(fills[orderHash], cancelValue);
-
-    // log events
     LogCancel(maker, tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelValue, values[0] - fills[orderHash]);
     return true;
   }
@@ -182,22 +218,36 @@ contract Exchange is SafeMath {
   }
 
   // values = [ valueM, valueT ]
-  function partialFill(uint256[2] values, uint256 fillValue) constant internal returns (uint256) {
-    if (fillValue > values[0] || fillValue == 0) {
-      throw;
-    }
-    // throw if rounding error > 0.01%
-    if (values[1] < 10**4 && values[1] * fillValue % values[0] != 0) {
-      throw;
-    }
+  function partialFill(uint256[2] values, uint256 fillValue)
+    constant
+    internal
+    returns (uint256)
+  {
+    if (fillValue > values[0] || fillValue == 0) throw;
+    if (values[1] < 10**4 && values[1] * fillValue % values[0] != 0) throw; // throw if rounding error > 0.01%
     return safeMul(fillValue, values[1]) / values[0];
   }
 
-  function validSignature(address maker, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) constant returns (bool success) {
+  function validSignature(
+    address maker,
+    bytes32 msgHash,
+    uint8 v,
+    bytes32 r,
+    bytes32 s)
+    constant
+    returns (bool success)
+  {
     return maker == ecrecover(sha3("\x19Ethereum Signed Message:\n32", msgHash), v, r, s);
   }
 
-  function transferFrom(address _token, address _from, address _to, uint256 _value) returns (bool success) {
+  function transferFrom(
+    address _token,
+    address _from,
+    address _to,
+    uint256 _value)
+    private
+    returns (bool success)
+  {
     return Proxy(PROXY).transferFrom(_token, _from, _to, _value);
   }
 
