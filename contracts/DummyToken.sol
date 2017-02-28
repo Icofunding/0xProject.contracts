@@ -7,6 +7,11 @@ contract DummyToken is StandardToken {
 
   function DummyToken(uint256 _value) {
     balances[msg.sender] = _value;
+    totalSupply = _value;
   }
 
+  function create(uint256 _value) {
+    balances[msg.sender] += _value;
+    totalSupply += _value;
+  }
 }
