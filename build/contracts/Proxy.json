@@ -138,7 +138,7 @@
       "type": "event"
     }
   ],
-  "unlinked_binary": "0x60606040525b60008054600160a060020a03191633600160a060020a03161790555b5b61037a806100316000396000f3006060604052361561005c5763ffffffff60e060020a60003504166315dacbea81146100615780638da5cb5b1461009d57806391223d69146100c6578063eecea000146100f3578063f2fde38b14610125578063fe9fbb8014610140575b610000565b3461000057610089600160a060020a036004358116906024358116906044351660643561016d565b604080519115158252519081900360200190f35b34610000576100aa610227565b60408051600160a060020a039092168252519081900360200190f35b3461000057610089600160a060020a0360043516610236565b604080519115158252519081900360200190f35b3461000057610089600160a060020a0360043516602435151561024b565b604080519115158252519081900360200190f35b346100005761013e600160a060020a03600435166102d4565b005b3461000057610089600160a060020a036004351661032c565b604080519115158252519081900360200190f35b600160a060020a033316600090815260016020819052604082205460ff1615151461019757610000565b604080516000602091820181905282517f23b872dd000000000000000000000000000000000000000000000000000000008152600160a060020a0388811660048301528781166024830152604482018790529351938916936323b872dd9360648084019491938390030190829087803b156100005760325a03f11561000057506001925050505b5b949350505050565b600054600160a060020a031681565b60016020526000908152604090205460ff1681565b6000805433600160a060020a0390811691161461026757610000565b600160a060020a03838116600081815260016020908152604091829020805460ff19168715159081179091558251908152915133909416937f7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd9281900390910190a35060015b5b92915050565b60005433600160a060020a039081169116146102ef57610000565b600160a060020a03811615610327576000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b5b50565b600160a060020a03811660009081526001602052604090205460ff165b9190505600a165627a7a723058209a8f90c5d75a7988c9b0621fcce54c7d3387d6d84733f6c8826c10841027bf850029",
+  "unlinked_binary": "0x60606040525b60008054600160a060020a03191633600160a060020a03161790555b5b61037a806100316000396000f3006060604052361561005c5763ffffffff60e060020a60003504166315dacbea81146100615780638da5cb5b1461009d57806391223d69146100c6578063eecea000146100f3578063f2fde38b14610125578063fe9fbb8014610140575b610000565b3461000057610089600160a060020a036004358116906024358116906044351660643561016d565b604080519115158252519081900360200190f35b34610000576100aa610227565b60408051600160a060020a039092168252519081900360200190f35b3461000057610089600160a060020a0360043516610236565b604080519115158252519081900360200190f35b3461000057610089600160a060020a0360043516602435151561024b565b604080519115158252519081900360200190f35b346100005761013e600160a060020a03600435166102d4565b005b3461000057610089600160a060020a036004351661032c565b604080519115158252519081900360200190f35b600160a060020a033316600090815260016020819052604082205460ff1615151461019757610000565b604080516000602091820181905282517f23b872dd000000000000000000000000000000000000000000000000000000008152600160a060020a0388811660048301528781166024830152604482018790529351938916936323b872dd9360648084019491938390030190829087803b156100005760325a03f11561000057506001925050505b5b949350505050565b600054600160a060020a031681565b60016020526000908152604090205460ff1681565b6000805433600160a060020a0390811691161461026757610000565b600160a060020a03838116600081815260016020908152604091829020805460ff19168715159081179091558251908152915133909416937f7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd9281900390910190a35060015b5b92915050565b60005433600160a060020a039081169116146102ef57610000565b600160a060020a03811615610327576000805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0383161790555b5b5b50565b600160a060020a03811660009081526001602052604090205460ff165b9190505600a165627a7a72305820b10e60e7dea031af775eb160d104796684bdb3950a1b852ccc667e61c81225fe0029",
   "networks": {
     "1488236592731": {
       "events": {
@@ -168,8 +168,298 @@
       "links": {},
       "address": "0xdefbb3738196f8800c74191e0ea61baa0c9cf4a2",
       "updated_at": 1488236738965
+    },
+    "1488308867730": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x0b70b2cb32e4cc5a918cb8020515f1576c0f69c9",
+      "updated_at": 1488309679692
+    },
+    "1488309854557": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x90f7c5abeb3c1229c18b6a15b3db8f491cbe7b43",
+      "updated_at": 1488309925100
+    },
+    "1488309991099": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xa83c3e30811ad998d5a7b2dece950f9236bf5096",
+      "updated_at": 1488309994879
+    },
+    "1488310532565": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x604a804661846977c74de34cb82bf024b9e958b7",
+      "updated_at": 1488310548034
+    },
+    "1488310657238": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x85a03d66b93c50def113cb3b3cb4a71ba6e76933",
+      "updated_at": 1488310667809
+    },
+    "1488312825893": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xd27f6d05e3ab6c0b2b858333fa7719dac5ca0ec8",
+      "updated_at": 1488312839121
+    },
+    "1488313070357": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xb913778dcb8ddc2b9aef5b4e03c64ccc5f9b2400",
+      "updated_at": 1488313075226
+    },
+    "1488313113405": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xa763a3a679a81b18b39adbd30eac263311665485",
+      "updated_at": 1488313117678
+    },
+    "1488313152857": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xea02e7d5d30633db94cb641709890c9a5b348c88",
+      "updated_at": 1488313156295
+    },
+    "1488313759668": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xb61f2c8f382b7f4e3a3139f4e29a7bb4c4211417",
+      "updated_at": 1488313836677
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1488308443230
+  "updated_at": 1488313836677
 }
