@@ -92,31 +92,74 @@ contract Exchange is SafeMath {
    );
 
    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
-   assert(validSignature(maker, sha3(
-     orderHash,
-     feeRecipient,
-     fees[0],
-     fees[1]
-   ), v, rs[0], rs[1]));
 
-   assert(transferFrom(tokens[0], maker, msg.sender, fillValue));
-   assert(transferFrom(tokens[1], msg.sender, maker, partialFill(values, fillValue)));
+   assert(validSignature(
+     maker,
+     sha3(
+       orderHash,
+       feeRecipient,
+       fees[0],
+       fees[1]
+     ),
+     v,
+     rs[0],
+     rs[1]
+   ));
+
+   assert(transferFrom(
+     tokens[0],
+     maker,
+     msg.sender,
+     fillValue
+   ));
+
+   assert(transferFrom(
+     tokens[1],
+     msg.sender,
+     maker,
+     partialFill(values, fillValue)
+   ));
 
    fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
    if (feeRecipient != address(0)) {
      if (fees[0] > 0) {
-       assert(transferFrom(PROTOCOL_TOKEN, maker, feeRecipient, partialFill(values, fees[0])));
+       assert(transferFrom(
+         PROTOCOL_TOKEN,
+         maker,
+         feeRecipient,
+         partialFill(values, fees[0])
+       ));
      }
      if (fees[1] > 0) {
-       assert(transferFrom(PROTOCOL_TOKEN, msg.sender, feeRecipient, partialFill(values, fees[1])));
+       assert(transferFrom(
+         PROTOCOL_TOKEN,
+         msg.sender,
+         feeRecipient,
+         partialFill(values, fees[1])
+       ));
      }
    }
 
    // log events
-   LogFillEvents([maker, msg.sender, tokens[0], tokens[1], feeRecipient],
-             [values[0], values[1], expiration, fees[0], fees[1], fillValue, values[0] - fills[orderHash]],
-             orderHash
+   LogFillEvents(
+     [
+       maker,
+       msg.sender,
+       tokens[0],
+       tokens[1],
+       feeRecipient
+     ],
+     [
+       values[0],
+       values[1],
+       expiration,
+       fees[0],
+       fees[1],
+       fillValue,
+       values[0] - fills[orderHash]
+     ],
+     orderHash
    );
 
    return true;
@@ -151,16 +194,48 @@ contract Exchange is SafeMath {
     );
 
     assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
-    assert(validSignature(maker, orderHash, v, rs[0], rs[1]));
+    assert(validSignature(
+      maker,
+      orderHash,
+      v,
+      rs[0],
+      rs[1]
+    ));
 
-    assert(transferFrom(tokens[0], maker, msg.sender, fillValue));
-    assert(transferFrom(tokens[1], msg.sender, maker, partialFill(values, fillValue)));
+    assert(transferFrom(
+      tokens[0],
+      maker,
+      msg.sender,
+      fillValue
+    ));
+
+    assert(transferFrom(
+      tokens[1],
+      msg.sender,
+      maker,
+      partialFill(values, fillValue)
+    ));
     fills[orderHash] = safeAdd(fills[orderHash], fillValue);
 
     //log events
-    LogFillEvents([maker, msg.sender, tokens[0], tokens[1], address(0)],
-              [values[0], values[1], expiration, 0, 0, fillValue, values[0] - fills[orderHash]],
-              orderHash
+    LogFillEvents(
+      [
+        maker,
+        msg.sender,
+        tokens[0],
+        tokens[1],
+        address(0)
+      ],
+      [
+        values[0],
+        values[1],
+        expiration,
+        0,
+        0,
+        fillValue,
+        values[0] - fills[orderHash]
+      ],
+      orderHash
     );
 
     return true;
@@ -179,7 +254,17 @@ contract Exchange is SafeMath {
     returns (bool success)
   {
     for (uint8 i = 0; i < makers.length; i++) {
-      assert(fill(makers[i], feeRecipients[i], tokens[i], values[i], fees[i], expirations[i], fillValues[i], v[i], rs[i]));
+      assert(fill(
+        makers[i],
+        feeRecipients[i],
+        tokens[i],
+        values[i],
+        fees[i],
+        expirations[i],
+        fillValues[i],
+        v[i],
+        rs[i]
+      ));
     }
 
     return true;
@@ -206,15 +291,54 @@ contract Exchange is SafeMath {
     );
     // NOTE: check that fills[orderHash] + cancelValue <= valueM
     fills[orderHash] = safeAdd(fills[orderHash], cancelValue);
-    LogCancel(maker, tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelValue, values[0] - fills[orderHash]);
+    LogCancel(
+      maker,
+      tokens[0],
+      tokens[1],
+      values[0],
+      values[1],
+      expiration,
+      orderHash,
+      cancelValue,
+      values[0] - fills[orderHash]
+    );
     return true;
   }
 
   //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
   //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
   function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash) {
-    LogFillByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
-    LogFillByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+    LogFillByUser(
+      addresses[0],
+      addresses[1],
+      addresses[2],
+      addresses[3],
+      values[0],
+      values[1],
+      values[2],
+      orderHash,
+      addresses[4],
+      values[3],
+      values[4],
+      values[5],
+      values[6]
+    );
+
+    LogFillByToken(
+      addresses[0],
+      addresses[1],
+      addresses[2],
+      addresses[3],
+      values[0],
+      values[1],
+      values[2],
+      orderHash,
+      addresses[4],
+      values[3],
+      values[4],
+      values[5],
+      values[6]
+    );
   }
 
   // values = [ valueM, valueT ]
@@ -237,7 +361,12 @@ contract Exchange is SafeMath {
     constant
     returns (bool success)
   {
-    return maker == ecrecover(sha3("\x19Ethereum Signed Message:\n32", msgHash), v, r, s);
+    return maker == ecrecover(
+      sha3("\x19Ethereum Signed Message:\n32", msgHash),
+      v,
+      r,
+      s
+    );
   }
 
   function transferFrom(
@@ -248,7 +377,12 @@ contract Exchange is SafeMath {
     private
     returns (bool success)
   {
-    return Proxy(PROXY).transferFrom(_token, _from, _to, _value);
+    return Proxy(PROXY).transferFrom(
+      _token,
+      _from,
+      _to,
+      _value
+    );
   }
 
 }
