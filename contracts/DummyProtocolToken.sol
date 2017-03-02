@@ -1,8 +1,13 @@
 pragma solidity ^0.4.8;
 
-import "./ProtocolToken.sol";
+import "./StandardToken.sol";
 
-contract DummyProtocolToken is ProtocolToken {
+contract DummyProtocolToken is StandardToken {
+
+  function DummyProtocolToken(uint256 _value) {
+    balances[msg.sender] = _value;
+    totalSupply = _value;
+  }
 
   function buy(uint256 _value) {
     balances[msg.sender] += _value;

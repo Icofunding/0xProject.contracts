@@ -516,8 +516,37 @@
       "links": {},
       "address": "0x0b37aa6d061fb140646345b97190da603a47dffc",
       "updated_at": 1488403073815
+    },
+    "1488493063831": {
+      "events": {
+        "0x7e6411853ffd89b63d1b984f80a60bca8e430167dea799b3c7df0ba7de81f3bd": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "value",
+              "type": "bool"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizationChange",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xe9b2390f794c70c219c42ad883e59201f0ddc631",
+      "updated_at": 1488493679306
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1488403073815
+  "updated_at": 1488493679306
 }

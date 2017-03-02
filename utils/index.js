@@ -1,46 +1,44 @@
 const ethUtil = require('ethereumjs-util');
 
-const getOrderHash = (params) => {
-  return ethUtil.sha3(Buffer.concat([
-    ethUtil.toBuffer(params.exchange),
-    ethUtil.toBuffer(params.maker),
-    ethUtil.toBuffer(params.tokenM),
-    ethUtil.toBuffer(params.tokenT),
-    ethUtil.toBuffer(params.valueM),
-    ethUtil.toBuffer(params.valueT),
-    ethUtil.toBuffer(params.expiration)
-  ]));
+const solSHA3 = (...args) => ethUtil.sha3(Buffer.concat(args.map(arg => ethUtil.toBuffer(arg))));
+
+const getOrderHash = (params, { hex = false } = {}) => {
+  let orderHash = solSHA3(
+    params.exchange,
+    params.maker,
+    params.tokenM,
+    params.tokenT,
+    params.valueM,
+    params.valueT,
+    params.expiration
+  );
+
+  return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
-const getMsgHash = (params, hashPersonal = true) => {
-  let msgHash = ethUtil.sha3(Buffer.concat([
-    ethUtil.toBuffer(params.orderHash),
-    ethUtil.toBuffer(params.feeRecipient),
-    ethUtil.toBuffer(params.feeM),
-    ethUtil.toBuffer(params.feeT)
-  ]));
+const getMsgHash = (params, { hex = false, hashPersonal = false } = {}) => {
+  let msgHash = solSHA3(
+    params.orderHash,
+    params.feeRecipient,
+    params.feeM,
+    params.feeT
+  );
 
-  if (hashPersonal) { msgHash = ethUtil.hashPersonalMessage(msgHash); }
+  if (hashPersonal) {
+    msgHash = ethUtil.hashPersonalMessage(msgHash);
+  }
 
-  return msgHash;
-};
-
-const pubFromOrderSig = (order) => {
-  let msgHash = getMsgHash(order);
-  let { v, r, s } = order;
-  let pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
-  let address = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true));
-  return address;
+  return hex ? msgHash = ethUtil.bufferToHex(msgHash) : msgHash;
 };
 
 module.exports = (web3) => {
   return {
     createOrder: (params) => {
       return new Promise((resolve, reject) => {
-        params.orderHash = ethUtil.bufferToHex(getOrderHash(params));
-        let msgHash = getMsgHash(params);
+        params.orderHash = getOrderHash(params, { hex: true });
+        let msgHash = getMsgHash(params, { hex: true, hashPersonal: true });
 
-        web3.eth.sign(params.maker, ethUtil.bufferToHex(msgHash), (err, sig) => {
+        web3.eth.sign(params.maker, msgHash, (err, sig) => {
           if (err) {
             reject(err);
           }
@@ -66,6 +64,19 @@ module.exports = (web3) => {
         });
       });
     },
-    pubFromOrderSig
+    validSignature: (order, { hashPersonal = true } = {}) => {
+      let msgHash = getMsgHash(order, { hashPersonal });
+
+      let { v, r, s } = order;
+
+      try {
+        let pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+        return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
+      }
+      catch(err) {
+        return false;
+      }
+    },
+    getMsgHash
   }
 };
