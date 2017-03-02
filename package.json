@@ -1,0 +1,25 @@
+{
+  "name": "0x-smart-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xProject/0x-Smart-Contracts.git"
+  },
+  "author": "abandeali1@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0xProject/0x-Smart-Contracts/issues"
+  },
+  "homepage": "https://github.com/0xProject/0x-Smart-Contracts#readme",
+  "devDependencies": {
+    "ethereumjs-util": "^5.1.1"
+  }
+}

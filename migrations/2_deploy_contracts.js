@@ -1,6 +1,6 @@
-var Proxy = artifacts.require('./Proxy.sol');
-var Exchange = artifacts.require('./Exchange.sol');
-var ProtocolToken = artifacts.require('./ProtocolToken.sol');
+const Proxy = artifacts.require('./Proxy.sol');
+const Exchange = artifacts.require('./Exchange.sol');
+const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 
 module.exports = function(deployer) {
   deployer.deploy(Proxy)

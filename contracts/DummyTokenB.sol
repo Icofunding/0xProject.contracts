@@ -10,7 +10,7 @@ contract DummyTokenB is StandardToken {
     totalSupply = _value;
   }
 
-  function create(uint256 _value) {
+  function buy(uint256 _value) {
     balances[msg.sender] += _value;
     totalSupply += _value;
   }
