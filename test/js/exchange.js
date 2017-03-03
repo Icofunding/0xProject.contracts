@@ -24,11 +24,12 @@ contract('Exchange', function(accounts) {
     let defaultParams = {
       exchange: Exchange.address,
       maker,
+      taker: '0x0',
       feeRecipient,
       tokenM: DummyTokenA.address,
       tokenT: DummyTokenB.address,
-      valueM: 10000,
-      valueT: 10000,
+      valueM: 100,
+      valueT: 200,
       feeM: 1,
       feeT: 1,
       expiration: Math.floor((Date.now() + 100000) / 1000)
@@ -107,7 +108,7 @@ contract('Exchange', function(accounts) {
     });
   });
 
-  describe('validSignature', function() {
+  describe('utility functions', function() {
     beforeEach(function(done) {
       utils.createOrder(orderFactory()).then(newOrder => {
         order = newOrder;
@@ -115,7 +116,19 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should return true with a valid signature', function(done) {
+    it('getOrderHash should output the correct orderHash', function(done) {
+      exchange.getOrderHash(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration
+      ).then(orderHash => {
+        assert(order.orderHash === orderHash);
+        done();
+      });
+    });
+
+    it('validSignature should return true with a valid signature', function(done) {
       let msgHash = utils.getMsgHash(order, { hex: true });
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(utils.validSignature(order));
@@ -124,9 +137,9 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should return false with an invalid signature', function(done) {
-      order.r = '0x0';
-      order.s = '0x0';
+    it('validSignature should return false with an invalid signature', function(done) {
+      order.r = utils.solSHA3('invalidR');
+      order.s = utils.solSHA3('invalidS');
       let msgHash = utils.getMsgHash(order, { hex: true });
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!utils.validSignature(order));
@@ -136,25 +149,13 @@ contract('Exchange', function(accounts) {
     });
 
     it('should return false with an invalid message hash', function(done) {
-      let msgHash = '0x0';
+      let msgHash = utils.solSHA3('invalid');
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!success);
         done();
       });
     });
 
-    it('getOrderHash should output the correct orderHash', function(done) {
-      exchange.getOrderHash(
-        order.maker,
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration
-      ).then(orderHash => {
-        console.log(order);
-        console.log(orderHash);
-        done();
-      });
-    });
   });
 
   describe('fill single order', function() {
@@ -169,9 +170,9 @@ contract('Exchange', function(accounts) {
     });
 
     it('should transfer the correct amounts between maker, taker, and feeRecipient', function(done) {
-      let fillValue = balances[taker][order.tokenT] * 0.05;
+      let fillValue = order.valueM / 2;
       exchange.fill(
-        order.maker,
+        [order.maker, order.taker],
         order.feeRecipient,
         [order.tokenM, order.tokenT],
         [order.valueM, order.valueT],
@@ -181,7 +182,7 @@ contract('Exchange', function(accounts) {
         order.v,
         [order.r, order.s],
         { from: taker }
-      ).then(tx => {
+      ).then(() => {
         getDmyBalances().then(newBalances => {
           console.log(balances);
           console.log(newBalances);

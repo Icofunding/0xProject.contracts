@@ -11,15 +11,29 @@ const solSHA3 = (...args) => {
 }
 
 const getOrderHash = (params, { hex = false } = {}) => {
-  let orderHash = solSHA3(
-    params.exchange,
-    params.maker,
-    params.tokenM,
-    params.tokenT,
-    params.valueM,
-    params.valueT,
-    params.expiration
-  );
+  let orderHash;
+  if (params.taker !== '0x0') {
+    orderHash = solSHA3(
+      params.exchange,
+      params.maker,
+      params.taker,
+      params.tokenM,
+      params.tokenT,
+      params.valueM,
+      params.valueT,
+      params.expiration
+    );
+  } else {
+    orderHash = solSHA3(
+      params.exchange,
+      params.maker,
+      params.tokenM,
+      params.tokenT,
+      params.valueM,
+      params.valueT,
+      params.expiration
+    );
+  }
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
@@ -62,8 +76,6 @@ module.exports = (web3) => {
             v,
             r: ethUtil.bufferToHex(r),
             s: ethUtil.bufferToHex(s)
-            // r,
-            // s
           });
         });
       });
@@ -79,6 +91,7 @@ module.exports = (web3) => {
         return false;
       }
     },
-    getMsgHash
+    getMsgHash,
+    solSHA3
   };
 };
