@@ -25,7 +25,7 @@ contract Proxy is Ownable {
     onlyAuthorized
     returns (bool success)
   {
-    Token(_token).transferFrom(_from, _to, _value);
+    if (!Token(_token).transferFrom(_from, _to, _value)) throw;
     return true;
   }
 

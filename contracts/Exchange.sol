@@ -168,7 +168,7 @@ contract Exchange is SafeMath {
   //tokens = [tokenM, tokenT]
   //values = [valueM, valueT]
   //rs = [r, s]
-  function fill(
+  function p2pFill(
     address maker,
     address taker,
     address[2] tokens,
@@ -241,7 +241,7 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  function fill(
+  function multiFill(
     address[] makers,
     address[] feeRecipients,
     address[2][] tokens,
@@ -361,6 +361,7 @@ contract Exchange is SafeMath {
     constant
     returns (bool success)
   {
+    //return true;
     return maker == ecrecover(
       sha3("\x19Ethereum Signed Message:\n32", msgHash),
       v,

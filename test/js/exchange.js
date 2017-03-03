@@ -16,6 +16,7 @@ contract('Exchange', function(accounts) {
   let dmyB;
   let dmyPT;
   let exchange;
+
   let order;
   let balances;
 
@@ -54,15 +55,15 @@ contract('Exchange', function(accounts) {
         dmyPT.balanceOf.call(feeRecipient)
       ]).then(res => {
         res = res.map(balance => balance.toString());
-        newBalances[maker].dmyA = res[0];
-        newBalances[taker].dmyA = res[1];
-        newBalances[feeRecipient].dmyA = res[2];
-        newBalances[maker].dmyB = res[3];
-        newBalances[taker].dmyB = res[4];
-        newBalances[feeRecipient].dmyB = res[5];
-        newBalances[maker].dmyPT = res[6];
-        newBalances[taker].dmyPT = res[7];
-        newBalances[feeRecipient].dmyPT = res[8];
+        newBalances[maker][dmyA.address] = res[0];
+        newBalances[taker][dmyA.address] = res[1];
+        newBalances[feeRecipient][dmyA.address] = res[2];
+        newBalances[maker][dmyB.address] = res[3];
+        newBalances[taker][dmyB.address] = res[4];
+        newBalances[feeRecipient][dmyB.address] = res[5];
+        newBalances[maker][dmyPT.address] = res[6];
+        newBalances[taker][dmyPT.address] = res[7];
+        newBalances[feeRecipient][dmyPT.address] = res[8];
         resolve(newBalances);
       });
     });
@@ -106,37 +107,38 @@ contract('Exchange', function(accounts) {
   });
 
   describe('validSignature', function() {
-    it('should return true with a valid signature', function(done) {
+    beforeEach(function(done) {
       utils.createOrder(orderFactory()).then(newOrder => {
-        let msgHash = utils.getMsgHash(newOrder, { hex: true });
-        exchange.validSignature.call(newOrder.maker, msgHash, newOrder.v, newOrder.r, newOrder.s).then(success => {
-          assert(utils.validSignature(newOrder));
-          assert(success);
-          done();
-        });
+        order = newOrder;
+        done();
+      });
+    });
+
+    it('should return true with a valid signature', function(done) {
+      let msgHash = utils.getMsgHash(order, { hex: true });
+      exchange.validSignature.call(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+        assert(utils.validSignature(order));
+        assert(success);
+        done();
       });
     });
 
     it('should return false with an invalid signature', function(done) {
-      utils.createOrder(orderFactory()).then(newOrder => {
-        newOrder.r = '0x0';
-        newOrder.s = '0x0';
-        let msgHash = utils.getMsgHash(newOrder, { hex: true });
-        exchange.validSignature.call(newOrder.maker, msgHash, newOrder.v, newOrder.r, newOrder.s).then(success => {
-          assert(!utils.validSignature(newOrder));
-          assert(!success);
-          done();
-        });
+      order.r = '0x0';
+      order.s = '0x0';
+      let msgHash = utils.getMsgHash(order, { hex: true });
+      exchange.validSignature.call(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+        assert(!utils.validSignature(order));
+        assert(!success);
+        done();
       });
     });
 
     it('should return false with an invalid message hash', function(done) {
-      utils.createOrder(orderFactory()).then(newOrder => {
-        let msgHash = '0x0';
-        exchange.validSignature.call(maker, msgHash, newOrder.v, newOrder.r, newOrder.s).then(success => {
-          assert(!success);
-          done();
-        });
+      let msgHash = '0x0';
+      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+        assert(!success);
+        done();
       });
     });
   });
@@ -145,7 +147,6 @@ contract('Exchange', function(accounts) {
     beforeEach(function(done) {
       getDmyBalances().then(newBalances => {
         balances = newBalances;
-        console.log(balances);
         utils.createOrder(orderFactory()).then(newOrder => {
           order = newOrder;
           done();
@@ -153,12 +154,55 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should have accounts', function(done) {
-      dmyA.balanceOf(maker)
-      .then(balance => {
+    it('should transfer the correct amounts between maker, taker, and feeRecipient', function(done) {
+      let fillValue = balances[taker][order.tokenT] * 0.05;
+      exchange.fill(
+        order.maker,
+        order.feeRecipient,
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        [order.feeM, order.feeT],
+        order.expiration,
+        fillValue,
+        order.v,
+        [order.r, order.s],
+        { from: taker }
+      ).then(tx => {
+        getDmyBalances().then(newBalances => {
+          console.log(balances);
+          console.log(newBalances);
+          done();
+        });
+      }).catch(e => {
+        throw(e);
         done();
       })
     });
+
+    it('should throw if an order is expired', function(done) {
+      done();
+    });
+
+    it('should throw if fillValue > remaining valueM', function(done) {
+      done();
+    });
+
+    it('should throw if signature is invalid', function(done){
+      done();
+    });
+
+    it('should throw if a transfer fails', function(done) {
+      done();
+    });
+
+    it('should throw if there is a rounding error', function(done) {
+      done();
+    });
+
+    it('should log events', function(done) {
+      done();
+    });
+
   });
 
 });
