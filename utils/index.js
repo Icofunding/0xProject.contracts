@@ -1,6 +1,14 @@
 const ethUtil = require('ethereumjs-util');
+const BN = require('bn.js');
 
-const solSHA3 = (...args) => ethUtil.sha3(Buffer.concat(args.map(arg => ethUtil.toBuffer(arg))));
+const solSHA3 = (...args) => {
+  return ethUtil.sha3(Buffer.concat(args.map(arg => {
+    if (typeof arg === 'number') {
+      return new BN(arg).toArrayLike(Buffer, 'be', 256 / 8);
+    }
+    return ethUtil.toBuffer(arg);
+  })));
+}
 
 const getOrderHash = (params, { hex = false } = {}) => {
   let orderHash = solSHA3(
@@ -72,5 +80,5 @@ module.exports = (web3) => {
       }
     },
     getMsgHash
-  }
+  };
 };

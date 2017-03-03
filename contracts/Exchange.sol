@@ -81,7 +81,7 @@ contract Exchange is SafeMath {
    assert(block.timestamp < expiration);
    assert(fillValue > 0);
 
-   bytes32 orderHash = sha3(
+   /*bytes32 orderHash = sha3(
      this,
      maker,
      tokens[0],
@@ -89,18 +89,26 @@ contract Exchange is SafeMath {
      values[0],
      values[1],
      expiration
+   );*/
+
+   bytes32 orderHash = getOrderHash(
+     maker,
+     tokens,
+     values,
+     expiration
    );
 
    assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
 
    assert(validSignature(
      maker,
-     sha3(
+     /*sha3(
        orderHash,
        feeRecipient,
        fees[0],
        fees[1]
-     ),
+     ),*/
+     getMsgHash(orderHash, feeRecipient, fees),
      v,
      rs[0],
      rs[1]
@@ -350,6 +358,37 @@ contract Exchange is SafeMath {
     if (fillValue > values[0] || fillValue == 0) throw;
     if (values[1] < 10**4 && values[1] * fillValue % values[0] != 0) throw; // throw if rounding error > 0.01%
     return safeMul(fillValue, values[1]) / values[0];
+  }
+
+  function getOrderHash(
+    address maker,
+    address[2] tokens,
+    uint256[2] values,
+    uint256 expiration)
+    constant
+    returns (bytes32 orderHash)
+  {
+    return sha3(
+      this,
+      maker,
+      tokens[0],
+      tokens[1],
+      values[0],
+      values[1],
+      expiration
+    );
+  }
+
+  function getMsgHash(bytes32 orderHash, address feeRecipient, uint256[2] fees)
+    constant
+    returns (bytes32 msgHash)
+  {
+    return sha3(
+      orderHash,
+      feeRecipient,
+      fees[0],
+      fees[1]
+    );
   }
 
   function validSignature(

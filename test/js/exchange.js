@@ -38,11 +38,6 @@ contract('Exchange', function(accounts) {
 
   const getDmyBalances = () => {
     return new Promise((resolve, reject) => {
-      let newBalances = {
-        [maker]: {},
-        [taker]: {},
-        [feeRecipient]: {}
-      };
       Promise.all([
         dmyA.balanceOf.call(maker),
         dmyA.balanceOf.call(taker),
@@ -54,21 +49,27 @@ contract('Exchange', function(accounts) {
         dmyPT.balanceOf.call(taker),
         dmyPT.balanceOf.call(feeRecipient)
       ]).then(res => {
+        let newBalances = {
+          [maker]: {},
+          [taker]: {},
+          [feeRecipient]: {}
+        };
         res = res.map(balance => balance.toString());
-        newBalances[maker][dmyA.address] = res[0];
-        newBalances[taker][dmyA.address] = res[1];
-        newBalances[feeRecipient][dmyA.address] = res[2];
-        newBalances[maker][dmyB.address] = res[3];
-        newBalances[taker][dmyB.address] = res[4];
-        newBalances[feeRecipient][dmyB.address] = res[5];
-        newBalances[maker][dmyPT.address] = res[6];
-        newBalances[taker][dmyPT.address] = res[7];
-        newBalances[feeRecipient][dmyPT.address] = res[8];
+        [
+          newBalances[maker][dmyA.address],
+          newBalances[taker][dmyA.address],
+          newBalances[feeRecipient][dmyA.address],
+          newBalances[maker][dmyB.address],
+          newBalances[taker][dmyB.address],
+          newBalances[feeRecipient][dmyB.address],
+          newBalances[maker][dmyPT.address],
+          newBalances[taker][dmyPT.address],
+          newBalances[feeRecipient][dmyPT.address]
+        ] = res;
         resolve(newBalances);
       });
     });
   };
-
 
   before(function(done) {
     Exchange.deployed().then(instance => {
@@ -116,7 +117,7 @@ contract('Exchange', function(accounts) {
 
     it('should return true with a valid signature', function(done) {
       let msgHash = utils.getMsgHash(order, { hex: true });
-      exchange.validSignature.call(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(utils.validSignature(order));
         assert(success);
         done();
@@ -127,7 +128,7 @@ contract('Exchange', function(accounts) {
       order.r = '0x0';
       order.s = '0x0';
       let msgHash = utils.getMsgHash(order, { hex: true });
-      exchange.validSignature.call(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!utils.validSignature(order));
         assert(!success);
         done();
@@ -138,6 +139,19 @@ contract('Exchange', function(accounts) {
       let msgHash = '0x0';
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!success);
+        done();
+      });
+    });
+
+    it('getOrderHash should output the correct orderHash', function(done) {
+      exchange.getOrderHash(
+        order.maker,
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration
+      ).then(orderHash => {
+        console.log(order);
+        console.log(orderHash);
         done();
       });
     });
@@ -173,8 +187,8 @@ contract('Exchange', function(accounts) {
           console.log(newBalances);
           done();
         });
-      }).catch(e => {
-        throw(e);
+      }).catch(err => {
+        throw(err);
         done();
       })
     });
