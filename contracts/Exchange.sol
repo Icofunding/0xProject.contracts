@@ -23,8 +23,8 @@ contract Exchange is SafeMath {
     address indexed feeRecipient,
     uint256 feeM,
     uint256 feeT,
-    uint256 fillValue,
-    uint256 remainingValue
+    uint256 fillValueM,
+    uint256 remainingValueM
   );
 
   event LogFillByToken(
@@ -39,8 +39,8 @@ contract Exchange is SafeMath {
     address feeRecipient,
     uint256 feeM,
     uint256 feeT,
-    uint256 fillValue,
-    uint256 remainingValue
+    uint256 fillValueM,
+    uint256 remainingValueM
   );
 
   event LogCancel(
@@ -52,7 +52,7 @@ contract Exchange is SafeMath {
     uint256 expiration,
     bytes32 orderHash,
     uint256 cancelValue,
-    uint256 remainingValue
+    uint256 remainingValueM
   );
 
   function Exchange(address _protocolToken, address _proxy) {
@@ -72,13 +72,12 @@ contract Exchange is SafeMath {
     uint256[2] values,
     uint256[2] fees,
     uint256 expiration,
-    uint256 fillValue,
+    uint256 fillValueM,
     uint8 v,
     bytes32[2] rs)
     returns (bool success)
   {
    assert(block.timestamp < expiration);
-   assert(fillValue > 0);
 
    if (traders[1] != address(0)) {
      assert(traders[1] == msg.sender);
@@ -91,7 +90,7 @@ contract Exchange is SafeMath {
      expiration
    );
 
-   assert(safeAdd(fills[orderHash], fillValue) <= values[0]);
+   assert(safeAdd(fills[orderHash], fillValueM) <= values[0]);
 
    assert(validSignature(
      traders[0],
@@ -105,17 +104,17 @@ contract Exchange is SafeMath {
      tokens[0],
      traders[0],
      msg.sender,
-     fillValue
+     fillValueM
    ));
 
    assert(transferFrom(
      tokens[1],
      msg.sender,
      traders[0],
-     partialFill(values, fillValue)
+     getFillValueT(values, fillValueM)
    ));
 
-   fills[orderHash] = safeAdd(fills[orderHash], fillValue);
+   fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
 
    if (feeRecipient != address(0)) {
      if (fees[0] > 0) {
@@ -123,7 +122,7 @@ contract Exchange is SafeMath {
          PROTOCOL_TOKEN,
          traders[0],
          feeRecipient,
-         partialFill(values, fees[0])
+         getFeeValue(values[0], fillValueM, fees[0])
        ));
      }
      if (fees[1] > 0) {
@@ -131,11 +130,10 @@ contract Exchange is SafeMath {
          PROTOCOL_TOKEN,
          msg.sender,
          feeRecipient,
-         partialFill(values, fees[1])
+         getFeeValue(values[0], fillValueM, fees[1])
        ));
      }
    }
-
    // log events
    LogFillEvents(
      [
@@ -151,7 +149,7 @@ contract Exchange is SafeMath {
        expiration,
        fees[0],
        fees[1],
-       fillValue,
+       fillValueM,
        values[0] - fills[orderHash]
      ],
      orderHash
@@ -167,7 +165,7 @@ contract Exchange is SafeMath {
     uint256[2][] values,
     uint256[2][] fees,
     uint256[] expirations,
-    uint256[] fillValues,
+    uint256[] fillValueMs,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
@@ -180,7 +178,7 @@ contract Exchange is SafeMath {
         values[i],
         fees[i],
         expirations[i],
-        fillValues[i],
+        fillValueMs[i],
         v[i],
         rs[i]
       ));
@@ -223,7 +221,7 @@ contract Exchange is SafeMath {
   }
 
   //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
-  //values = [valueM, valueT, expiration, feeM, feeT, fillValue, remainingValue]
+  //values = [valueM, valueT, expiration, feeM, feeT, fillValueM, remainingValueM]
   function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash) {
     LogFillByUser(
       addresses[0],
@@ -259,14 +257,22 @@ contract Exchange is SafeMath {
   }
 
   // values = [ valueM, valueT ]
-  function partialFill(uint256[2] values, uint256 fillValue)
+  function getFillValueT(uint256[2] values, uint256 fillValueM)
     constant
     internal
-    returns (uint256)
+    returns (uint256 fillValueT)
   {
-    if (fillValue > values[0] || fillValue == 0) throw;
-    if (values[1] < 10**4 && values[1] * fillValue % values[0] != 0) throw; // throw if rounding error > 0.01%
-    return safeMul(fillValue, values[1]) / values[0];
+    assert(!(fillValueM > values[0] || fillValueM == 0));
+    assert(!(values[1] < 10**4 && values[1] * fillValueM % values[0] != 0)); // throw if rounding error > 0.01%
+    return safeMul(fillValueM, values[1]) / values[0];
+  }
+
+  function getFeeValue(uint256 valueM, uint256 fillValueM, uint256 fee)
+    constant
+    internal
+    returns (uint256 feeValue)
+  {
+    return safeDiv(safeMul(fee, fillValueM), valueM);
   }
 
   function getOrderHash(

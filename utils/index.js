@@ -1,6 +1,6 @@
 const ethUtil = require('ethereumjs-util');
-const { getOrderHash, getMsgHash } = require('./hashUtils.js');
-const BNutils = require('./BNutils.js');
+const { getOrderHash, getMsgHash } = require('./hashUtil.js');
+const BNutil = require('./BNutil.js');
 
 module.exports = (web3) => {
   return {
@@ -46,6 +46,6 @@ module.exports = (web3) => {
     sha3: ethUtil.sha3,
     getOrderHash,
     getMsgHash,
-    BNutils
+    BNutil
   };
 };

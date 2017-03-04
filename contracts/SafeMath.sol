@@ -15,18 +15,17 @@ contract SafeMath {
 
   function safeAdd(uint a, uint b) constant internal returns (uint) {
     uint c = a + b;
-    assert(c>=a && c>=b);
+    assert(c >= a && c >= b);
     return c;
   }
 
-  /*
-  // threshold for maximum rounding error
-  function safeDiv(uint a, uint b, uint maxError) constant internal returns (uint) {
+  function safeDiv(uint a, uint b) internal returns (uint) {
+    assert(b > 0);
     uint c = a / b;
-    // assert(...);
+    assert(a == b * c + a % b);
     return c;
   }
-  */
+
 
   function assert(bool assertion) internal {
     if (!assertion) throw;

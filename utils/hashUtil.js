@@ -1,5 +1,5 @@
 const ethUtil = require('ethereumjs-util');
-const BNutils = require('./BNutils.js');
+const BNutils = require('./BNutil.js');
 
 exports.solSHA3 = (...args) => {
   return ethUtil.sha3(Buffer.concat(args.map(arg => {

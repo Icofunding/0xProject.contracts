@@ -5,7 +5,7 @@ const DummyTokenB = artifacts.require('./DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 
 const utils = require('../../utils/index.js')(web3);
-const { toSmallestUnits } = utils.BNutils;
+const { toSmallestUnits } = utils.BNutil;
 const assert = require('assert');
 
 contract('Exchange', function(accounts) {
@@ -76,38 +76,27 @@ contract('Exchange', function(accounts) {
   };
 
   before(function(done) {
-    Exchange.deployed().then(instance => {
-      exchange = instance;
-    }).then(() => {
-      DummyTokenA.deployed().then(instance => {
-        dmyA = instance;
-        return Promise.all([
-          dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-          dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-          dmyA.buy(INIT_BAL, { from: maker }),
-          dmyA.buy(INIT_BAL, { from: taker })
-        ]).then(() => {
-          DummyTokenB.deployed().then(instance => {
-            dmyB = instance;
-            return Promise.all([
-              dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-              dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-              dmyB.buy(INIT_BAL, { from: maker }),
-              dmyB.buy(INIT_BAL, { from: taker })
-            ]).then(() => {
-              DummyProtocolToken.deployed().then(instance => {
-                dmyPT = instance;
-                return Promise.all([
-                  dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-                  dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-                  dmyPT.buy(INIT_BAL, { from: maker }),
-                  dmyPT.buy(INIT_BAL, { from: taker })
-                ]).then(() => done());
-              });
-            });
-          });
-        });
-      });
+    Promise.all([
+      Exchange.deployed(),
+      DummyTokenA.deployed(),
+      DummyTokenB.deployed(),
+      DummyProtocolToken.deployed()
+    ]).then(instances => {
+      [exchange, dmyA, dmyB, dmyPT] = instances;
+      return Promise.all([
+        dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+        dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+        dmyA.buy(INIT_BAL, { from: maker }),
+        dmyA.buy(INIT_BAL, { from: taker }),
+        dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+        dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+        dmyB.buy(INIT_BAL, { from: maker }),
+        dmyB.buy(INIT_BAL, { from: taker }),
+        dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+        dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+        dmyPT.buy(INIT_BAL, { from: maker }),
+        dmyPT.buy(INIT_BAL, { from: taker })
+      ]).then(() => done());
     });
   });
 
