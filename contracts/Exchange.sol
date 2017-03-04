@@ -277,21 +277,10 @@ contract Exchange is SafeMath {
     constant
     returns (bytes32 orderHash)
   {
-    if (traders[1] != address(0)) {
-      return sha3(
-        this,
-        traders[0],
-        traders[1],
-        tokens[0],
-        tokens[1],
-        values[0],
-        values[1],
-        expiration
-      );
-    }
     return sha3(
       this,
       traders[0],
+      traders[1],
       tokens[0],
       tokens[1],
       values[0],

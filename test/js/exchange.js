@@ -5,12 +5,15 @@ const DummyTokenB = artifacts.require('./DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 
 const utils = require('../../utils/index.js')(web3);
+const { toSmallestUnits } = utils.BNutils;
 const assert = require('assert');
 
 contract('Exchange', function(accounts) {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
+  const INIT_BAL = toSmallestUnits(1000);
+  const INIT_ALLOW = toSmallestUnits(1000);
 
   let dmyA;
   let dmyB;
@@ -28,10 +31,10 @@ contract('Exchange', function(accounts) {
       feeRecipient,
       tokenM: DummyTokenA.address,
       tokenT: DummyTokenB.address,
-      valueM: 100,
-      valueT: 200,
-      feeM: 1,
-      feeT: 1,
+      valueM: toSmallestUnits(100),
+      valueT: toSmallestUnits(200),
+      feeM: toSmallestUnits(1),
+      feeT: toSmallestUnits(1),
       expiration: Math.floor((Date.now() + 100000) / 1000)
     };
     return Object.assign({}, defaultParams, params);
@@ -79,26 +82,26 @@ contract('Exchange', function(accounts) {
       DummyTokenA.deployed().then(instance => {
         dmyA = instance;
         return Promise.all([
-          dmyA.approve(Proxy.address, 1000, { from: maker }),
-          dmyA.approve(Proxy.address, 1000, { from: taker }),
-          dmyA.buy(1000, { from: maker }),
-          dmyA.buy(1000, { from: taker })
+          dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+          dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+          dmyA.buy(INIT_BAL, { from: maker }),
+          dmyA.buy(INIT_BAL, { from: taker })
         ]).then(() => {
           DummyTokenB.deployed().then(instance => {
             dmyB = instance;
             return Promise.all([
-              dmyB.approve(Proxy.address, 1000, { from: maker }),
-              dmyB.approve(Proxy.address, 1000, { from: taker }),
-              dmyB.buy(1000, { from: maker }),
-              dmyB.buy(1000, { from: taker })
+              dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+              dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+              dmyB.buy(INIT_BAL, { from: maker }),
+              dmyB.buy(INIT_BAL, { from: taker })
             ]).then(() => {
               DummyProtocolToken.deployed().then(instance => {
                 dmyPT = instance;
                 return Promise.all([
-                  dmyPT.approve(Proxy.address, 1000, { from: maker }),
-                  dmyPT.approve(Proxy.address, 1000, { from: taker }),
-                  dmyPT.buy(1000, { from: maker }),
-                  dmyPT.buy(1000, { from: taker })
+                  dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+                  dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+                  dmyPT.buy(INIT_BAL, { from: maker }),
+                  dmyPT.buy(INIT_BAL, { from: taker })
                 ]).then(() => done());
               });
             });
@@ -128,6 +131,17 @@ contract('Exchange', function(accounts) {
       });
     });
 
+    it('getMsgHash should output the correct msgHash', function(done) {
+      exchange.getMsgHash(
+        order.orderHash,
+        order.feeRecipient,
+        [order.feeM, order.feeT]
+      ).then(msgHash => {
+        assert(utils.getMsgHash(order, { hex: true }) === msgHash);
+        done();
+      });
+    });
+
     it('validSignature should return true with a valid signature', function(done) {
       let msgHash = utils.getMsgHash(order, { hex: true });
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
@@ -138,8 +152,8 @@ contract('Exchange', function(accounts) {
     });
 
     it('validSignature should return false with an invalid signature', function(done) {
-      order.r = utils.solSHA3('invalidR');
-      order.s = utils.solSHA3('invalidS');
+      order.r = utils.sha3('invalidR');
+      order.s = utils.sha3('invalidS');
       let msgHash = utils.getMsgHash(order, { hex: true });
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!utils.validSignature(order));
@@ -149,7 +163,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should return false with an invalid message hash', function(done) {
-      let msgHash = utils.solSHA3('invalid');
+      let msgHash = utils.sha3('invalid');
       exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
         assert(!success);
         done();

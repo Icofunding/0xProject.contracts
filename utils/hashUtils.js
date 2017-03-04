@@ -3,17 +3,18 @@ const BNutils = require('./BNutils.js');
 
 exports.solSHA3 = (...args) => {
   return ethUtil.sha3(Buffer.concat(args.map(arg => {
-    if (typeof arg === 'number') {
-      return BNutils.toBuffer(arg);
+    if (!ethUtil.isHexString(arg) && !isNaN(+arg)) {
+      return BNutils.toBuffer(arg.toString());
+    }
+    if (arg === '0x0') {
+      return ethUtil.setLength(ethUtil.toBuffer(arg), 20);
     }
     return ethUtil.toBuffer(arg);
   })));
 }
 
 exports.getOrderHash = (params, { hex = false } = {}) => {
-  let orderHash;
-  if (params.taker !== '0x0') {
-    orderHash = exports.solSHA3(
+  let orderHash = exports.solSHA3(
       params.exchange,
       params.maker,
       params.taker,
@@ -23,17 +24,6 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
       params.valueT,
       params.expiration
     );
-  } else {
-    orderHash = exports.solSHA3(
-      params.exchange,
-      params.maker,
-      params.tokenM,
-      params.tokenT,
-      params.valueM,
-      params.valueT,
-      params.expiration
-    );
-  }
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
