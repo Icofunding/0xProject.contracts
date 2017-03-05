@@ -1,6 +1,8 @@
 const ethUtil = require('ethereumjs-util');
 const { getOrderHash, getMsgHash } = require('./hashUtil.js');
+const { createFill, createBatchFill, createCancel } = require('./formatUtil.js');
 const BNutil = require('./BNutil.js');
+const exchangeUtil = require('./exchangeUtil.js');
 
 module.exports = web3 => {
   return {
@@ -33,54 +35,6 @@ module.exports = web3 => {
         });
       });
     },
-    createFill: (order, fillValueM) => {
-      return {
-        traders: [order.maker, order.taker],
-        feeRecipient: order.feeRecipient,
-        tokens: [order.tokenM, order.tokenT],
-        values: [order.valueM, order.valueT],
-        fees: [order.feeM, order.feeT],
-        expiration: order.expiration,
-        fillValueM,
-        v: order.v,
-        rs: [order.r, order.s]
-      };
-    },
-    createMultiFill: (orders, fillValuesM) => {
-      let ret = {
-        traders: [],
-        feeRecipients: [],
-        tokens: [],
-        values: [],
-        fees: [],
-        expirations: [],
-        fillValuesM: [],
-        v: [],
-        rs: []
-      };
-      orders.forEach((order, i) => {
-        ret.traders.push([order.maker, order.taker]);
-        ret.feeRecipients.push(order.feeRecipient),
-        ret.tokens.push([order.tokenM, order.tokenT]),
-        ret.values.push([order.valueM, order.valueT]),
-        ret.fees.push([order.feeM, order.feeT]),
-        ret.expirations.push(order.expiration),
-        ret.fillValuesM.push(fillValuesM[i]),
-        ret.v.push(order.v),
-        ret.rs.push([order.r, order.s])
-      });
-      return ret;
-    },
-    createCancel: (order, cancelValueM) => {
-      return {
-        traders: [order.maker, order.taker],
-        tokens: [order.tokenM, order.tokenT],
-        values: [order.valueM, order.valueT],
-        fees: [order.feeM, order.feeT],
-        expiration: order.expiration,
-        cancelValueM
-      };
-    },
     validSignature: (order, { hashPersonal = true } = {}) => {
       let msgHash = getMsgHash(order, { hashPersonal });
       let { v, r, s } = order;
@@ -95,6 +49,7 @@ module.exports = web3 => {
     sha3: ethUtil.sha3,
     getOrderHash,
     getMsgHash,
-    BNutil
+    BNutil,
+    exchangeUtil
   };
 };

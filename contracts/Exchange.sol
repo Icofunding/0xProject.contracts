@@ -158,7 +158,7 @@ contract Exchange is SafeMath {
    return true;
   }
 
-  function multiFill(
+  function batchFill(
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
