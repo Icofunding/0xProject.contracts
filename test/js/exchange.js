@@ -133,7 +133,13 @@ contract('Exchange', function(accounts) {
 
     it('validSignature should return true with a valid signature', function(done) {
       let msgHash = util.getMsgHash(order, { hex: true });
-      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+      exchange.validSignature(
+        order.maker,
+        msgHash,
+        order.v,
+        order.r,
+        order.s
+      ).then(success => {
         assert(util.validSignature(order));
         assert(success);
         done();
@@ -144,7 +150,13 @@ contract('Exchange', function(accounts) {
       order.r = util.sha3('invalidR');
       order.s = util.sha3('invalidS');
       let msgHash = util.getMsgHash(order, { hex: true });
-      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+      exchange.validSignature(
+        order.maker,
+        msgHash,
+        order.v,
+        order.r,
+        order.s
+      ).then(success => {
         assert(!util.validSignature(order));
         assert(!success);
         done();
@@ -153,7 +165,13 @@ contract('Exchange', function(accounts) {
 
     it('validSignature should return false with an invalid message hash', function(done) {
       let msgHash = util.sha3('invalid');
-      exchange.validSignature(order.maker, msgHash, order.v, order.r, order.s).then(success => {
+      exchange.validSignature(
+        order.maker,
+        msgHash,
+        order.v,
+        order.r,
+        order.s
+      ).then(success => {
         assert(!success);
         done();
       });
@@ -179,16 +197,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(100) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(() => {
           getDmyBalances().then(newBalances => {
@@ -215,16 +234,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(200), valueT: toSmallestUnits(100) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(() => {
           getDmyBalances().then(newBalances => {
@@ -251,16 +271,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(() => {
           getDmyBalances().then(newBalances => {
@@ -287,16 +308,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ taker, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(() => {
           getDmyBalances().then(newBalances => {
@@ -323,16 +345,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -348,16 +371,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -371,16 +395,17 @@ contract('Exchange', function(accounts) {
 
     it('should throw if fillValueM > valueM', function(done) {
       let fillValueM = add(order.valueM, 1);
+      let params = util.createFill(order, fillValueM);
       exchange.fill(
-        [order.maker, order.taker],
-        order.feeRecipient,
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        [order.feeM, order.feeT],
-        order.expiration,
-        fillValueM,
-        order.v,
-        [order.r, order.s],
+        params.traders,
+        params.feeRecipient,
+        params.tokens,
+        params.values,
+        params.fees,
+        params.expiration,
+        params.fillValueM,
+        params.v,
+        params.rs,
         { from: taker }
       ).then(res => {
         assert(!res);
@@ -393,29 +418,31 @@ contract('Exchange', function(accounts) {
 
     it('should throw if fillValueM > remaining valueM', function(done) {
       let fillValueM = div(order.valueM, 2);
+      let params = util.createFill(order, fillValueM);
       exchange.fill(
-        [order.maker, order.taker],
-        order.feeRecipient,
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        [order.feeM, order.feeT],
-        order.expiration,
-        fillValueM,
-        order.v,
-        [order.r, order.s],
+        params.traders,
+        params.feeRecipient,
+        params.tokens,
+        params.values,
+        params.fees,
+        params.expiration,
+        params.fillValueM,
+        params.v,
+        params.rs,
         { from: taker }
       ).then(() => {
         fillValueM = add(fillValueM, 1);
+        params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -433,16 +460,17 @@ contract('Exchange', function(accounts) {
         order.r = util.sha3('invalidR');
         order.s = util.sha3('invalidS');
         let fillValueM = div(order.valueM, 2);
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -458,16 +486,17 @@ contract('Exchange', function(accounts) {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
         let fillValueM = order.valueM;
+        let params = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          params.traders,
+          params.feeRecipient,
+          params.tokens,
+          params.values,
+          params.fees,
+          params.expiration,
+          params.fillValueM,
+          params.v,
+          params.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -481,16 +510,17 @@ contract('Exchange', function(accounts) {
 
     it('should log 2 events', function(done) {
       let fillValueM = div(order.valueM, 2);
+      let params = util.createFill(order, fillValueM);
       exchange.fill(
-        [order.maker, order.taker],
-        order.feeRecipient,
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        [order.feeM, order.feeT],
-        order.expiration,
-        fillValueM,
-        order.v,
-        [order.r, order.s],
+        params.traders,
+        params.feeRecipient,
+        params.tokens,
+        params.values,
+        params.fees,
+        params.expiration,
+        params.fillValueM,
+        params.v,
+        params.rs,
         { from: taker }
       ).then(res => {
         assert(res.logs.length === 2);
@@ -504,7 +534,48 @@ contract('Exchange', function(accounts) {
   });
 
   describe('multiFill', function() {
+    let order1;
+    let order2;
+    let order3;
+    let params;
+    beforeEach(function(done) {
+      Promise.all([
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+      ]).then(orders => {
+        [order1, order2, order3] = orders;
+        let fillValuesM = [
+          div(order1.valueM, 2),
+          div(order2.valueM, 2),
+          div(order3.valueM, 2)
+        ];
+        params = util.createMultiFill(orders, fillValuesM);
+        done();
+      });
+    });
 
+    it('should cost less gas per order to execute multiFill', function(done) {
+      exchange.multiFill([
+        params.traders,
+        params.feeRecipients,
+        params.tokens,
+        params.values,
+        params.fees,
+        params.expirations,
+        params.fillValuesM,
+        params.v,
+        params.rs,
+        { from: taker }
+      ]).then(res => {
+        console.log(res);
+        done();
+      }).catch(e => {
+        console.log(e);
+        assert(!e);
+        done();
+      })
+    });
   });
 
   describe('cancel', function() {
@@ -517,12 +588,13 @@ contract('Exchange', function(accounts) {
 
     it('should throw if not sent by maker', function(done) {
       let cancelValueM = order.valueM;
+      let params = util.createCancel(order, cancelValueM);
       exchange.cancel(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration,
-        cancelValueM,
+        params.traders,
+        params.tokens,
+        params.values,
+        params.expiration,
+        params.cancelValueM,
         { from: taker }
       ).then(res => {
         assert(!res);
@@ -535,12 +607,13 @@ contract('Exchange', function(accounts) {
 
     it('should throw if cancelValueM === 0', function(done) {
       let cancelValueM = 0;
+      let params = util.createCancel(order, cancelValueM);
       exchange.cancel(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration,
-        cancelValueM,
+        params.traders,
+        params.tokens,
+        params.values,
+        params.expiration,
+        params.cancelValueM,
         { from: maker }
       ).then(res => {
         assert(!res);
@@ -553,25 +626,27 @@ contract('Exchange', function(accounts) {
 
     it('should be able to cancel a full order', function(done) {
       let cancelValueM = order.valueM;
+      let cParams = util.createCancel(order, cancelValueM);
       exchange.cancel(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration,
-        cancelValueM,
+        cParams.traders,
+        cParams.tokens,
+        cParams.values,
+        cParams.expiration,
+        cParams.cancelValueM,
         { from: maker }
       ).then(() => {
         let fillValueM = 1;
+        let fParams = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          fParams.traders,
+          fParams.feeRecipient,
+          fParams.tokens,
+          fParams.values,
+          fParams.fees,
+          fParams.expiration,
+          fParams.fillValueM,
+          fParams.v,
+          fParams.rs,
           { from: taker }
         ).then(res => {
           assert(!res);
@@ -588,38 +663,41 @@ contract('Exchange', function(accounts) {
 
     it('should be able to cancel part of an order', function(done) {
       let cancelValueM = div(order.valueM, 2);
+      let cParams = util.createCancel(order, cancelValueM);
       exchange.cancel(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration,
-        cancelValueM,
+        cParams.traders,
+        cParams.tokens,
+        cParams.values,
+        cParams.expiration,
+        cParams.cancelValueM,
         { from: maker }
-      ).then((res) => {
+      ).then(() => {
         let fillValueM = div(order.valueM, 4);
+        let fParams = util.createFill(order, fillValueM);
         exchange.fill(
-          [order.maker, order.taker],
-          order.feeRecipient,
-          [order.tokenM, order.tokenT],
-          [order.valueM, order.valueT],
-          [order.feeM, order.feeT],
-          order.expiration,
-          fillValueM,
-          order.v,
-          [order.r, order.s],
+          fParams.traders,
+          fParams.feeRecipient,
+          fParams.tokens,
+          fParams.values,
+          fParams.fees,
+          fParams.expiration,
+          fParams.fillValueM,
+          fParams.v,
+          fParams.rs,
           { from: taker }
         ).then(() => {
           fillValueM = add(div(order.valueM, 4), 1);
+          fParams = util.createFill(order, fillValueM);
           exchange.fill(
-            [order.maker, order.taker],
-            order.feeRecipient,
-            [order.tokenM, order.tokenT],
-            [order.valueM, order.valueT],
-            [order.feeM, order.feeT],
-            order.expiration,
-            fillValueM,
-            order.v,
-            [order.r, order.s],
+            fParams.traders,
+            fParams.feeRecipient,
+            fParams.tokens,
+            fParams.values,
+            fParams.fees,
+            fParams.expiration,
+            fParams.fillValueM,
+            fParams.v,
+            fParams.rs,
             { from: taker }
           ).then(res => {
             assert(!res);
@@ -637,12 +715,13 @@ contract('Exchange', function(accounts) {
 
     it('should log 1 event', function(done) {
       let cancelValueM = div(order.valueM, 2);
+      let params = util.createCancel(order, cancelValueM);
       exchange.cancel(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration,
-        cancelValueM,
+        params.traders,
+        params.tokens,
+        params.values,
+        params.expiration,
+        params.cancelValueM,
         { from: maker }
       ).then(res => {
         assert(res.logs.length === 1);

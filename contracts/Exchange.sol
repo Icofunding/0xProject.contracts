@@ -165,7 +165,7 @@ contract Exchange is SafeMath {
     uint256[2][] values,
     uint256[2][] fees,
     uint256[] expirations,
-    uint256[] fillValueMs,
+    uint256[] fillValuesM,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
@@ -178,7 +178,7 @@ contract Exchange is SafeMath {
         values[i],
         fees[i],
         expirations[i],
-        fillValueMs[i],
+        fillValuesM[i],
         v[i],
         rs[i]
       ));

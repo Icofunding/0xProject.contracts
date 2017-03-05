@@ -4,7 +4,7 @@ const BNutils = require('./BNutil.js');
 exports.solSHA3 = (...args) => {
   return ethUtil.sha3(Buffer.concat(args.map(arg => {
     if (!ethUtil.isHexString(arg) && !isNaN(+arg)) {
-      return BNutils.toBuffer(arg.toString());
+      return BNutils.toBuffer(arg);
     }
     if (arg === '0x0') { //TODO: create isEmptyAddress func
       return ethUtil.setLength(ethUtil.toBuffer(arg), 20);
