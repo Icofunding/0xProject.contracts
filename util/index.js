@@ -13,9 +13,10 @@ module.exports = (web3) => {
             reject(err);
           }
           let { v, r, s } = ethUtil.fromRpcSig(sig);
-          let { maker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration, orderHash } = params;
+          let { maker, taker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration, orderHash } = params;
           resolve({
             maker,
+            taker,
             feeRecipient,
             tokenM,
             tokenT,

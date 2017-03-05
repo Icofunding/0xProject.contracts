@@ -6,7 +6,7 @@ exports.solSHA3 = (...args) => {
     if (!ethUtil.isHexString(arg) && !isNaN(+arg)) {
       return BNutils.toBuffer(arg.toString());
     }
-    if (arg === '0x0') {
+    if (arg === '0x0') { //TODO: create isEmptyAddress func
       return ethUtil.setLength(ethUtil.toBuffer(arg), 20);
     }
     return ethUtil.toBuffer(arg);

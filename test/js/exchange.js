@@ -35,7 +35,7 @@ contract('Exchange', function(accounts) {
       valueT: toSmallestUnits(200),
       feeM: toSmallestUnits(1),
       feeT: toSmallestUnits(1),
-      expiration: Math.floor((Date.now() + 100000) / 1000)
+      expiration: Math.floor((Date.now() + Math.random() * 100000) / 1000)
     };
     return Object.assign({}, defaultParams, params);
   };
@@ -159,12 +159,12 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('get fillValueT should throw if there is a rounding error', function(done) {
+    it('getFillValueT should throw if there is a rounding error', function(done) {
       done();
     });
   });
 
-  describe('fill single order', function() {
+  describe('fill', function() {
     beforeEach(function(done) {
       getDmyBalances().then(newBalances => {
         balances = newBalances;
@@ -204,6 +204,9 @@ contract('Exchange', function(accounts) {
             assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
             done();
           });
+        }).catch(e => {
+          assert(!e);
+          done();
         });
       });
     });
@@ -237,6 +240,9 @@ contract('Exchange', function(accounts) {
             assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
             done();
           });
+        }).catch(e => {
+          assert(!e);
+          done();
         });
       });
     });
@@ -270,6 +276,70 @@ contract('Exchange', function(accounts) {
             assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
             done();
           });
+        }).catch(e => {
+          assert(!e);
+          done();
+        });
+      });
+    });
+
+    it('should transfer the correct amounts when taker is specified and order is claimed by taker', function(done) {
+      util.createOrder(orderFactory({ taker, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
+        order = newOrder;
+        let fillValueM = div(order.valueM, 2);
+        exchange.fill(
+          [order.maker, order.taker],
+          order.feeRecipient,
+          [order.tokenM, order.tokenT],
+          [order.valueM, order.valueT],
+          [order.feeM, order.feeT],
+          order.expiration,
+          fillValueM,
+          order.v,
+          [order.r, order.s],
+          { from: taker }
+        ).then(() => {
+          getDmyBalances().then(newBalances => {
+            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
+            assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
+            assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
+            assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
+            assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
+            assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
+            assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+            done();
+          });
+        }).catch(e => {
+          assert(!e);
+          done();
+        });
+      });
+    });
+
+    it('should throw when taker is specified and order is claimed by other', function(done) {
+      util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
+        order = newOrder;
+        let fillValueM = div(order.valueM, 2);
+        exchange.fill(
+          [order.maker, order.taker],
+          order.feeRecipient,
+          [order.tokenM, order.tokenT],
+          [order.valueM, order.valueT],
+          [order.feeM, order.feeT],
+          order.expiration,
+          fillValueM,
+          order.v,
+          [order.r, order.s],
+          { from: taker }
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
+          assert(e);
+          done();
         });
       });
     });
@@ -289,7 +359,10 @@ contract('Exchange', function(accounts) {
           order.v,
           [order.r, order.s],
           { from: taker }
-        ).catch(e => {
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
           assert(e);
           done();
         });
@@ -309,14 +382,17 @@ contract('Exchange', function(accounts) {
         order.v,
         [order.r, order.s],
         { from: taker }
-      ).catch(e => {
+      ).then(res => {
+        assert(!res);
+        done();
+      }).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should throw if fillValueM > remaining valueM', function(done) {
-      let fillValueM = div(order.valueM, 1.9);
+      let fillValueM = div(order.valueM, 2);
       exchange.fill(
         [order.maker, order.taker],
         order.feeRecipient,
@@ -329,6 +405,7 @@ contract('Exchange', function(accounts) {
         [order.r, order.s],
         { from: taker }
       ).then(() => {
+        fillValueM = add(fillValueM, 1);
         exchange.fill(
           [order.maker, order.taker],
           order.feeRecipient,
@@ -340,7 +417,10 @@ contract('Exchange', function(accounts) {
           order.v,
           [order.r, order.s],
           { from: taker }
-        ).catch(e => {
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
           assert(e);
           done();
         });
@@ -364,14 +444,42 @@ contract('Exchange', function(accounts) {
           order.v,
           [order.r, order.s],
           { from: taker }
-        ).catch(e => {
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
           assert(e);
           done();
         });
       });
     });
 
-    it('should log events', function(done) {
+    it('should throw if a transfer fails', function(done){
+      util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
+        order = newOrder;
+        let fillValueM = order.valueM;
+        exchange.fill(
+          [order.maker, order.taker],
+          order.feeRecipient,
+          [order.tokenM, order.tokenT],
+          [order.valueM, order.valueT],
+          [order.feeM, order.feeT],
+          order.expiration,
+          fillValueM,
+          order.v,
+          [order.r, order.s],
+          { from: taker }
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
+          assert(e);
+          done();
+        });
+      });
+    });
+
+    it('should log 2 events', function(done) {
       let fillValueM = div(order.valueM, 2);
       exchange.fill(
         [order.maker, order.taker],
@@ -385,11 +493,164 @@ contract('Exchange', function(accounts) {
         [order.r, order.s],
         { from: taker }
       ).then(res => {
-        assert(res.logs.length > 0);
+        assert(res.logs.length === 2);
+        done();
+      }).catch(e => {
+        assert(!e);
         done();
       });
     });
 
   });
 
+  describe('multiFill', function() {
+
+  });
+
+  describe('cancel', function() {
+    beforeEach(function(done) {
+      util.createOrder(orderFactory()).then(newOrder => {
+        order = newOrder;
+        done();
+      });
+    });
+
+    it('should throw if not sent by maker', function(done) {
+      let cancelValueM = order.valueM;
+      exchange.cancel(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration,
+        cancelValueM,
+        { from: taker }
+      ).then(res => {
+        assert(!res);
+        done();
+      }).catch(e => {
+        assert(e);
+        done();
+      });
+    });
+
+    it('should throw if cancelValueM === 0', function(done) {
+      let cancelValueM = 0;
+      exchange.cancel(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration,
+        cancelValueM,
+        { from: maker }
+      ).then(res => {
+        assert(!res);
+        done();
+      }).catch(e => {
+        assert(e);
+        done();
+      });
+    });
+
+    it('should be able to cancel a full order', function(done) {
+      let cancelValueM = order.valueM;
+      exchange.cancel(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration,
+        cancelValueM,
+        { from: maker }
+      ).then(() => {
+        let fillValueM = 1;
+        exchange.fill(
+          [order.maker, order.taker],
+          order.feeRecipient,
+          [order.tokenM, order.tokenT],
+          [order.valueM, order.valueT],
+          [order.feeM, order.feeT],
+          order.expiration,
+          fillValueM,
+          order.v,
+          [order.r, order.s],
+          { from: taker }
+        ).then(res => {
+          assert(!res);
+          done();
+        }).catch(e => {
+          assert(e);
+          done();
+        });
+      }).catch(e => {
+        assert(!e);
+        done();
+      });
+    });
+
+    it('should be able to cancel part of an order', function(done) {
+      let cancelValueM = div(order.valueM, 2);
+      exchange.cancel(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration,
+        cancelValueM,
+        { from: maker }
+      ).then((res) => {
+        let fillValueM = div(order.valueM, 4);
+        exchange.fill(
+          [order.maker, order.taker],
+          order.feeRecipient,
+          [order.tokenM, order.tokenT],
+          [order.valueM, order.valueT],
+          [order.feeM, order.feeT],
+          order.expiration,
+          fillValueM,
+          order.v,
+          [order.r, order.s],
+          { from: taker }
+        ).then(() => {
+          fillValueM = add(div(order.valueM, 4), 1);
+          exchange.fill(
+            [order.maker, order.taker],
+            order.feeRecipient,
+            [order.tokenM, order.tokenT],
+            [order.valueM, order.valueT],
+            [order.feeM, order.feeT],
+            order.expiration,
+            fillValueM,
+            order.v,
+            [order.r, order.s],
+            { from: taker }
+          ).then(res => {
+            assert(!res);
+            done();
+          }).catch(e => {
+            assert(e);
+            done();
+          });
+        });
+      }).catch(e => {
+        assert(!e);
+        done();
+      });
+    });
+
+    it('should log 1 event', function(done) {
+      let cancelValueM = div(order.valueM, 2);
+      exchange.cancel(
+        [order.maker, order.taker],
+        [order.tokenM, order.tokenT],
+        [order.valueM, order.valueT],
+        order.expiration,
+        cancelValueM,
+        { from: maker }
+      ).then(res => {
+        assert(res.logs.length === 1);
+        done();
+      }).catch(e => {
+        assert(!e);
+        done();
+      });
+    });
+  });
 });

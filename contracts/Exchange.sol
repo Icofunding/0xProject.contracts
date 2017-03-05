@@ -51,7 +51,7 @@ contract Exchange is SafeMath {
     uint256 valueT,
     uint256 expiration,
     bytes32 orderHash,
-    uint256 cancelValue,
+    uint256 cancelValueM,
     uint256 remainingValueM
   );
 
@@ -111,7 +111,7 @@ contract Exchange is SafeMath {
      tokens[1],
      msg.sender,
      traders[0],
-     getFillValueT(values, fillValueM)
+     getFillValueT(values[0], values[1], fillValueM)
    ));
 
    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
@@ -192,11 +192,11 @@ contract Exchange is SafeMath {
     address[2] tokens,
     uint256[2] values,
     uint256 expiration,
-    uint256 cancelValue)
+    uint256 cancelValueM)
     returns (bool success)
   {
     assert(msg.sender == traders[0]);
-    assert(cancelValue > 0);
+    assert(cancelValueM > 0);
 
     bytes32 orderHash = getOrderHash(
       traders,
@@ -205,7 +205,7 @@ contract Exchange is SafeMath {
       expiration
     );
     // NOTE: check that fills[orderHash] + cancelValue <= valueM
-    fills[orderHash] = safeAdd(fills[orderHash], cancelValue);
+    fills[orderHash] = safeAdd(fills[orderHash], cancelValueM);
     LogCancel(
       traders[0],
       tokens[0],
@@ -214,7 +214,7 @@ contract Exchange is SafeMath {
       values[1],
       expiration,
       orderHash,
-      cancelValue,
+      cancelValueM,
       values[0] - fills[orderHash]
     );
     return true;
@@ -256,15 +256,14 @@ contract Exchange is SafeMath {
     );
   }
 
-  // values = [ valueM, valueT ]
-  function getFillValueT(uint256[2] values, uint256 fillValueM)
+  function getFillValueT(uint256 valueM, uint256 valueT, uint256 fillValueM)
     constant
     internal
     returns (uint256 fillValueT)
   {
-    assert(!(fillValueM > values[0] || fillValueM == 0));
-    assert(!(values[1] < 10**4 && values[1] * fillValueM % values[0] != 0)); // throw if rounding error > 0.01%
-    return safeMul(fillValueM, values[1]) / values[0];
+    assert(!(fillValueM > valueM || fillValueM == 0));
+    assert(!(valueT < 10**4 && valueT * fillValueM % valueM != 0)); // throw if rounding error > 0.01%
+    return safeMul(fillValueM, valueT) / valueM;
   }
 
   function getFeeValue(uint256 valueM, uint256 fillValueM, uint256 fee)
