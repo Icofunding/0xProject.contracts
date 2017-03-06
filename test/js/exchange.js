@@ -377,29 +377,82 @@ contract('Exchange', function(accounts) {
       let fillValuesM = [];
       let tokenM = dmyA.address;
       let tokenT = dmyB.address;
-      orders.forEach((order, i) => {
+      orders.forEach(order => {
         let fillValueM = div(order.valueM, 2);
         let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+        let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+        let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
         fillValuesM.push(fillValueM);
-        balances[order.maker][order.tokenM] = sub(balances[order.maker][order.tokenM], fillValueM);
-        balances[order.maker][order.tokenT] = add(balances[order.maker][order.tokenT], fillValueT);
-        balances[taker][order.tokenM] = add(balances[taker][order.tokenM], fillValueM);
-        balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], fillValueT);
+        balances[maker][tokenM] = sub(balances[maker][tokenM], fillValueM);
+        balances[maker][tokenT] = add(balances[maker][tokenT], fillValueT);
+        balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], feeValueM);
+        balances[taker][tokenM] = add(balances[taker][tokenM], fillValueM);
+        balances[taker][tokenT] = sub(balances[taker][tokenT], fillValueT);
+        balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
+        balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
       });
       exUtil.batchFill(orders, { fillValuesM, from: taker }).then(() => {
-        // assert(newBalances[maker][dmyA.address] === sub(balances[maker][dmyA.address], fillValueM));
-        // assert(newBalances[maker][dmyB.address] === add(balances[maker][dmyB.address], fillValueT));
-        // assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-        // assert(newBalances[taker][dmyB.address] === sub(balances[taker][dmyB.address], fillValueT));
-        // assert(newBalances[taker][dmyA.address] === add(balances[taker][dmyA.address], fillValueM));
-        // assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-        // assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+        getDmyBalances().then(newBalances => {
+          assert(newBalances[maker][tokenM] === balances[maker][tokenM]);
+          assert(newBalances[maker][tokenT] === balances[maker][tokenT]);
+          assert(newBalances[maker][dmyPT.address] === balances[maker][dmyPT.address]);
+          assert(newBalances[taker][tokenT] === balances[taker][tokenT]);
+          assert(newBalances[taker][tokenM] === balances[taker][tokenM]);
+          assert(newBalances[taker][dmyPT.address] === balances[taker][dmyPT.address]);
+          assert(newBalances[feeRecipient][dmyPT.address] === balances[feeRecipient][dmyPT.address]);
+          done();
+        });
+      }).catch(e => {
+        assert(!e);
         done();
-      });
+      })
     });
 
     it('should allow tokens acquired in trade to be used in later trade', function(done) {
-      done()
+      dmyPT.setBalance(0, { from: taker }).then(() => {
+        balances[taker][dmyPT.address] = 0;
+        util.createOrder(orderFactory({ tokenM: dmyPT.address, feeT: 0 })).then(newOrder => {
+          orders[0] = newOrder;
+          let rest = orders.slice(1);
+          let fillValuesM = [0];
+          rest.forEach(order => {
+            fillValuesM[0] = add(fillValuesM[0], order.feeT);
+            fillValuesM.push(order.valueM);
+          });
+          orders.forEach((order, i) => {
+            let fillValueM = fillValuesM[i];
+            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], fillValueM);
+            balances[maker][order.tokenT] = add(balances[maker][order.tokenT], fillValueT);
+            balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], feeValueM);
+            balances[taker][order.tokenM] = add(balances[taker][order.tokenM], fillValueM);
+            balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], fillValueT);
+            balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
+            balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
+          });
+          exUtil.batchFill(orders, { fillValuesM, from: taker }).then(() => {
+            getDmyBalances().then(newBalances => {
+              assert(newBalances[maker][dmyA.address] === balances[maker][dmyA.address]);
+              assert(newBalances[maker][dmyB.address] === balances[maker][dmyB.address]);
+              assert(newBalances[maker][dmyPT.address] === balances[maker][dmyPT.address]);
+              assert(newBalances[taker][dmyB.address] === balances[taker][dmyB.address]);
+              assert(newBalances[taker][dmyA.address] === balances[taker][dmyA.address]);
+              assert(newBalances[taker][dmyPT.address] === balances[taker][dmyPT.address]);
+              assert(newBalances[feeRecipient][dmyPT.address] === balances[feeRecipient][dmyPT.address]);
+              dmyPT.setBalance(INIT_BAL, { from: taker }).then(() => {
+                done();
+              });
+            });
+          }).catch(e => {
+            dmyPT.setBalance(INIT_BAL, { from: taker }).then(() => {
+              assert(!e);
+              done();
+            });
+          })
+        });
+      });
     });
 
     it('should cost less gas per order to execute batchFill', function(done) {
@@ -410,10 +463,21 @@ contract('Exchange', function(accounts) {
           assert(cmp(res.receipt.gasUsed, totalGas) === -1);
           done();
         }).catch(e => {
+          //why does this error sometimes?
           assert(!e);
           done();
         });
       });
+    });
+
+    it('should log 2 events per order', function(done) {
+      exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
+        assert(res.logs.length = orders.length * 2);
+        done();
+      }).catch(e => {
+        assert(!e);
+        done();
+      })
     });
   });
 
