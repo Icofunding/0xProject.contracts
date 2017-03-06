@@ -5,7 +5,7 @@ const DummyTokenB = artifacts.require('./DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 
 const util = require('../../util/index.js')(web3);
-const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
+const { add, sub, mul, div, cmp, toSmallestUnits } = util.BNutil;
 const assert = require('assert');
 
 contract('Exchange', function(accounts) {
@@ -89,17 +89,17 @@ contract('Exchange', function(accounts) {
       return Promise.all([
         dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
         dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyA.buy(INIT_BAL, { from: maker }),
-        dmyA.buy(INIT_BAL, { from: taker }),
+        dmyA.setBalance(INIT_BAL, { from: maker }),
+        dmyA.setBalance(INIT_BAL, { from: taker }),
         dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
         dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyB.buy(INIT_BAL, { from: maker }),
-        dmyB.buy(INIT_BAL, { from: taker }),
+        dmyB.setBalance(INIT_BAL, { from: maker }),
+        dmyB.setBalance(INIT_BAL, { from: taker }),
         dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
         dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyPT.buy(INIT_BAL, { from: maker }),
-        dmyPT.buy(INIT_BAL, { from: taker })
-      ]).then(() => done());
+        dmyPT.setBalance(INIT_BAL, { from: maker }),
+        dmyPT.setBalance(INIT_BAL, { from: taker })
+      ]).then(() => done()).catch(e => console.log(e))
     });
   });
 
@@ -366,8 +366,40 @@ contract('Exchange', function(accounts) {
         util.createOrder(orderFactory())
       ]).then(newOrders => {
         orders = newOrders;
+        getDmyBalances().then(newBalances => {
+          balances = newBalances;
+          done();
+        });
+      });
+    });
+
+    it('should transfer the correct amounts', function(done) {
+      let fillValuesM = [];
+      let tokenM = dmyA.address;
+      let tokenT = dmyB.address;
+      orders.forEach((order, i) => {
+        let fillValueM = div(order.valueM, 2);
+        let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+        fillValuesM.push(fillValueM);
+        balances[order.maker][order.tokenM] = sub(balances[order.maker][order.tokenM], fillValueM);
+        balances[order.maker][order.tokenT] = add(balances[order.maker][order.tokenT], fillValueT);
+        balances[taker][order.tokenM] = add(balances[taker][order.tokenM], fillValueM);
+        balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], fillValueT);
+      });
+      exUtil.batchFill(orders, { fillValuesM, from: taker }).then(() => {
+        // assert(newBalances[maker][dmyA.address] === sub(balances[maker][dmyA.address], fillValueM));
+        // assert(newBalances[maker][dmyB.address] === add(balances[maker][dmyB.address], fillValueT));
+        // assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
+        // assert(newBalances[taker][dmyB.address] === sub(balances[taker][dmyB.address], fillValueT));
+        // assert(newBalances[taker][dmyA.address] === add(balances[taker][dmyA.address], fillValueM));
+        // assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
+        // assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
         done();
       });
+    });
+
+    it('should allow tokens acquired in trade to be used in later trade', function(done) {
+      done()
     });
 
     it('should cost less gas per order to execute batchFill', function(done) {
@@ -375,7 +407,7 @@ contract('Exchange', function(accounts) {
         let totalGas = 0;
         res.forEach(tx => totalGas = add(totalGas, tx.receipt.gasUsed));
         exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
-          assert(res.receipt.gasUsed < totalGas);
+          assert(cmp(res.receipt.gasUsed, totalGas) === -1);
           done();
         }).catch(e => {
           assert(!e);

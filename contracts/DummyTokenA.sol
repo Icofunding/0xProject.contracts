@@ -1,6 +1,5 @@
 pragma solidity ^0.4.8;
 
-import "./Token.sol";
 import "./StandardToken.sol";
 
 contract DummyTokenA is StandardToken {
@@ -10,8 +9,7 @@ contract DummyTokenA is StandardToken {
     totalSupply = _value;
   }
 
-  function buy(uint256 _value) {
-    balances[msg.sender] += _value;
-    totalSupply += _value;
+  function setBalance(uint256 _value) {
+    balances[msg.sender] = _value;
   }
 }
