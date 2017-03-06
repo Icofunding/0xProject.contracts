@@ -151,6 +151,11 @@ contract('Exchange', function(accounts) {
       });
     });
 
+    it('transferFrom should be private', function(done) {
+      assert(exchange.transferFrom === undefined);
+      done();
+    });
+    
     it('getFillValueT should throw if there is a rounding error', function(done) {
       done();
     });
@@ -460,6 +465,8 @@ contract('Exchange', function(accounts) {
         let totalGas = 0;
         res.forEach(tx => totalGas = add(totalGas, tx.receipt.gasUsed));
         exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
+          console.log('fill:', totalGas);
+          console.log('batchFill:', res.receipt.gasUsed);
           assert(cmp(res.receipt.gasUsed, totalGas) === -1);
           done();
         }).catch(e => {
