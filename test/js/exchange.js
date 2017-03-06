@@ -112,37 +112,21 @@ contract('Exchange', function(accounts) {
     });
 
     it('getOrderHash should output the correct orderHash', function(done) {
-      exchange.getOrderHash(
-        [order.maker, order.taker],
-        [order.tokenM, order.tokenT],
-        [order.valueM, order.valueT],
-        order.expiration
-      ).then(orderHash => {
+      exUtil.getOrderHash(order).then(orderHash => {
         assert(order.orderHash === orderHash);
         done();
       });
     });
 
     it('getMsgHash should output the correct msgHash', function(done) {
-      exchange.getMsgHash(
-        order.orderHash,
-        order.feeRecipient,
-        [order.feeM, order.feeT]
-      ).then(msgHash => {
+      exUtil.getMsgHash(order).then(msgHash => {
         assert(util.getMsgHash(order, { hex: true }) === msgHash);
         done();
       });
     });
 
     it('validSignature should return true with a valid signature', function(done) {
-      let msgHash = util.getMsgHash(order, { hex: true });
-      exchange.validSignature(
-        order.maker,
-        msgHash,
-        order.v,
-        order.r,
-        order.s
-      ).then(success => {
+      exUtil.validSignature(order).then(success => {
         assert(util.validSignature(order));
         assert(success);
         done();
@@ -152,14 +136,7 @@ contract('Exchange', function(accounts) {
     it('validSignature should return false with an invalid signature', function(done) {
       order.r = util.sha3('invalidR');
       order.s = util.sha3('invalidS');
-      let msgHash = util.getMsgHash(order, { hex: true });
-      exchange.validSignature(
-        order.maker,
-        msgHash,
-        order.v,
-        order.r,
-        order.s
-      ).then(success => {
+      exUtil.validSignature(order).then(success => {
         assert(!util.validSignature(order));
         assert(!success);
         done();
@@ -167,14 +144,8 @@ contract('Exchange', function(accounts) {
     });
 
     it('validSignature should return false with an invalid message hash', function(done) {
-      let msgHash = util.sha3('invalid');
-      exchange.validSignature(
-        order.maker,
-        msgHash,
-        order.v,
-        order.r,
-        order.s
-      ).then(success => {
+      order.orderHash = util.sha3('invalid');
+      exUtil.validSignature(order).then(success => {
         assert(!success);
         done();
       });
@@ -299,8 +270,7 @@ contract('Exchange', function(accounts) {
     it('should throw when taker is specified and order is claimed by other', function(done) {
       util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
-        exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
           assert(!res);
           done();
         }).catch(e => {
@@ -313,8 +283,7 @@ contract('Exchange', function(accounts) {
     it('should throw if an order is expired', function(done) {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
-        exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
           assert(!res);
           done();
         }).catch(e => {
@@ -325,8 +294,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should throw if fillValueM > valueM', function(done) {
-      let fillValueM = add(order.valueM, 1);
-      exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+      exUtil.fill(order, { fillValueM: add(order.valueM, 1), from: taker }).then(res => {
         assert(!res);
         done();
       }).catch(e => {
@@ -354,8 +322,7 @@ contract('Exchange', function(accounts) {
         order = newOrder;
         order.r = util.sha3('invalidR');
         order.s = util.sha3('invalidS');
-        let fillValueM = div(order.valueM, 2);
-        exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
           assert(!res);
           done();
         }).catch(e => {
@@ -368,8 +335,7 @@ contract('Exchange', function(accounts) {
     it('should throw if a transfer fails', function(done){
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = order.valueM;
-        exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+        exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(res => {
           assert(!res);
           done();
         }).catch(e => {
@@ -380,8 +346,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should log 2 events', function(done) {
-      let fillValueM = div(order.valueM, 2);
-      exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+      exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
         assert(res.logs.length === 2);
         done();
       }).catch(e => {
@@ -394,32 +359,29 @@ contract('Exchange', function(accounts) {
 
   describe('batchFill', function() {
     let orders;
-    let fillValuesM;
     beforeEach(function(done) {
       Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory())
       ]).then(newOrders => {
         orders = newOrders;
-        fillValuesM = [
-          div(orders[0].valueM, 2),
-          div(orders[1].valueM, 2),
-          div(orders[2].valueM, 2)
-        ];
         done();
       });
     });
 
     it('should cost less gas per order to execute batchFill', function(done) {
-      exUtil.batchFill(orders, { fillValuesM, from: taker }).then(res => {
-        console.log(res);
-        done();
-      }).catch(e => {
-        console.log(e);
-        assert(!e);
-        done();
-      })
+      Promise.all(orders.map(order => exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }))).then(res => {
+        let totalGas = 0;
+        res.forEach(tx => totalGas = add(totalGas, tx.receipt.gasUsed));
+        exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
+          assert(res.receipt.gasUsed < totalGas);
+          done();
+        }).catch(e => {
+          assert(!e);
+          done();
+        });
+      });
     });
   });
 
@@ -432,8 +394,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should throw if not sent by maker', function(done) {
-      let cancelValueM = order.valueM;
-      exUtil.cancel(order, { cancelValueM, from: taker }).then(res => {
+      exUtil.cancel(order, { cancelValueM: order.valueM, from: taker }).then(res => {
         assert(!res);
         done();
       }).catch(e => {
@@ -443,8 +404,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should throw if cancelValueM === 0', function(done) {
-      let cancelValueM = 0;
-      exUtil.cancel(order, { cancelValueM, from: maker }).then(res => {
+      exUtil.cancel(order, { cancelValueM: 0, from: maker }).then(res => {
         assert(!res);
         done();
       }).catch(e => {
@@ -454,10 +414,8 @@ contract('Exchange', function(accounts) {
     });
 
     it('should be able to cancel a full order', function(done) {
-      let cancelValueM = order.valueM;
-      exUtil.cancel(order, { cancelValueM, from: maker }).then(() => {
-        let fillValueM = 1;
-        exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(() => {
+        exUtil.fill(order, { fillValueM: 1, from: taker }).then(res => {
           assert(!res);
           done();
         }).catch(e => {
@@ -471,12 +429,9 @@ contract('Exchange', function(accounts) {
     });
 
     it('should be able to cancel part of an order', function(done) {
-      let cancelValueM = div(order.valueM, 2);
-      exUtil.cancel(order, { cancelValueM, from: maker }).then(() => {
-        let fillValueM = div(order.valueM, 4);
-        exUtil.fill(order, { fillValueM, from: taker }).then(() => {
-          fillValueM = add(div(order.valueM, 4), 1);
-          exUtil.fill(order, { fillValueM, from: taker }).then(res => {
+      exUtil.cancel(order, { cancelValueM: div(order.valueM, 2), from: maker }).then(() => {
+        exUtil.fill(order, { fillValueM: div(order.valueM, 4), from: taker }).then(() => {
+          exUtil.fill(order, { fillValueM: add(div(order.valueM, 4), 1), from: taker }).then(res => {
             assert(!res);
             done();
           }).catch(e => {
@@ -491,8 +446,7 @@ contract('Exchange', function(accounts) {
     });
 
     it('should log 1 event', function(done) {
-      let cancelValueM = div(order.valueM, 2);
-      exUtil.cancel(order, { cancelValueM, from: maker }).then(res => {
+      exUtil.cancel(order, { cancelValueM: div(order.valueM, 2), from: maker }).then(res => {
         assert(res.logs.length === 1);
         done();
       }).catch(e => {

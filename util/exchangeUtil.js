@@ -1,4 +1,5 @@
 const { createFill, createBatchFill, createCancel } = require('./formatUtil.js');
+const { getMsgHash } = require('./hashUtil.js');
 
 module.exports = exchange => {
   return {
@@ -41,6 +42,31 @@ module.exports = exchange => {
         params.expiration,
         params.cancelValueM,
         { from }
+      );
+    },
+    getOrderHash: order => {
+      let params = createFill(order);
+      return exchange.getOrderHash(
+        params.traders,
+        params.tokens,
+        params.values,
+        params.expiration
+      );
+    },
+    getMsgHash: order => {
+      return exchange.getMsgHash(
+        order.orderHash,
+        order.feeRecipient,
+        [order.feeM, order.feeT]
+      );
+    },
+    validSignature: order => {
+      return exchange.validSignature(
+        order.maker,
+        getMsgHash(order, { hex: true }),
+        order.v,
+        order.r,
+        order.s
       );
     }
   };
