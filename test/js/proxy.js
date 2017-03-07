@@ -73,6 +73,16 @@ contract('Proxy', function(accounts) {
         done();
       });
     });
+
+    it('should log 1 event', function(done) {
+      proxy.setAuthorization(notOwner, false, { from: owner }).then(res => {
+        assert(res.logs.length === 1);
+        done();
+      }).catch(e => {
+        assert(!e);
+        done();
+      });
+    });
   });
 
   describe('transferFrom', function() {
@@ -95,7 +105,7 @@ contract('Proxy', function(accounts) {
         let [ownerBalance, notOwnerBalance] = balances;
         proxy.setAuthorization(owner, true, { from: owner }).then(res => {
           let transferAmt = 10000;
-          proxy.transferFrom(dmyA.address, owner, notOwner, transferAmt, { from: owner}).then(res => {
+          proxy.transferFrom(dmyA.address, owner, notOwner, transferAmt, { from: owner }).then(res => {
             Promise.all([
               dmyA.balanceOf(owner),
               dmyA.balanceOf(notOwner)

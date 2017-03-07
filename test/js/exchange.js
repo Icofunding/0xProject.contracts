@@ -37,7 +37,7 @@ contract('Exchange', function(accounts) {
       valueT: toSmallestUnits(200),
       feeM: toSmallestUnits(1),
       feeT: toSmallestUnits(1),
-      expiration: Math.floor((Date.now() + Math.random() * 100000) / 1000)
+      expiration: Math.floor((Date.now() + Math.random() * 1000000) / 1000)
     };
     return Object.assign({}, defaultParams, params);
   };
@@ -45,15 +45,15 @@ contract('Exchange', function(accounts) {
   const getDmyBalances = () => {
     return new Promise((resolve, reject) => {
       Promise.all([
-        dmyA.balanceOf.call(maker),
-        dmyA.balanceOf.call(taker),
-        dmyA.balanceOf.call(feeRecipient),
-        dmyB.balanceOf.call(maker),
-        dmyB.balanceOf.call(taker),
-        dmyB.balanceOf.call(feeRecipient),
-        dmyPT.balanceOf.call(maker),
-        dmyPT.balanceOf.call(taker),
-        dmyPT.balanceOf.call(feeRecipient)
+        dmyA.balanceOf(maker),
+        dmyA.balanceOf(taker),
+        dmyA.balanceOf(feeRecipient),
+        dmyB.balanceOf(maker),
+        dmyB.balanceOf(taker),
+        dmyB.balanceOf(feeRecipient),
+        dmyPT.balanceOf(maker),
+        dmyPT.balanceOf(taker),
+        dmyPT.balanceOf(feeRecipient)
       ]).then(res => {
         let newBalances = {
           [maker]: {},
@@ -155,7 +155,7 @@ contract('Exchange', function(accounts) {
       assert(exchange.transferFrom === undefined);
       done();
     });
-    
+
     it('getFillValueT should throw if there is a rounding error', function(done) {
       done();
     });
@@ -465,12 +465,11 @@ contract('Exchange', function(accounts) {
         let totalGas = 0;
         res.forEach(tx => totalGas = add(totalGas, tx.receipt.gasUsed));
         exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
-          console.log('fill:', totalGas);
-          console.log('batchFill:', res.receipt.gasUsed);
+          // console.log('fill:', totalGas);
+          // console.log('batchFill:', res.receipt.gasUsed);
           assert(cmp(res.receipt.gasUsed, totalGas) === -1);
           done();
         }).catch(e => {
-          //why does this error sometimes?
           assert(!e);
           done();
         });
