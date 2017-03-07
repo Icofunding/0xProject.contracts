@@ -6,7 +6,6 @@ const BNutil = require('../../util/BNutil.js');
 contract('Proxy', function(accounts) {
   const owner = accounts[0];
   const notOwner = accounts[1];
-  const authorized = Exchange.address;
 
   const INIT_BAL = 100000000;
   const INIT_ALLOW = 100000000;
@@ -33,15 +32,15 @@ contract('Proxy', function(accounts) {
 
   describe('isAuthorized', function() {
     it('should return true if authorized', function(done) {
-      proxy.isAuthorized(authorized).then(success => {
-        assert(success);
+      proxy.isAuthorized(Exchange.address).then(authorized => {
+        assert(authorized);
         done();
       });
     });
 
     it('should return false if not authorized', function(done) {
-      proxy.isAuthorized(owner).then(success => {
-        assert(!success);
+      proxy.isAuthorized(owner).then(authorized => {
+        assert(!authorized);
         done();
       });
     });
@@ -60,11 +59,11 @@ contract('Proxy', function(accounts) {
 
     it('should allow owner to set authorization', function(done) {
       proxy.setAuthorization(notOwner, true, { from: owner }).then(res => {
-        proxy.isAuthorized(notOwner).then(success => {
-          assert(success);
+        proxy.isAuthorized(notOwner).then(authorized => {
+          assert(authorized);
           proxy.setAuthorization(notOwner, false, { from: owner }).then(res => {
-            proxy.isAuthorized(notOwner).then(success => {
-              assert(!success);
+            proxy.isAuthorized(notOwner).then(authorized => {
+              assert(!authorized);
               done();
             });
           });
