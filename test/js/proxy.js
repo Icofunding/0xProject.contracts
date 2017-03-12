@@ -1,6 +1,6 @@
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
-const DummyTokenA = artifacts.require('./DummyTokenA.sol');
+const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const BNutil = require('../../util/BNutil.js');
 
 contract('Proxy', accounts => {

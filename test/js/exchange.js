@@ -1,8 +1,8 @@
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
-const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const DummyTokenB = artifacts.require('./DummyTokenB.sol');
-const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
+const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
+const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
+const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
 const assert = require('assert');
 const util = require('../../util/index.js')(web3);
@@ -355,6 +355,7 @@ contract('Exchange', accounts => {
 
     it('should log 2 events', done => {
       exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
+        // console.log('gasgUsed:', res.receipt.gasUsed);
         assert(res.logs.length === 2);
         done();
       }).catch(e => {

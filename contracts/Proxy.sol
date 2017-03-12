@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-import "./Token.sol";
+import "./tokens/Token.sol";
 import "./Ownable.sol";
 
 contract Proxy is Ownable {
