@@ -65,17 +65,16 @@ contract Exchange is SafeMath {
   */
 
   /// @dev Fills an order with specified parameters and ECDSA signature.
-  /// @param traders Addresses array of order maker, taker.
+  /// @param traders Array of order maker and taker addresses.
   /// @param feeRecipient Address that receives order fees.
-  /// @param tokens Addresses array of order tokenM, tokenT.
-  /// @param values Array of order valueM, valueT.
-  /// @param fees Array of order feeM, feeT.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
   /// @param fillValueM Desired amount of tokenM to fill in order.
   /// @param v ECDSA signature parameter v.
-  /// @param rs Array of ECDSA signature parameters r, s.
-  /// @return filledValueM Total amount of tokenM filled in trade.
-
+  /// @param rs Array of ECDSA signature parameters r and s.
+  /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
     address feeRecipient,
@@ -164,13 +163,12 @@ contract Exchange is SafeMath {
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
-  /// @param traders Addresses array of order maker, taker.
-  /// @param tokens Addresses array of order tokenM, tokenT.
-  /// @param values Array of order valueM, valueT.
+  /// @param traders Array of order maker and taker addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param values Array of order valueM and valueT.
   /// @param expiration Time order expires in seconds.
   /// @param cancelValueM Desired amount of tokenM to cancel in order.
-  /// @return cancelledValueM Total amount of tokenM cancelled.
-
+  /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
     address[2] tokens,
@@ -213,8 +211,7 @@ contract Exchange is SafeMath {
   /// @param valueM Amount of tokenM specified in order.
   /// @param valueT Amount of tokenT specified in order.
   /// @param fillValueM Amount of tokenM to be filled.
-  /// @return fillValueT Amount of tokenT to be filled.
-
+  /// @return Amount of tokenT to fill.
   function getFillValueT(uint256 valueM, uint256 valueT, uint256 fillValueM)
     constant
     internal
@@ -229,8 +226,7 @@ contract Exchange is SafeMath {
   /// @param valueM Amount of tokenM specified in order.
   /// @param fillValueM Amount of tokenM to be filled.
   /// @param fee Amount of feeM or feeT specified in order.
-  /// @return feeValue Amount of feeM or feeT to be paid for fill.
-
+  /// @return Amount of feeM or feeT to be paid for fill.
   function getFeeValue(uint256 valueM, uint256 fillValueM, uint256 fee)
     constant
     internal
@@ -240,12 +236,11 @@ contract Exchange is SafeMath {
   }
 
   /// @dev Calculates Keccak-256 hash of order with specified parameters.
-  /// @param traders Addresses array of order maker, taker.
-  /// @param tokens Addresses array of order tokenM, tokenT.
-  /// @param values Array of order valueM, valueT.
+  /// @param traders Array of order maker and taker addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param values Array of order valueM and valueT.
   /// @param expiration Time order expires in seconds.
-  /// @return orderHash Keccak-256 hash of order.
-
+  /// @return Keccak-256 hash of order.
   function getOrderHash(
     address[2] traders,
     address[2] tokens,
@@ -269,9 +264,8 @@ contract Exchange is SafeMath {
   /// @dev Calculates hash of data signed by maker.
   /// @param orderHash Keccak-256 hash of order.
   /// @param feeRecipient Address that receives order fees.
-  /// @param fees Array of order feeM, feeT.
-  /// @return msgHash Keccak-256 hash of orderHash and fee data.
-
+  /// @param fees Array of order feeM and feeT.
+  /// @return Keccak-256 hash of orderHash and fee data.
   function getMsgHash(bytes32 orderHash, address feeRecipient, uint256[2] fees)
     constant
     returns (bytes32 msgHash)
@@ -290,8 +284,7 @@ contract Exchange is SafeMath {
   /// @param v ECDSA signature parameter v.
   /// @param r ECDSA signature parameters r.
   /// @param s ECDSA signature parameters s.
-  /// @return success Validity of order signature.
-
+  /// @return Validity of order signature.
   function validSignature(
     address maker,
     bytes32 msgHash,
@@ -317,7 +310,6 @@ contract Exchange is SafeMath {
   /// @param addresses Array of maker, taker, tokenM, tokenT, and feeRecipient addresses.
   /// @param values Array of valueM, valueT, expiration, feeM, feeT, fillValueM, and remainingValueM.
   /// @param orderHash Keccak-256 hash of order.
-
   function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash)
     internal
     returns (bool success)
@@ -360,8 +352,7 @@ contract Exchange is SafeMath {
   /// @param _from Address transfering token.
   /// @param _to Address receiving token.
   /// @param _value Amount of token to transfer.
-  /// @return success Success of token transfer.
-
+  /// @return Success of token transfer.
   function transferFrom(
     address _token,
     address _from,
@@ -383,17 +374,16 @@ contract Exchange is SafeMath {
   */
 
   /// @dev Fills all of desired fill amount of an order or nothing.
-  /// @param traders Addresses array of order maker, taker.
+  /// @param traders Array of order maker and taker addresses.
   /// @param feeRecipient Address that receives order fees.
-  /// @param tokens Addresses array of order tokenM, tokenT.
-  /// @param values Array of order valueM, valueT.
-  /// @param fees Array of order feeM, feeT.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
   /// @param fillValueM Desired amount of tokenM to fill in order.
   /// @param v ECDSA signature parameter v.
-  /// @param rs Array of ECDSA signature parameters r, s.
-  /// @return success Success of entire fillValueM being filled.
-
+  /// @param rs Array of ECDSA signature parameters r and s.
+  /// @return Success of entire fillValueM being filled.
   function fillOrKill(
     address[2] traders,
     address feeRecipient,
@@ -420,7 +410,17 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  //batch fills array of orders, throws if any fill amounts are not as predicted
+  /// @dev Synchronously executes multiple fillOrKill orders in a single transaction.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+  /// @param v Array ECDSA signature v parameters.
+  /// @param rs Array of ECDSA signature parameters r and s tuples.
+  /// @return Success of all orders being filled with respective fillValueM.
   function batchFill(
     address[2][] traders,
     address[] feeRecipients,
@@ -449,7 +449,17 @@ contract Exchange is SafeMath {
     return true;
   }
 
-  //fills array of orders until entire fillValueM filled
+  /// @dev Synchronously executes multiple fill orders in a single transaction until total fillValueM filled.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param fillValueM Desired total amount of tokenM to fill in orders.
+  /// @param v Array ECDSA signature v parameters.
+  /// @param rs Array of ECDSA signature parameters r and s tuples.
+  /// @return Total amount of fillValueM filled in orders.
   function fillUntil(
     address[2][] traders,
     address[] feeRecipients,
@@ -460,27 +470,35 @@ contract Exchange is SafeMath {
     uint256 fillValueM,
     uint8[] v,
     bytes32[2][] rs)
-    returns (uint256 fillValueMLeft)
+    returns (uint256 filledValueM)
   {
     address tokenM = tokens[0][0];
+    uint256 fillValueMLeft = fillValueM;
     for (uint256 i = 0; i < traders.length; i++) {
       assert(tokenM == tokens[i][0]);
-      fillValueM = safeSub(fillValueM, fill(
+      fillValueMLeft = safeSub(fillValueMLeft, fill(
         traders[i],
         feeRecipients[i],
         tokens[i],
         values[i],
         fees[i],
         expirations[i],
-        fillValueM,
+        fillValueMLeft,
         v[i],
         rs[i]
       ));
-      if (fillValueM == 0) break;
+      if (fillValueMLeft == 0) break;
     }
-    return fillValueM;
+    return safeSub(fillValueM, fillValueMLeft);
   }
 
+  /// @dev Synchronously cancels multiple orders in a single transaction.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param cancelValuesM Array of desired amounts of tokenM to cancel in orders.
+  /// @return Success of all orders being cancelled with at least desired amounts.
   function batchCancel(
     address[2][] traders,
     address[2][] tokens,
@@ -490,13 +508,13 @@ contract Exchange is SafeMath {
     returns (bool success)
   {
     for (uint256 i = 0; i < traders.length; i++) {
-      assert(cancel(
+      cancel(
         traders[i],
         tokens[i],
         values[i],
         expirations[i],
         cancelValuesM[i]
-      ) == cancelValuesM[i]);
+      );
       return true;
     }
   }
