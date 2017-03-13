@@ -468,7 +468,7 @@ contract('Exchange', accounts => {
         res.forEach(tx => {
           totalGas = add(totalGas, tx.receipt.gasUsed);
         });
-        exUtil.batchFill(os, { fillValuesM: os.map(o => div(o.valueM, 2)), from: taker }).then(innerRes => {
+        exUtil.batchFill(orders, { fillValuesM: orders.map(o => div(o.valueM, 2)), from: taker }).then(innerRes => {
           // console.log('fill:', totalGas);
           // console.log('batchFill:', innerRes.receipt.gasUsed);
           assert(cmp(innerRes.receipt.gasUsed, totalGas) === -1);
@@ -482,7 +482,7 @@ contract('Exchange', accounts => {
 
     it('should log 2 events per order', done => {
       exUtil.batchFill(orders, { fillValuesM: orders.map(o => div(o.valueM, 2)), from: taker }).then(res => {
-        assert(res.logs.length === os.length * 2);
+        assert(res.logs.length === orders.length * 2);
         done();
       }).catch(e => {
         assert(!e);
