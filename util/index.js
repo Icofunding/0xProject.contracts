@@ -1,21 +1,21 @@
 const ethUtil = require('ethereumjs-util');
 const { getOrderHash, getMsgHash } = require('./hashUtil.js');
-const { createFill, createBatchFill, createCancel } = require('./formatUtil.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
 
 module.exports = web3 => {
-  return {
-    createOrder: params => {
-      return new Promise((resolve, reject) => {
+  const index = {
+    createOrder: initialParams => {
+      const params = initialParams;
+      const order = new Promise((resolve, reject) => {
         params.orderHash = getOrderHash(params, { hex: true });
-        let msgHash = getMsgHash(params, { hex: true, hashPersonal: true });
+        const msgHash = getMsgHash(params, { hex: true, hashPersonal: true });
         web3.eth.sign(params.maker, msgHash, (err, sig) => {
           if (err) {
             reject(err);
           }
-          let { v, r, s } = ethUtil.fromRpcSig(sig);
-          let { maker, taker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration, orderHash } = params;
+          const { v, r, s } = ethUtil.fromRpcSig(sig);
+          const { maker, taker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration, orderHash } = params;
           resolve({
             maker,
             taker,
@@ -30,19 +30,19 @@ module.exports = web3 => {
             expiration,
             v,
             r: ethUtil.bufferToHex(r),
-            s: ethUtil.bufferToHex(s)
+            s: ethUtil.bufferToHex(s),
           });
         });
       });
+      return order;
     },
     validSignature: (order, { hashPersonal = true } = {}) => {
-      let msgHash = getMsgHash(order, { hashPersonal });
-      let { v, r, s } = order;
+      const msgHash = getMsgHash(order, { hashPersonal });
+      const { v, r, s } = order;
       try {
-        let pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+        const pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
         return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
-      }
-      catch(err) {
+      } catch (err) {
         return false;
       }
     },
@@ -50,6 +50,7 @@ module.exports = web3 => {
     getOrderHash,
     getMsgHash,
     BNutil,
-    exchangeUtil
+    exchangeUtil,
   };
+  return index;
 };

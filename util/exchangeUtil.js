@@ -2,9 +2,9 @@ const { createFill, createBatchFill, createCancel } = require('./formatUtil.js')
 const { getMsgHash } = require('./hashUtil.js');
 
 module.exports = exchange => {
-  return {
+  const exchangeUtil = {
     fill: (order, { fillValueM, from }) => {
-      let params = createFill(order, fillValueM);
+      const params = createFill(order, fillValueM);
       return exchange.fill(
         params.traders,
         params.feeRecipient,
@@ -19,7 +19,7 @@ module.exports = exchange => {
       );
     },
     batchFill: (orders, { fillValuesM, from }) => {
-      let params = createBatchFill(orders, fillValuesM);
+      const params = createBatchFill(orders, fillValuesM);
       return exchange.batchFill(
         params.traders,
         params.feeRecipients,
@@ -34,7 +34,7 @@ module.exports = exchange => {
       );
     },
     cancel: (order, { cancelValueM, from }) => {
-      let params = createCancel(order, cancelValueM);
+      const params = createCancel(order, cancelValueM);
       return exchange.cancel(
         params.traders,
         params.tokens,
@@ -45,7 +45,7 @@ module.exports = exchange => {
       );
     },
     getOrderHash: order => {
-      let params = createFill(order);
+      const params = createFill(order);
       return exchange.getOrderHash(
         params.traders,
         params.tokens,
@@ -54,20 +54,23 @@ module.exports = exchange => {
       );
     },
     getMsgHash: order => {
-      return exchange.getMsgHash(
+      const msgHash = exchange.getMsgHash(
         order.orderHash,
         order.feeRecipient,
         [order.feeM, order.feeT]
       );
+      return msgHash;
     },
     validSignature: order => {
-      return exchange.validSignature(
+      const validSignature = exchange.validSignature(
         order.maker,
         getMsgHash(order, { hex: true }),
         order.v,
         order.r,
         order.s
       );
-    }
+      return validSignature;
+    },
   };
+  return exchangeUtil;
 };
