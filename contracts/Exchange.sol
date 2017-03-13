@@ -75,7 +75,7 @@ contract Exchange is SafeMath {
     uint256 fillValueM,
     uint8 v,
     bytes32[2] rs)
-    returns (bool success)
+    returns (uint256 filledValueM)
   {
    assert(block.timestamp < expiration);
 
@@ -90,72 +90,76 @@ contract Exchange is SafeMath {
      expiration
    );
 
-   assert(safeAdd(fills[orderHash], fillValueM) <= values[0]);
+    if (safeAdd(fills[orderHash], fillValueM) > values[0]) {
+      fillValueM = safeSub(values[0], fills[orderHash]);
+    }
 
-   assert(validSignature(
-     traders[0],
-     getMsgHash(orderHash, feeRecipient, fees),
-     v,
-     rs[0],
-     rs[1]
-   ));
+    if (fillValueM != 0) {
+      assert(validSignature(
+        traders[0],
+        getMsgHash(orderHash, feeRecipient, fees),
+        v,
+        rs[0],
+        rs[1]
+      ));
 
-   assert(transferFrom(
-     tokens[0],
-     traders[0],
-     msg.sender,
-     fillValueM
-   ));
+      assert(transferFrom(
+        tokens[0],
+        traders[0],
+        msg.sender,
+        fillValueM
+      ));
 
-   assert(transferFrom(
-     tokens[1],
-     msg.sender,
-     traders[0],
-     getFillValueT(values[0], values[1], fillValueM)
-   ));
+      assert(transferFrom(
+        tokens[1],
+        msg.sender,
+        traders[0],
+        getFillValueT(values[0], values[1], fillValueM)
+      ));
 
-   fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
+      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
 
-   if (feeRecipient != address(0)) {
-     if (fees[0] > 0) {
-       assert(transferFrom(
-         PROTOCOL_TOKEN,
-         traders[0],
-         feeRecipient,
-         getFeeValue(values[0], fillValueM, fees[0])
-       ));
-     }
-     if (fees[1] > 0) {
-       assert(transferFrom(
-         PROTOCOL_TOKEN,
-         msg.sender,
-         feeRecipient,
-         getFeeValue(values[0], fillValueM, fees[1])
-       ));
-     }
-   }
-   // log events
-   LogFillEvents(
-     [
-       traders[0],
-       msg.sender,
-       tokens[0],
-       tokens[1],
-       feeRecipient
-     ],
-     [
-       values[0],
-       values[1],
-       expiration,
-       fees[0],
-       fees[1],
-       fillValueM,
-       values[0] - fills[orderHash]
-     ],
-     orderHash
-   );
+      if (feeRecipient != address(0)) {
+        if (fees[0] > 0) {
+          assert(transferFrom(
+            PROTOCOL_TOKEN,
+            traders[0],
+            feeRecipient,
+            getFeeValue(values[0], fillValueM, fees[0])
+          ));
+        }
+        if (fees[1] > 0) {
+          assert(transferFrom(
+            PROTOCOL_TOKEN,
+            msg.sender,
+            feeRecipient,
+            getFeeValue(values[0], fillValueM, fees[1])
+          ));
+        }
+      }
+      // log events
+      LogFillEvents(
+        [
+          traders[0],
+          msg.sender,
+          tokens[0],
+          tokens[1],
+          feeRecipient
+        ],
+        [
+          values[0],
+          values[1],
+          expiration,
+          fees[0],
+          fees[1],
+          fillValueM,
+          values[0] - fills[orderHash]
+        ],
+        orderHash
+      );
+    }
 
-   return true;
+    return fillValueM;
   }
 
   function batchFill(
@@ -170,7 +174,7 @@ contract Exchange is SafeMath {
     bytes32[2][] rs)
     returns (bool success)
   {
-    for (uint8 i = 0; i < traders.length; i++) {
+    for (uint256 i = 0; i < traders.length; i++) {
       assert(fill(
         traders[i],
         feeRecipients[i],
@@ -181,9 +185,40 @@ contract Exchange is SafeMath {
         fillValuesM[i],
         v[i],
         rs[i]
-      ));
+      ) == fillValuesM[i]);
     }
     return true;
+  }
+
+  function fillUntil(
+    address[2][] traders,
+    address[] feeRecipients,
+    address[2][] tokens,
+    uint256[2][] values,
+    uint256[2][] fees,
+    uint256[] expirations,
+    uint256 fillValueM,
+    uint8[] v,
+    bytes32[2][] rs)
+    returns (uint256 fillValueMLeft)
+  {
+    address tokenM = tokens[0][0];
+    for (uint256 i = 0; i < traders.length; i++) {
+      assert(tokenM == tokens[i][0]);
+      fillValueM = safeSub(fillValueM, fill(
+        traders[i],
+        feeRecipients[i],
+        tokens[i],
+        values[i],
+        fees[i],
+        expirations[i],
+        fillValueM,
+        v[i],
+        rs[i]
+      ));
+      if (fillValueM == 0) break;
+    }
+    return fillValueM;
   }
 
   function cancel(
@@ -227,7 +262,7 @@ contract Exchange is SafeMath {
     uint256[] cancelValuesM)
     returns (bool success)
   {
-    for (uint8 i = 0; i < traders.length; i++) {
+    for (uint256 i = 0; i < traders.length; i++) {
       assert(cancel(
         traders[i],
         tokens[i],
@@ -280,7 +315,7 @@ contract Exchange is SafeMath {
     internal
     returns (uint256 fillValueT)
   {
-    assert(!(fillValueM > valueM || fillValueM == 0));
+    assert(fillValueM <= valueM);
     assert(!(valueT < 10**4 && valueT * fillValueM % valueM != 0)); // throw if rounding error > 0.01%
     return safeMul(fillValueM, valueT) / valueM;
   }
