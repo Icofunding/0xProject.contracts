@@ -77,24 +77,20 @@ contract Exchange is SafeMath {
     bytes32[2] rs)
     returns (uint256 filledValueM)
   {
-   assert(block.timestamp < expiration);
-
-   if (traders[1] != address(0)) {
-     assert(traders[1] == msg.sender);
-   }
-
-   bytes32 orderHash = getOrderHash(
-     traders,
-     tokens,
-     values,
-     expiration
-   );
-
+    assert(block.timestamp < expiration);
+    if (traders[1] != address(0)) {
+      assert(traders[1] == msg.sender);
+    }
+    bytes32 orderHash = getOrderHash(
+      traders,
+      tokens,
+      values,
+      expiration
+    );
     if (safeAdd(fills[orderHash], fillValueM) > values[0]) {
       fillValueM = safeSub(values[0], fills[orderHash]);
     }
-
-    if (fillValueM != 0) {
+    if (fillValueM > 0) {
       assert(validSignature(
         traders[0],
         getMsgHash(orderHash, feeRecipient, fees),
@@ -102,23 +98,19 @@ contract Exchange is SafeMath {
         rs[0],
         rs[1]
       ));
-
       assert(transferFrom(
         tokens[0],
         traders[0],
         msg.sender,
         fillValueM
       ));
-
       assert(transferFrom(
         tokens[1],
         msg.sender,
         traders[0],
         getFillValueT(values[0], values[1], fillValueM)
       ));
-
       fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
-
       if (feeRecipient != address(0)) {
         if (fees[0] > 0) {
           assert(transferFrom(
@@ -158,10 +150,10 @@ contract Exchange is SafeMath {
         orderHash
       );
     }
-
     return fillValueM;
   }
 
+  //batch fills array of orders, throws if any fills amounts are not as predicted
   function batchFill(
     address[2][] traders,
     address[] feeRecipients,
@@ -190,6 +182,7 @@ contract Exchange is SafeMath {
     return true;
   }
 
+  //fills array of orders until entire fillValueM filled
   function fillUntil(
     address[2][] traders,
     address[] feeRecipients,
@@ -231,7 +224,6 @@ contract Exchange is SafeMath {
   {
     assert(msg.sender == traders[0]);
     assert(cancelValueM > 0);
-
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -292,7 +284,6 @@ contract Exchange is SafeMath {
       values[5],
       values[6]
     );
-
     LogFillByToken(
       addresses[0],
       addresses[1],
