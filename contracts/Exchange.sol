@@ -183,7 +183,6 @@ contract Exchange is SafeMath {
         rs[i]
       ));
     }
-
     return true;
   }
 
@@ -218,6 +217,26 @@ contract Exchange is SafeMath {
       values[0] - fills[orderHash]
     );
     return true;
+  }
+
+  function batchCancel(
+    address[2][] traders,
+    address[2][] tokens,
+    uint256[2][] values,
+    uint256[] expirations,
+    uint256[] cancelValuesM)
+    returns (bool success)
+  {
+    for (uint8 i = 0; i < traders.length; i++) {
+      assert(cancel(
+        traders[i],
+        tokens[i],
+        values[i],
+        expirations[i],
+        cancelValuesM[i]
+      ));
+      return true;
+    }
   }
 
   //addresses = [maker, taker, tokenM, tokenT, feeRecipient]
