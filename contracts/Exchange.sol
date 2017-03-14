@@ -87,10 +87,10 @@ contract Exchange is SafeMath {
     bytes32[2] rs)
     returns (uint256 filledValueM)
   {
-    assert(block.timestamp < expiration);
     if (traders[1] != address(0)) {
       assert(traders[1] == msg.sender);
     }
+    if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -114,6 +114,7 @@ contract Exchange is SafeMath {
         orderHash,
         fillValueM
       ));
+      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
       assert(tradeFees(
         traders[0],
         msg.sender,
@@ -122,26 +123,26 @@ contract Exchange is SafeMath {
         fees,
         fillValueM
       ));
+      LogFillEvents(
+        [
+          traders[0],
+          msg.sender,
+          tokens[0],
+          tokens[1],
+          feeRecipient
+        ],
+        [
+          values[0],
+          values[1],
+          expiration,
+          fees[0],
+          fees[1],
+          fillValueM,
+          values[0] - fills[orderHash]
+        ],
+        orderHash
+      );
     }
-    LogFillEvents(
-      [
-        traders[0],
-        msg.sender,
-        tokens[0],
-        tokens[1],
-        feeRecipient
-      ],
-      [
-        values[0],
-        values[1],
-        expiration,
-        fees[0],
-        fees[1],
-        fillValueM,
-        values[0] - fills[orderHash]
-      ],
-      orderHash
-    );
     return fillValueM;
   }
 
@@ -190,6 +191,7 @@ contract Exchange is SafeMath {
       rs[1][0],
       rs[1][1]
     ));
+    //uint256 fillValueM = getFillValueM(orderHash, valueM, fillValueM)
     return (1, 1);
   }
 
@@ -209,7 +211,7 @@ contract Exchange is SafeMath {
     returns (uint256 cancelledValueM)
   {
     assert(msg.sender == traders[0]);
-    assert(fillValueM > 0);
+    if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -217,18 +219,20 @@ contract Exchange is SafeMath {
       expiration
     );
     fillValueM = getFillValueM(orderHash, values[0], fillValueM);
-    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
-    LogCancel(
-      traders[0],
-      tokens[0],
-      tokens[1],
-      values[0],
-      values[1],
-      expiration,
-      orderHash,
-      fillValueM,
-      values[0] - fills[orderHash]
-    );
+    if (fillValueM > 0) {
+      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
+      LogCancel(
+        traders[0],
+        tokens[0],
+        tokens[1],
+        values[0],
+        values[1],
+        expiration,
+        orderHash,
+        fillValueM,
+        values[0] - fills[orderHash]
+      );
+    }
     return fillValueM;
   }
 
@@ -389,7 +393,6 @@ contract Exchange is SafeMath {
       maker,
       getFillValueT(values[0], values[1], fillValueM)
     ));
-    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
     return true;
   }
 
