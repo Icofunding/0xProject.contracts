@@ -51,7 +51,7 @@ contract Exchange is SafeMath {
     uint256 valueT,
     uint256 expiration,
     bytes32 orderHash,
-    uint256 cancelValueM,
+    uint256 fillValueM,
     uint256 remainingValueM
   );
 
@@ -97,9 +97,7 @@ contract Exchange is SafeMath {
       values,
       expiration
     );
-    if (safeAdd(fills[orderHash], fillValueM) > values[0]) {
-      fillValueM = safeSub(values[0], fills[orderHash]);
-    }
+    fillValueM = getFillValueM(orderHash, values[0], fillValueM);
     if (fillValueM > 0) {
       assert(validSignature(
         traders[0],
@@ -162,33 +160,65 @@ contract Exchange is SafeMath {
     return fillValueM;
   }
 
+  function matchOrders(
+    address[2][2] traders,
+    address[2] feeRecipients,
+    address[2][2] tokens,
+    uint256[2][2] values,
+    uint256[2][2] fees,
+    uint256[2] expirations,
+    uint8[2] v,
+    bytes32[2][2] rs)
+    returns (bool success)
+  {
+    assert(expirations[0] < block.timestamp && expirations[1] < block.timestamp);
+    assert(isMatchable(tokens[0], tokens[1], values[0], values[1]));
+    if (traders[0][1] != address(0)) {
+      assert(msg.sender == traders[0][1]);
+    }
+    if (traders[1][1] != address(0)) {
+      assert(msg.sender == traders[1][1]);
+    }
+    bytes32 orderHash1 = getOrderHash(
+      traders[0],
+      tokens[0],
+      values[0],
+      expirations[0]
+    );
+    bytes32 orderHash2 = getOrderHash(
+      traders[1],
+      tokens[1],
+      values[1],
+      expirations[1]
+    );
+    return true;
+  }
+
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param values Array of order valueM and valueT.
   /// @param expiration Time order expires in seconds.
-  /// @param cancelValueM Desired amount of tokenM to cancel in order.
+  /// @param fillValueM Desired amount of tokenM to cancel in order.
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
     address[2] tokens,
     uint256[2] values,
     uint256 expiration,
-    uint256 cancelValueM)
+    uint256 fillValueM)
     returns (uint256 cancelledValueM)
   {
     assert(msg.sender == traders[0]);
-    assert(cancelValueM > 0);
+    assert(fillValueM > 0);
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
       values,
       expiration
     );
-    if (safeAdd(cancelValueM, fills[orderHash]) > values[0]) {
-      cancelValueM = safeSub(values[0], fills[orderHash]);
-    }
-    fills[orderHash] = safeAdd(fills[orderHash], cancelValueM);
+    fillValueM = getFillValueM(orderHash, values[0], fillValueM);
+    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
     LogCancel(
       traders[0],
       tokens[0],
@@ -197,15 +227,30 @@ contract Exchange is SafeMath {
       values[1],
       expiration,
       orderHash,
-      cancelValueM,
+      fillValueM,
       values[0] - fills[orderHash]
     );
-    return cancelValueM;
+    return fillValueM;
   }
 
   /*
   * Constant functions
   */
+
+  /// @dev Calculates the amount of tokenM to be filled.
+  /// @param orderHash Keccak-256 hash of order.
+  /// @param fillValueM Desired amount of tokenM to cancel in order.
+  /// @return Amount of tokenM to fill.
+  function getFillValueM(bytes32 orderHash, uint256 valueM, uint256 fillValueM)
+    constant
+    internal
+    returns (uint256 filledValueM)
+  {
+    if (safeAdd(fills[orderHash], fillValueM) > valueM) {
+      fillValueM = safeSub(valueM, fills[orderHash]);
+    }
+    return fillValueM;
+  }
 
   /// @dev Calculates amount of tokenT to fill.
   /// @param valueM Amount of tokenM specified in order.
@@ -302,8 +347,27 @@ contract Exchange is SafeMath {
     );
   }
 
+  function isMatchable(
+    address[2] tokensA,
+    address[2] tokensB,
+    uint256[2] valuesA,
+    uint256[2] valuesB
+  )
+    constant
+    returns (bool matchable)
+  {
+    assert(tokensA[0] == tokensB[1]);
+    assert(tokensA[1] == tokensB[0]);
+    uint256 multiplier = 10**18;
+    assert(safeDiv(
+      safeMul(safeMul(valuesA[0], valuesB[0]), multiplier),
+      safeMul(valuesA[1], valuesB[1])
+    ) >= multiplier);
+    return true;
+  }
+
   /*
-  * Internal functions
+  * Private functions
   */
 
   /// @dev Logs fill events indexed by user and by token.
@@ -311,7 +375,7 @@ contract Exchange is SafeMath {
   /// @param values Array of valueM, valueT, expiration, feeM, feeT, fillValueM, and remainingValueM.
   /// @param orderHash Keccak-256 hash of order.
   function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash)
-    internal
+    private
     returns (bool success)
   {
     LogFillByUser(
@@ -492,19 +556,21 @@ contract Exchange is SafeMath {
     return safeSub(fillValueM, fillValueMLeft);
   }
 
+
+
   /// @dev Synchronously cancels multiple orders in a single transaction.
   /// @param traders Array of order maker and taker address tuples.
   /// @param tokens Array of order tokenM and tokenT address tuples.
   /// @param values Array of order valueM and valueT tuples.
   /// @param expirations Array of times orders expire in seconds.
-  /// @param cancelValuesM Array of desired amounts of tokenM to cancel in orders.
+  /// @param fillValuesM Array of desired amounts of tokenM to cancel in orders.
   /// @return Success of all orders being cancelled with at least desired amounts.
   function batchCancel(
     address[2][] traders,
     address[2][] tokens,
     uint256[2][] values,
     uint256[] expirations,
-    uint256[] cancelValuesM)
+    uint256[] fillValuesM)
     returns (bool success)
   {
     for (uint256 i = 0; i < traders.length; i++) {
@@ -513,10 +579,10 @@ contract Exchange is SafeMath {
         tokens[i],
         values[i],
         expirations[i],
-        cancelValuesM[i]
+        fillValuesM[i]
       );
-      return true;
     }
+    return true;
   }
 
 
