@@ -106,37 +106,22 @@ contract Exchange is SafeMath {
         rs[0],
         rs[1]
       ));
-      assert(transferFrom(
-        tokens[0],
+      assert(tradeTokens(
         traders[0],
         msg.sender,
+        tokens,
+        values,
+        orderHash,
         fillValueM
       ));
-      assert(transferFrom(
-        tokens[1],
-        msg.sender,
+      assert(tradeFees(
         traders[0],
-        getFillValueT(values[0], values[1], fillValueM)
+        msg.sender,
+        feeRecipient,
+        values,
+        fees,
+        fillValueM
       ));
-      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
-      if (feeRecipient != address(0)) {
-        if (fees[0] > 0) {
-          assert(transferFrom(
-            PROTOCOL_TOKEN,
-            traders[0],
-            feeRecipient,
-            getFeeValue(values[0], fillValueM, fees[0])
-          ));
-        }
-        if (fees[1] > 0) {
-          assert(transferFrom(
-            PROTOCOL_TOKEN,
-            msg.sender,
-            feeRecipient,
-            getFeeValue(values[0], fillValueM, fees[1])
-          ));
-        }
-      }
     }
     LogFillEvents(
       [
@@ -169,10 +154,10 @@ contract Exchange is SafeMath {
     uint256[2] expirations,
     uint8[2] v,
     bytes32[2][2] rs)
-    returns (bool success)
+    returns (uint256 fillValueM1, uint256 fillValueM2)
   {
     assert(expirations[0] < block.timestamp && expirations[1] < block.timestamp);
-    assert(isMatchable(tokens[0], tokens[1], values[0], values[1]));
+    assert(isMatchable(tokens, values));
     if (traders[0][1] != address(0)) {
       assert(msg.sender == traders[0][1]);
     }
@@ -185,13 +170,27 @@ contract Exchange is SafeMath {
       values[0],
       expirations[0]
     );
+    assert(validSignature(
+      traders[0][0],
+      getMsgHash(orderHash1, feeRecipients[0], fees[0]),
+      v[0],
+      rs[0][0],
+      rs[0][1]
+    ));
     bytes32 orderHash2 = getOrderHash(
       traders[1],
       tokens[1],
       values[1],
       expirations[1]
     );
-    return true;
+    assert(validSignature(
+      traders[1][0],
+      getMsgHash(orderHash2, feeRecipients[1], fees[1]),
+      v[1],
+      rs[1][0],
+      rs[1][1]
+    ));
+    return (1, 1);
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
@@ -348,20 +347,18 @@ contract Exchange is SafeMath {
   }
 
   function isMatchable(
-    address[2] tokensA,
-    address[2] tokensB,
-    uint256[2] valuesA,
-    uint256[2] valuesB
+    address[2][2] tokens,
+    uint256[2][2] values
   )
     constant
     returns (bool matchable)
   {
-    assert(tokensA[0] == tokensB[1]);
-    assert(tokensA[1] == tokensB[0]);
+    assert(tokens[0][0] == tokens[1][1]);
+    assert(tokens[0][1] == tokens[1][0]);
     uint256 multiplier = 10**18;
     assert(safeDiv(
-      safeMul(safeMul(valuesA[0], valuesB[0]), multiplier),
-      safeMul(valuesA[1], valuesB[1])
+      safeMul(safeMul(values[0][0], values[1][0]), multiplier),
+      safeMul(values[0][1], values[1][1])
     ) >= multiplier);
     return true;
   }
@@ -369,6 +366,63 @@ contract Exchange is SafeMath {
   /*
   * Private functions
   */
+
+  function tradeTokens(
+    address maker,
+    address taker,
+    address[2] tokens,
+    uint256[2] values,
+    bytes32 orderHash,
+    uint256 fillValueM)
+    private
+    returns (bool success)
+  {
+    assert(transferFrom(
+      tokens[0],
+      maker,
+      taker,
+      fillValueM
+    ));
+    assert(transferFrom(
+      tokens[1],
+      taker,
+      maker,
+      getFillValueT(values[0], values[1], fillValueM)
+    ));
+    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
+    return true;
+  }
+
+  function tradeFees(
+    address maker,
+    address taker,
+    address feeRecipient,
+    uint256[2] values,
+    uint256[2] fees,
+    uint256 fillValueM)
+    private
+    returns (bool success)
+  {
+    if (feeRecipient != address(0)) {
+      if (fees[0] > 0) {
+        assert(transferFrom(
+          PROTOCOL_TOKEN,
+          maker,
+          feeRecipient,
+          getFeeValue(values[0], fillValueM, fees[0])
+        ));
+      }
+      if (fees[1] > 0) {
+        assert(transferFrom(
+          PROTOCOL_TOKEN,
+          taker,
+          feeRecipient,
+          getFeeValue(values[0], fillValueM, fees[1])
+        ));
+      }
+    }
+    return true;
+  }
 
   /// @dev Logs fill events indexed by user and by token.
   /// @param addresses Array of maker, taker, tokenM, tokenT, and feeRecipient addresses.
