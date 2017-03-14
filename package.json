@@ -21,8 +21,12 @@
   "homepage": "https://github.com/0xProject/0x-Smart-Contracts#readme",
   "devDependencies": {
     "bignumber.js": "^4.0.0",
-    "bn.js": "^4.11.6",
+    "eslint": "^3.17.1",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0",
     "ethereumjs-util": "^5.1.1"
   },
-  "dependencies": {}
+  "dependencies": {
+      "bn.js": "^4.11.6",
+  }
 }

@@ -4,11 +4,12 @@ const DummyTokenA = artifacts.require('./DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 
-const util = require('../../util/index.js')(web3);
-const { add, sub, mul, div, cmp, toSmallestUnits } = util.BNutil;
 const assert = require('assert');
+const util = require('../../util/index.js')(web3);
 
-contract('Exchange', function(accounts) {
+const { add, sub, mul, div, cmp, toSmallestUnits } = util.BNutil;
+
+contract('Exchange', accounts => {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
@@ -26,7 +27,7 @@ contract('Exchange', function(accounts) {
   let exUtil;
 
   const orderFactory = params => {
-    let defaultParams = {
+    const defaultParams = {
       exchange: Exchange.address,
       maker,
       taker: '0x0',
@@ -37,12 +38,12 @@ contract('Exchange', function(accounts) {
       valueT: toSmallestUnits(200),
       feeM: toSmallestUnits(1),
       feeT: toSmallestUnits(1),
-      expiration: Math.floor((Date.now() + Math.random() * 1000000) / 1000)
+      expiration: Math.floor((Date.now() + (Math.random() * 1000000)) / 1000),
     };
     return Object.assign({}, defaultParams, params);
   };
 
-  const getDmyBalances = () => {
+  const getDmyBalances = function() {
     return new Promise((resolve, reject) => {
       Promise.all([
         dmyA.balanceOf(maker),
@@ -53,14 +54,14 @@ contract('Exchange', function(accounts) {
         dmyB.balanceOf(feeRecipient),
         dmyPT.balanceOf(maker),
         dmyPT.balanceOf(taker),
-        dmyPT.balanceOf(feeRecipient)
+        dmyPT.balanceOf(feeRecipient),
       ]).then(res => {
-        let newBalances = {
+        const newBalances = {
           [maker]: {},
           [taker]: {},
-          [feeRecipient]: {}
+          [feeRecipient]: {},
         };
-        res = res.map(balance => balance.toString());
+        const balanceStrs = res.map(balance => balance.toString());
         [
           newBalances[maker][dmyA.address],
           newBalances[taker][dmyA.address],
@@ -70,19 +71,21 @@ contract('Exchange', function(accounts) {
           newBalances[feeRecipient][dmyB.address],
           newBalances[maker][dmyPT.address],
           newBalances[taker][dmyPT.address],
-          newBalances[feeRecipient][dmyPT.address]
-        ] = res;
+          newBalances[feeRecipient][dmyPT.address],
+      ] = balanceStrs;
         resolve(newBalances);
+      }).catch(() => {
+        reject();
       });
     });
   };
 
-  before(function(done) {
+  before(done => {
     Promise.all([
       Exchange.deployed(),
       DummyTokenA.deployed(),
       DummyTokenB.deployed(),
-      DummyProtocolToken.deployed()
+      DummyProtocolToken.deployed(),
     ]).then(instances => {
       [exchange, dmyA, dmyB, dmyPT] = instances;
       exUtil = util.exchangeUtil(exchange);
@@ -98,34 +101,34 @@ contract('Exchange', function(accounts) {
         dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
         dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
         dmyPT.setBalance(INIT_BAL, { from: maker }),
-        dmyPT.setBalance(INIT_BAL, { from: taker })
-      ]).then(() => done()).catch(e => console.log(e))
+        dmyPT.setBalance(INIT_BAL, { from: taker }),
+      ]).then(() => done()).catch(e => done(e));
     });
   });
 
-  describe('utility functions', function() {
-    beforeEach(function(done) {
+  describe('utility functions', () => {
+    beforeEach(done => {
       util.createOrder(orderFactory()).then(newOrder => {
         order = newOrder;
         done();
       });
     });
 
-    it('getOrderHash should output the correct orderHash', function(done) {
+    it('getOrderHash should output the correct orderHash', done => {
       exUtil.getOrderHash(order).then(orderHash => {
         assert(order.orderHash === orderHash);
         done();
       });
     });
 
-    it('getMsgHash should output the correct msgHash', function(done) {
+    it('getMsgHash should output the correct msgHash', done => {
       exUtil.getMsgHash(order).then(msgHash => {
         assert(util.getMsgHash(order, { hex: true }) === msgHash);
         done();
       });
     });
 
-    it('validSignature should return true with a valid signature', function(done) {
+    it('validSignature should return true with a valid signature', done => {
       exUtil.validSignature(order).then(success => {
         assert(util.validSignature(order));
         assert(success);
@@ -133,7 +136,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('validSignature should return false with an invalid signature', function(done) {
+    it('validSignature should return false with an invalid signature', done => {
       order.r = util.sha3('invalidR');
       order.s = util.sha3('invalidS');
       exUtil.validSignature(order).then(success => {
@@ -143,7 +146,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('validSignature should return false with an invalid message hash', function(done) {
+    it('validSignature should return false with an invalid message hash', done => {
       order.orderHash = util.sha3('invalid');
       exUtil.validSignature(order).then(success => {
         assert(!success);
@@ -151,18 +154,18 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('transferFrom should be private', function(done) {
+    it('transferFrom should be private', done => {
       assert(exchange.transferFrom === undefined);
       done();
     });
 
-    it('getFillValueT should throw if there is a rounding error', function(done) {
+    it('getFillValueT should throw if there is a rounding error', done => {
       done();
     });
   });
 
-  describe('fill', function() {
-    beforeEach(function(done) {
+  describe('fill', () => {
+    beforeEach(done => {
       getDmyBalances().then(newBalances => {
         balances = newBalances;
         util.createOrder(orderFactory()).then(newOrder => {
@@ -172,15 +175,15 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should transfer the correct amounts when valueM === valueT', function(done) {
+    it('should transfer the correct amounts when valueM === valueT', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(100) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
+        const fillValueM = div(order.valueM, 2);
         exUtil.fill(order, { fillValueM, from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
-            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
             assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
             assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
             assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
@@ -197,15 +200,15 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should transfer the correct amounts when valueM > valueT', function(done) {
+    it('should transfer the correct amounts when valueM > valueT', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(200), valueT: toSmallestUnits(100) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
+        const fillValueM = div(order.valueM, 2);
         exUtil.fill(order, { fillValueM, from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
-            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
             assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
             assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
             assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
@@ -222,15 +225,15 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should transfer the correct amounts when valueM < valueT', function(done) {
+    it('should transfer the correct amounts when valueM < valueT', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
+        const fillValueM = div(order.valueM, 2);
         exUtil.fill(order, { fillValueM, from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
-            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
             assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
             assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
             assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
@@ -247,15 +250,15 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should transfer the correct amounts when taker is specified and order is claimed by taker', function(done) {
+    it('should transfer the correct amounts when taker is specified and order is claimed by taker', done => {
       util.createOrder(orderFactory({ taker, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
-        let fillValueM = div(order.valueM, 2);
+        const fillValueM = div(order.valueM, 2);
         exUtil.fill(order, { fillValueM, from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
-            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
             assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
             assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
             assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
@@ -272,7 +275,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw when taker is specified and order is claimed by other', function(done) {
+    it('should throw when taker is specified and order is claimed by other', done => {
       util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
@@ -285,7 +288,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if an order is expired', function(done) {
+    it('should throw if an order is expired', done => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
@@ -298,7 +301,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if fillValueM > valueM', function(done) {
+    it('should throw if fillValueM > valueM', done => {
       exUtil.fill(order, { fillValueM: add(order.valueM, 1), from: taker }).then(res => {
         assert(!res);
         done();
@@ -308,7 +311,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if fillValueM > remaining valueM', function(done) {
+    it('should throw if fillValueM > remaining valueM', done => {
       let fillValueM = div(order.valueM, 2);
       exUtil.fill(order, { fillValueM, from: taker }).then(() => {
         fillValueM = add(fillValueM, 1);
@@ -322,7 +325,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if signature is invalid', function(done){
+    it('should throw if signature is invalid', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(10) })).then(newOrder => {
         order = newOrder;
         order.r = util.sha3('invalidR');
@@ -337,7 +340,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if a transfer fails', function(done){
+    it('should throw if a transfer fails', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(res => {
@@ -350,7 +353,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should log 2 events', function(done) {
+    it('should log 2 events', done => {
       exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
         assert(res.logs.length === 2);
         done();
@@ -359,16 +362,15 @@ contract('Exchange', function(accounts) {
         done();
       });
     });
-
   });
 
-  describe('batchFill', function() {
+  describe('batchFill', () => {
     let orders;
-    beforeEach(function(done) {
+    beforeEach(done => {
       Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
-        util.createOrder(orderFactory())
+        util.createOrder(orderFactory()),
       ]).then(newOrders => {
         orders = newOrders;
         getDmyBalances().then(newBalances => {
@@ -378,15 +380,15 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should transfer the correct amounts', function(done) {
-      let fillValuesM = [];
-      let tokenM = dmyA.address;
-      let tokenT = dmyB.address;
-      orders.forEach(order => {
-        let fillValueM = div(order.valueM, 2);
-        let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-        let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-        let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+    it('should transfer the correct amounts', done => {
+      const fillValuesM = [];
+      const tokenM = dmyA.address;
+      const tokenT = dmyB.address;
+      orders.forEach(o => {
+        const fillValueM = div(o.valueM, 2);
+        const fillValueT = div(mul(fillValueM, o.valueT), o.valueM);
+        const feeValueM = div(mul(o.feeM, fillValueM), o.valueM);
+        const feeValueT = div(mul(o.feeT, fillValueM), o.valueM);
         fillValuesM.push(fillValueM);
         balances[maker][tokenM] = sub(balances[maker][tokenM], fillValueM);
         balances[maker][tokenT] = add(balances[maker][tokenT], fillValueT);
@@ -410,30 +412,30 @@ contract('Exchange', function(accounts) {
       }).catch(e => {
         assert(!e);
         done();
-      })
+      });
     });
 
-    it('should allow tokens acquired in trade to be used in later trade', function(done) {
+    it('should allow tokens acquired in trade to be used in later trade', done => {
       dmyPT.setBalance(0, { from: taker }).then(() => {
         balances[taker][dmyPT.address] = 0;
         util.createOrder(orderFactory({ tokenM: dmyPT.address, feeT: 0 })).then(newOrder => {
           orders[0] = newOrder;
-          let rest = orders.slice(1);
-          let fillValuesM = [0];
-          rest.forEach(order => {
-            fillValuesM[0] = add(fillValuesM[0], order.feeT);
-            fillValuesM.push(order.valueM);
+          const rest = orders.slice(1);
+          const fillValuesM = [0];
+          rest.forEach(o => {
+            fillValuesM[0] = add(fillValuesM[0], o.feeT);
+            fillValuesM.push(o.valueM);
           });
-          orders.forEach((order, i) => {
-            let fillValueM = fillValuesM[i];
-            let fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            let feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            let feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-            balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], fillValueM);
-            balances[maker][order.tokenT] = add(balances[maker][order.tokenT], fillValueT);
+          orders.forEach((o, i) => {
+            const fillValueM = fillValuesM[i];
+            const fillValueT = div(mul(fillValueM, o.valueT), o.valueM);
+            const feeValueM = div(mul(o.feeM, fillValueM), o.valueM);
+            const feeValueT = div(mul(o.feeT, fillValueM), o.valueM);
+            balances[maker][o.tokenM] = sub(balances[maker][o.tokenM], fillValueM);
+            balances[maker][o.tokenT] = add(balances[maker][o.tokenT], fillValueT);
             balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], feeValueM);
-            balances[taker][order.tokenM] = add(balances[taker][order.tokenM], fillValueM);
-            balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], fillValueT);
+            balances[taker][o.tokenM] = add(balances[taker][o.tokenM], fillValueM);
+            balances[taker][o.tokenT] = sub(balances[taker][o.tokenT], fillValueT);
             balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
             balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
           });
@@ -455,19 +457,21 @@ contract('Exchange', function(accounts) {
               assert(!e);
               done();
             });
-          })
+          });
         });
       });
     });
 
-    it('should cost less gas per order to execute batchFill', function(done) {
-      Promise.all(orders.map(order => exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }))).then(res => {
+    it('should cost less gas per order to execute batchFill', done => {
+      Promise.all(orders.map(o => exUtil.fill(o, { fillValueM: div(o.valueM, 2), from: taker }))).then(res => {
         let totalGas = 0;
-        res.forEach(tx => totalGas = add(totalGas, tx.receipt.gasUsed));
-        exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
+        res.forEach(tx => {
+          totalGas = add(totalGas, tx.receipt.gasUsed);
+        });
+        exUtil.batchFill(orders, { fillValuesM: orders.map(o => div(o.valueM, 2)), from: taker }).then(innerRes => {
           // console.log('fill:', totalGas);
-          // console.log('batchFill:', res.receipt.gasUsed);
-          assert(cmp(res.receipt.gasUsed, totalGas) === -1);
+          // console.log('batchFill:', innerRes.receipt.gasUsed);
+          assert(cmp(innerRes.receipt.gasUsed, totalGas) === -1);
           done();
         }).catch(e => {
           assert(!e);
@@ -476,26 +480,26 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should log 2 events per order', function(done) {
-      exUtil.batchFill(orders, { fillValuesM: orders.map(order => div(order.valueM, 2)), from: taker }).then(res => {
-        assert(res.logs.length = orders.length * 2);
+    it('should log 2 events per order', done => {
+      exUtil.batchFill(orders, { fillValuesM: orders.map(o => div(o.valueM, 2)), from: taker }).then(res => {
+        assert(res.logs.length === orders.length * 2);
         done();
       }).catch(e => {
         assert(!e);
         done();
-      })
+      });
     });
   });
 
-  describe('cancel', function() {
-    beforeEach(function(done) {
+  describe('cancel', () => {
+    beforeEach(done => {
       util.createOrder(orderFactory()).then(newOrder => {
         order = newOrder;
         done();
       });
     });
 
-    it('should throw if not sent by maker', function(done) {
+    it('should throw if not sent by maker', done => {
       exUtil.cancel(order, { cancelValueM: order.valueM, from: taker }).then(res => {
         assert(!res);
         done();
@@ -505,7 +509,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should throw if cancelValueM === 0', function(done) {
+    it('should throw if cancelValueM === 0', done => {
       exUtil.cancel(order, { cancelValueM: 0, from: maker }).then(res => {
         assert(!res);
         done();
@@ -515,7 +519,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should be able to cancel a full order', function(done) {
+    it('should be able to cancel a full order', done => {
       exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(() => {
         exUtil.fill(order, { fillValueM: 1, from: taker }).then(res => {
           assert(!res);
@@ -530,7 +534,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should be able to cancel part of an order', function(done) {
+    it('should be able to cancel part of an order', done => {
       exUtil.cancel(order, { cancelValueM: div(order.valueM, 2), from: maker }).then(() => {
         exUtil.fill(order, { fillValueM: div(order.valueM, 4), from: taker }).then(() => {
           exUtil.fill(order, { fillValueM: add(div(order.valueM, 4), 1), from: taker }).then(res => {
@@ -547,7 +551,7 @@ contract('Exchange', function(accounts) {
       });
     });
 
-    it('should log 1 event', function(done) {
+    it('should log 1 event', done => {
       exUtil.cancel(order, { cancelValueM: div(order.valueM, 2), from: maker }).then(res => {
         assert(res.logs.length === 1);
         done();

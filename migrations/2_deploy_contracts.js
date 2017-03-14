@@ -3,7 +3,7 @@ const Exchange = artifacts.require('./Exchange.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 
-module.exports = function(deployer, network) {
+module.exports = (deployer, network) => {
   if (network !== 'live') {
     deployer.deploy(Proxy)
       .then(() => deployer.deploy(DummyProtocolToken, 0))
