@@ -77,6 +77,7 @@ contract Exchange is SafeMath {
   /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
+    address caller,
     address feeRecipient,
     address[2] tokens,
     uint256[2] values,
@@ -87,9 +88,7 @@ contract Exchange is SafeMath {
     bytes32[2] rs)
     returns (uint256 filledValueM)
   {
-    if (traders[1] != address(0)) {
-      assert(traders[1] == msg.sender);
-    }
+    assert(validCaller(traders[1], caller));
     if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
@@ -108,16 +107,15 @@ contract Exchange is SafeMath {
       ));
       assert(tradeTokens(
         traders[0],
-        msg.sender,
+        caller,
         tokens,
         values,
-        orderHash,
         fillValueM
       ));
       fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
       assert(tradeFees(
         traders[0],
-        msg.sender,
+        caller,
         feeRecipient,
         values,
         fees,
@@ -126,7 +124,7 @@ contract Exchange is SafeMath {
       LogFillEvents(
         [
           traders[0],
-          msg.sender,
+          caller,
           tokens[0],
           tokens[1],
           feeRecipient
@@ -146,7 +144,7 @@ contract Exchange is SafeMath {
     return fillValueM;
   }
 
-  function matchOrders(
+  /*function matchOrders(
     address[2][2] traders,
     address[2] feeRecipients,
     address[2][2] tokens,
@@ -157,14 +155,14 @@ contract Exchange is SafeMath {
     bytes32[2][2] rs)
     returns (uint256 fillValueM1, uint256 fillValueM2)
   {
-    assert(expirations[0] < block.timestamp && expirations[1] < block.timestamp);
-    assert(isMatchable(tokens, values));
     if (traders[0][1] != address(0)) {
       assert(msg.sender == traders[0][1]);
     }
     if (traders[1][1] != address(0)) {
       assert(msg.sender == traders[1][1]);
     }
+    assert(isMatchable(tokens, values));
+    if(block.timestamp > expirations[0] || block.timestamp > expirations[1]) return (0, 0);
     bytes32 orderHash1 = getOrderHash(
       traders[0],
       tokens[0],
@@ -191,9 +189,20 @@ contract Exchange is SafeMath {
       rs[1][0],
       rs[1][1]
     ));
-    //uint256 fillValueM = getFillValueM(orderHash, valueM, fillValueM)
+    uint256 totalFillValueM = min(
+      getFillValueM(orderHash1, values[0][0], values[0][0]),
+      getFillValueT(
+        values[1][0],
+        values[1][1],
+        getFillValueM(orderHash2, values[1][1], values[1][1])
+      )
+    );
+    uint256 requiredFillValueM = safeDiv(
+      safeMul(totalFillValueM, min(values[0][1], values[1][0])),
+      max(values[0][1], values[1][0])
+    );
     return (1, 1);
-  }
+  }*/
 
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
@@ -204,13 +213,14 @@ contract Exchange is SafeMath {
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
+    address caller,
     address[2] tokens,
     uint256[2] values,
     uint256 expiration,
     uint256 fillValueM)
     returns (uint256 cancelledValueM)
   {
-    assert(msg.sender == traders[0]);
+    assert(validCaller(traders[0], caller));
     if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
@@ -350,6 +360,15 @@ contract Exchange is SafeMath {
     );
   }
 
+  function validCaller(address required, address caller)
+    constant
+    returns (bool success)
+  {
+    assert(caller == msg.sender || caller == tx.origin);
+    if (required != address(0)) assert(caller == required);
+    return true;
+  }
+
   function isMatchable(
     address[2][2] tokens,
     uint256[2][2] values
@@ -376,7 +395,6 @@ contract Exchange is SafeMath {
     address taker,
     address[2] tokens,
     uint256[2] values,
-    bytes32 orderHash,
     uint256 fillValueM)
     private
     returns (bool success)
@@ -519,6 +537,7 @@ contract Exchange is SafeMath {
   {
     assert(fill(
       traders,
+      msg.sender,
       feeRecipient,
       tokens,
       values,
@@ -542,7 +561,7 @@ contract Exchange is SafeMath {
   /// @param v Array ECDSA signature v parameters.
   /// @param rs Array of ECDSA signature parameters r and s tuples.
   /// @return Success of all orders being filled with respective fillValueM.
-  function batchFill(
+  function batchFillOrKill(
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
@@ -599,6 +618,7 @@ contract Exchange is SafeMath {
       assert(tokenM == tokens[i][0]);
       fillValueMLeft = safeSub(fillValueMLeft, fill(
         traders[i],
+        msg.sender,
         feeRecipients[i],
         tokens[i],
         values[i],
@@ -633,6 +653,7 @@ contract Exchange is SafeMath {
     for (uint256 i = 0; i < traders.length; i++) {
       cancel(
         traders[i],
+        msg.sender,
         tokens[i],
         values[i],
         expirations[i],
