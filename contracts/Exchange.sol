@@ -1,9 +1,9 @@
 pragma solidity ^0.4.8;
 
-import "./tokens/Token.sol";
-import "./ExchangeMathUtil.sol";
 import "./Proxy.sol";
-import "./ExchangeCryptoUtil.sol";
+import "./tokens/Token.sol";
+import "./util/ExchangeMathUtil.sol";
+import "./util/ExchangeCryptoUtil.sol";
 
 contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
 
