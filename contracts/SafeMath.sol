@@ -26,16 +26,6 @@ contract SafeMath {
     return c;
   }
 
-  function max(uint a, uint b) constant internal returns (uint) {
-    if (a > b) return a;
-    return b;
-  }
-
-  function min(uint a, uint b) constant internal returns (uint) {
-    if (a < b) return a;
-    return b;
-  }
-
   function assert(bool assertion) internal {
     if (!assertion) throw;
   }

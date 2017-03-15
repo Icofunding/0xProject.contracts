@@ -14,6 +14,7 @@ contract ExchangeCryptoUtil {
     uint256[2] values,
     uint256 expiration)
     constant
+    internal
     returns (bytes32 orderHash)
   {
     return sha3(
@@ -35,6 +36,7 @@ contract ExchangeCryptoUtil {
   /// @return Keccak-256 hash of orderHash and fee data.
   function getMsgHash(bytes32 orderHash, address feeRecipient, uint256[2] fees)
     constant
+    internal
     returns (bytes32 msgHash)
   {
     return sha3(
@@ -59,6 +61,7 @@ contract ExchangeCryptoUtil {
     bytes32 r,
     bytes32 s)
     constant
+    internal
     returns (bool success)
   {
     return maker == ecrecover(
