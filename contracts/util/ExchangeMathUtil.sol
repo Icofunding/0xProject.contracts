@@ -23,32 +23,19 @@ contract ExchangeMathUtil is SafeMath {
     return fillValueM;
   }
 
-  /// @dev Calculates amount of tokenT to fill.
+  /// @dev Calculates partial value given fillValueM and order valueM.
   /// @param valueM Amount of tokenM specified in order.
-  /// @param valueT Amount of tokenT specified in order.
   /// @param fillValueM Amount of tokenM to be filled.
-  /// @return Amount of tokenT to fill.
-  function getFillValueT(uint256 valueM, uint256 valueT, uint256 fillValueM)
+  /// @param target Value to calculate partial.
+  /// @return Partial value of target.
+  function getPartialValue(uint256 valueM, uint256 fillValueM, uint256 target)
     constant
     internal
-    returns (uint256 fillValueT)
+    returns (uint256 partial)
   {
     assert(fillValueM <= valueM);
-    assert(!(valueT < 10**4 && valueT * fillValueM % valueM != 0)); // throw if rounding error > 0.01%
-    return safeMul(fillValueM, valueT) / valueM;
-  }
-
-  /// @dev Calculates fee to be paid for fill.
-  /// @param valueM Amount of tokenM specified in order.
-  /// @param fillValueM Amount of tokenM to be filled.
-  /// @param fee Amount of feeM or feeT specified in order.
-  /// @return Amount of feeM or feeT to be paid for fill.
-  function getFeeValue(uint256 valueM, uint256 fillValueM, uint256 fee)
-    constant
-    internal
-    returns (uint256 feeValue)
-  {
-    return safeDiv(safeMul(fee, fillValueM), valueM);
+    assert(!(target < 10**3 && target * fillValueM % valueM != 0)); // throw if rounding error > 0.1%
+    return safeDiv(safeMul(fillValueM, target), valueM);
   }
 
   function max(uint a, uint b) constant internal returns (uint) {

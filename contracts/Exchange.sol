@@ -192,10 +192,10 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     ));
     uint256 totalFillValueM = min(
       getFillValueM(values[0][0], values[0][0], fills[orderHash1]),
-      getFillValueT(
+      getPartialValue(
         values[1][0],
-        values[1][1],
-        getFillValueM(values[1][1], values[1][1], fills[orderHash2])
+        getFillValueM(values[1][1], values[1][1], fills[orderHash2]),
+        values[1][1]
       )
     );
     uint256 requiredFillValueM = safeDiv(
@@ -322,7 +322,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
       tokens[1],
       taker,
       maker,
-      getFillValueT(values[0], values[1], fillValueM)
+      getPartialValue(values[0], fillValueM, values[1])
     ));
     return true;
   }
@@ -343,7 +343,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
           PROTOCOL_TOKEN,
           maker,
           feeRecipient,
-          getFeeValue(values[0], fillValueM, fees[0])
+          getPartialValue(values[0], fillValueM, fees[0])
         ));
       }
       if (fees[1] > 0) {
@@ -351,7 +351,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
           PROTOCOL_TOKEN,
           taker,
           feeRecipient,
-          getFeeValue(values[0], fillValueM, fees[1])
+          getPartialValue(values[0], fillValueM, fees[1])
         ));
       }
     }

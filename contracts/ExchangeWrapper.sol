@@ -1,7 +1,7 @@
 pragma solidity ^0.4.8;
 
 import "./Exchange.sol";
-import "./SafeMath.sol";
+import "./util/SafeMath.sol";
 
 contract ExchangeWrapper is SafeMath {
 
