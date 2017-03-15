@@ -11,8 +11,8 @@ contract ExchangeCryptoUtil {
   function getOrderHash(
     address[2] traders,
     address[2] tokens,
-    uint256[2] values,
-    uint256 expiration)
+    uint[2] values,
+    uint expiration)
     constant
     internal
     returns (bytes32 orderHash)
@@ -34,7 +34,7 @@ contract ExchangeCryptoUtil {
   /// @param feeRecipient Address that receives order fees.
   /// @param fees Array of order feeM and feeT.
   /// @return Keccak-256 hash of orderHash and fee data.
-  function getMsgHash(bytes32 orderHash, address feeRecipient, uint256[2] fees)
+  function getMsgHash(bytes32 orderHash, address feeRecipient, uint[2] fees)
     constant
     internal
     returns (bytes32 msgHash)

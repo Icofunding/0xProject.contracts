@@ -6,12 +6,12 @@ contract DummyTokenA is StandardToken {
   string public name = "TokenA";
   string public symbol = "TA";
 
-  function DummyTokenA(uint256 _value) {
+  function DummyTokenA(uint _value) {
     balances[msg.sender] = _value;
     totalSupply = _value;
   }
 
-  function setBalance(uint256 _value) {
+  function setBalance(uint _value) {
     balances[msg.sender] = _value;
   }
 }

@@ -26,13 +26,13 @@ contract ExchangeWrapper is SafeMath {
     address[2] traders,
     address feeRecipient,
     address[2] tokens,
-    uint256[2] values,
-    uint256[2] fees,
-    uint256 expiration,
-    uint256 fillValueM,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint fillValueM,
     uint8 v,
     bytes32[2] rs)
-  returns (uint256 filledValueM)
+  returns (uint filledValueM)
   {
     return exchange.fill(
       traders,
@@ -63,10 +63,10 @@ contract ExchangeWrapper is SafeMath {
     address[2] traders,
     address feeRecipient,
     address[2] tokens,
-    uint256[2] values,
-    uint256[2] fees,
-    uint256 expiration,
-    uint256 fillValueM,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint fillValueM,
     uint8 v,
     bytes32[2] rs)
     returns (bool success)
@@ -100,15 +100,15 @@ contract ExchangeWrapper is SafeMath {
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
-    uint256[2][] values,
-    uint256[2][] fees,
-    uint256[] expirations,
-    uint256[] fillValuesM,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint[] fillValuesM,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
   {
-    for (uint256 i = 0; i < traders.length; i++) {
+    for (uint i = 0; i < traders.length; i++) {
       fill(
         traders[i],
         feeRecipients[i],
@@ -139,15 +139,15 @@ contract ExchangeWrapper is SafeMath {
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
-    uint256[2][] values,
-    uint256[2][] fees,
-    uint256[] expirations,
-    uint256[] fillValuesM,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint[] fillValuesM,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
   {
-    for (uint256 i = 0; i < traders.length; i++) {
+    for (uint i = 0; i < traders.length; i++) {
       assert(fillOrKill(
         traders[i],
         feeRecipients[i],
@@ -178,17 +178,17 @@ contract ExchangeWrapper is SafeMath {
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
-    uint256[2][] values,
-    uint256[2][] fees,
-    uint256[] expirations,
-    uint256 fillValueM,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint fillValueM,
     uint8[] v,
     bytes32[2][] rs)
-    returns (uint256 filledValueM)
+    returns (uint filledValueM)
   {
     address tokenM = tokens[0][0];
-    uint256 fillValueMLeft = fillValueM;
-    for (uint256 i = 0; i < traders.length; i++) {
+    uint fillValueMLeft = fillValueM;
+    for (uint i = 0; i < traders.length; i++) {
       assert(tokenM == tokens[i][0]);
       fillValueMLeft = safeSub(fillValueMLeft, fill(
         traders[i],
@@ -216,10 +216,10 @@ contract ExchangeWrapper is SafeMath {
   function cancel(
     address[2] traders,
     address[2] tokens,
-    uint256[2] values,
-    uint256 expiration,
-    uint256 fillValueM)
-    returns (uint256 cancelledValueM)
+    uint[2] values,
+    uint expiration,
+    uint fillValueM)
+    returns (uint cancelledValueM)
   {
     return exchange.cancel(
       traders,
@@ -241,12 +241,12 @@ contract ExchangeWrapper is SafeMath {
   function batchCancel(
     address[2][] traders,
     address[2][] tokens,
-    uint256[2][] values,
-    uint256[] expirations,
-    uint256[] fillValuesM)
+    uint[2][] values,
+    uint[] expirations,
+    uint[] fillValuesM)
     returns (bool success)
   {
-    for (uint256 i = 0; i < traders.length; i++) {
+    for (uint i = 0; i < traders.length; i++) {
       cancel(
         traders[i],
         tokens[i],

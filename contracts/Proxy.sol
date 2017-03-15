@@ -21,7 +21,7 @@ contract Proxy is Ownable {
     address _token,
     address _from,
     address _to,
-    uint256 _value)
+    uint _value)
     onlyAuthorized
     returns (bool success)
   {

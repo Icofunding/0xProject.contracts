@@ -10,22 +10,22 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   address public PROTOCOL_TOKEN;
   address public PROXY;
 
-  mapping (bytes32 => uint256) public fills;
+  mapping (bytes32 => uint) public fills;
 
   event LogFillByUser(
     address indexed maker,
     address indexed taker,
     address tokenM,
     address tokenT,
-    uint256 valueM,
-    uint256 valueT,
-    uint256 expiration,
+    uint valueM,
+    uint valueT,
+    uint expiration,
     bytes32 orderHash,
     address indexed feeRecipient,
-    uint256 feeM,
-    uint256 feeT,
-    uint256 fillValueM,
-    uint256 remainingValueM
+    uint feeM,
+    uint feeT,
+    uint fillValueM,
+    uint remainingValueM
   );
 
   event LogFillByToken(
@@ -33,27 +33,27 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address taker,
     address indexed tokenM,
     address indexed tokenT,
-    uint256 valueM,
-    uint256 valueT,
-    uint256 expiration,
+    uint valueM,
+    uint valueT,
+    uint expiration,
     bytes32 indexed orderHash,
     address feeRecipient,
-    uint256 feeM,
-    uint256 feeT,
-    uint256 fillValueM,
-    uint256 remainingValueM
+    uint feeM,
+    uint feeT,
+    uint fillValueM,
+    uint remainingValueM
   );
 
   event LogCancel(
     address indexed maker,
     address indexed tokenM,
     address indexed tokenT,
-    uint256 valueM,
-    uint256 valueT,
-    uint256 expiration,
+    uint valueM,
+    uint valueT,
+    uint expiration,
     bytes32 orderHash,
-    uint256 fillValueM,
-    uint256 remainingValueM
+    uint fillValueM,
+    uint remainingValueM
   );
 
   function Exchange(address _protocolToken, address _proxy) {
@@ -81,13 +81,13 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address caller,
     address feeRecipient,
     address[2] tokens,
-    uint256[2] values,
-    uint256[2] fees,
-    uint256 expiration,
-    uint256 fillValueM,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint fillValueM,
     uint8 v,
     bytes32[2] rs)
-    returns (uint256 filledValueM)
+    returns (uint filledValueM)
   {
     assert(validCaller(traders[1], caller));
     if (block.timestamp < expiration) return 0;
@@ -149,12 +149,12 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address[2][2] traders,
     address[2] feeRecipients,
     address[2][2] tokens,
-    uint256[2][2] values,
-    uint256[2][2] fees,
-    uint256[2] expirations,
+    uint[2][2] values,
+    uint[2][2] fees,
+    uint[2] expirations,
     uint8[2] v,
     bytes32[2][2] rs)
-    returns (uint256 fillValueM1, uint256 fillValueM2)
+    returns (uint fillValueM1, uint fillValueM2)
   {
     if (traders[0][1] != address(0)) {
       assert(msg.sender == traders[0][1]);
@@ -190,7 +190,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
       rs[1][0],
       rs[1][1]
     ));
-    uint256 totalFillValueM = min(
+    uint totalFillValueM = min(
       getFillValueM(values[0][0], values[0][0], fills[orderHash1]),
       getPartialValue(
         values[1][0],
@@ -198,7 +198,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
         values[1][1]
       )
     );
-    uint256 requiredFillValueM = safeDiv(
+    uint requiredFillValueM = safeDiv(
       safeMul(totalFillValueM, min(values[0][1], values[1][0])),
       max(values[0][1], values[1][0])
     );
@@ -216,10 +216,10 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address[2] traders,
     address caller,
     address[2] tokens,
-    uint256[2] values,
-    uint256 expiration,
-    uint256 fillValueM)
-    returns (uint256 cancelledValueM)
+    uint[2] values,
+    uint expiration,
+    uint fillValueM)
+    returns (uint cancelledValueM)
   {
     assert(validCaller(traders[0], caller));
     if (block.timestamp < expiration) return 0;
@@ -262,14 +262,14 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
 
   function isMatchable(
     address[2][2] tokens,
-    uint256[2][2] values
+    uint[2][2] values
   )
     constant
     returns (bool matchable)
   {
     assert(tokens[0][0] == tokens[1][1]);
     assert(tokens[0][1] == tokens[1][0]);
-    uint256 multiplier = 10**18;
+    uint multiplier = 10**18;
     assert(safeDiv(
       safeMul(safeMul(values[0][0], values[1][0]), multiplier),
       safeMul(values[0][1], values[1][1])
@@ -291,7 +291,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address _token,
     address _from,
     address _to,
-    uint256 _value)
+    uint _value)
     private
     returns (bool success)
   {
@@ -307,8 +307,8 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address maker,
     address taker,
     address[2] tokens,
-    uint256[2] values,
-    uint256 fillValueM)
+    uint[2] values,
+    uint fillValueM)
     private
     returns (bool success)
   {
@@ -331,9 +331,9 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     address maker,
     address taker,
     address feeRecipient,
-    uint256[2] values,
-    uint256[2] fees,
-    uint256 fillValueM)
+    uint[2] values,
+    uint[2] fees,
+    uint fillValueM)
     private
     returns (bool success)
   {
@@ -362,7 +362,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   /// @param addresses Array of maker, taker, tokenM, tokenT, and feeRecipient addresses.
   /// @param values Array of valueM, valueT, expiration, feeM, feeT, fillValueM, and remainingValueM.
   /// @param orderHash Keccak-256 hash of order.
-  function LogFillEvents(address[5] addresses, uint256[7] values, bytes32 orderHash)
+  function LogFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
     private
     returns (bool success)
   {
