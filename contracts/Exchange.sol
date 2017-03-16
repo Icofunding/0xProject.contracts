@@ -12,6 +12,34 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
 
   mapping (bytes32 => uint) public fills;
 
+  struct Pair {
+    bytes32 orderAHash;
+    bytes32 orderBHash;
+    uint orderATotalFillValueM;
+    uint orderAFillValueM;
+    uint orderBFillValueM;
+  }
+
+  modifier notExpired(uint expiration) {
+    if (block.timestamp < expiration)
+      _;
+  }
+
+  /*modifier callerIsControlled(address caller) {
+    assert(caller == msg.sender || caller == tx.origin);
+    _;
+  }
+
+  modifier callerIsMaker(address[2] traders, address caller) {
+    assert(traders[0] == address(0) || caller == traders[0]);
+    _;
+  }
+
+  modifier callerIsTaker(address[2] traders, address caller) {
+    assert(traders[1] == address(0) || caller == traders[1]);
+    _;
+  }*/
+
   event LogFillByUser(
     address indexed maker,
     address indexed taker,
@@ -87,10 +115,10 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     uint fillValueM,
     uint8 v,
     bytes32[2] rs)
+    notExpired(expiration)
     returns (uint filledValueM)
   {
     assert(validCaller(traders[1], caller));
-    if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -147,6 +175,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
 
   /*function matchOrders(
     address[2][2] traders,
+    address caller,
     address[2] feeRecipients,
     address[2][2] tokens,
     uint[2][2] values,
@@ -154,55 +183,56 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     uint[2] expirations,
     uint8[2] v,
     bytes32[2][2] rs)
-    returns (uint fillValueM1, uint fillValueM2)
+    returns (uint orderAFillValueM, uint orderBFillValueM)
   {
-    if (traders[0][1] != address(0)) {
-      assert(msg.sender == traders[0][1]);
-    }
-    if (traders[1][1] != address(0)) {
-      assert(msg.sender == traders[1][1]);
-    }
+    assert(validCaller(traders[0][1], caller));
+    assert(validCaller(traders[1][1], caller));
     assert(isMatchable(tokens, values));
     if(block.timestamp > expirations[0] || block.timestamp > expirations[1]) return (0, 0);
-    bytes32 orderHash1 = getOrderHash(
-      traders[0],
-      tokens[0],
-      values[0],
-      expirations[0]
+    Pair memory pair = Pair({
+      orderAHash: getOrderHash(
+        traders[0],
+        tokens[0],
+        values[0],
+        expirations[0]
+      ),
+      orderBHash: getOrderHash(
+        traders[1],
+        tokens[1],
+        values[1],
+        expirations[1]
+      ),
+      orderATotalFillValueM: 0,
+      orderAFillValueM: 0,
+      orderBFillValueM: 0
+    });
+    pair.orderATotalFillValueM = min(
+      getFillValueM(values[0][0], values[0][0], fills[pair.orderAHash]),
+      getPartialValue(
+        values[1][0],
+        getFillValueM(values[1][1], values[1][1], fills[pair.orderBHash]),
+        values[1][1]
+      )
+    );
+    pair.orderAFillValueM = safeDiv(
+      safeMul(pair.orderATotalFillValueM, min(values[0][1], values[1][0])),
+      max(values[0][1], values[1][0])
     );
     assert(validSignature(
       traders[0][0],
-      getMsgHash(orderHash1, feeRecipients[0], fees[0]),
+      getMsgHash(pair.orderAHash, feeRecipients[0], fees[0]),
       v[0],
       rs[0][0],
       rs[0][1]
     ));
-    bytes32 orderHash2 = getOrderHash(
-      traders[1],
-      tokens[1],
-      values[1],
-      expirations[1]
-    );
     assert(validSignature(
       traders[1][0],
-      getMsgHash(orderHash2, feeRecipients[1], fees[1]),
+      getMsgHash(pair.orderBHash, feeRecipients[1], fees[1]),
       v[1],
       rs[1][0],
       rs[1][1]
     ));
-    uint totalFillValueM = min(
-      getFillValueM(values[0][0], values[0][0], fills[orderHash1]),
-      getPartialValue(
-        values[1][0],
-        getFillValueM(values[1][1], values[1][1], fills[orderHash2]),
-        values[1][1]
-      )
-    );
-    uint requiredFillValueM = safeDiv(
-      safeMul(totalFillValueM, min(values[0][1], values[1][0])),
-      max(values[0][1], values[1][0])
-    );
-    return (1, 1);
+    return (pair.orderAFillValueM, pair.orderBFillValueM);
   }*/
 
   /// @dev Cancels provided amount of an order with given parameters.
@@ -219,10 +249,11 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     uint[2] values,
     uint expiration,
     uint fillValueM)
+    notExpired(expiration)
     returns (uint cancelledValueM)
   {
     assert(validCaller(traders[0], caller));
-    if (block.timestamp < expiration) return 0;
+    //if (block.timestamp < expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -256,7 +287,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     returns (bool success)
   {
     assert(caller == msg.sender || caller == tx.origin);
-    if (required != address(0)) assert(caller == required);
+    assert(required == address(0) || caller == required);
     return true;
   }
 
