@@ -26,22 +26,17 @@ contract('Exchange', accounts => {
 
   let exUtil;
 
-  const orderFactory = params => {
-    const defaultParams = {
-      exchange: Exchange.address,
-      maker,
-      taker: '0x0',
-      feeRecipient,
-      tokenM: DummyTokenA.address,
-      tokenT: DummyTokenB.address,
-      valueM: toSmallestUnits(100),
-      valueT: toSmallestUnits(200),
-      feeM: toSmallestUnits(1),
-      feeT: toSmallestUnits(1),
-      expiration: Math.floor((Date.now() + (Math.random() * 1000000)) / 1000),
-    };
-    return Object.assign({}, defaultParams, params);
-  };
+  const orderFactory = util.createOrderFactory({
+    exchange: Exchange.address,
+    maker,
+    feeRecipient,
+    tokenM: DummyTokenA.address,
+    tokenT: DummyTokenB.address,
+    valueM: toSmallestUnits(100),
+    valueT: toSmallestUnits(200),
+    feeM: toSmallestUnits(1),
+    feeT: toSmallestUnits(1),
+  });
 
   const getDmyBalances = function() {
     return new Promise((resolve, reject) => {
