@@ -37,14 +37,4 @@ contract ExchangeMathUtil is SafeMath {
     assert(!(target < 10**3 && target * fillValue % value != 0)); // throw if rounding error > 0.1%
     return safeDiv(safeMul(fillValue, target), value);
   }
-
-  function max(uint a, uint b) constant internal returns (uint) {
-    if (a > b) return a;
-    return b;
-  }
-
-  function min(uint a, uint b) constant internal returns (uint) {
-    if (a < b) return a;
-    return b;
-  }
 }

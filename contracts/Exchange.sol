@@ -12,14 +12,6 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
 
   mapping (bytes32 => uint) public fills;
 
-  struct Pair {
-    bytes32[2] orderHashes;
-    uint[2] fillValuesM;
-    uint[2] fillValuesT;
-    address matcherToken;
-    uint matcherValue;
-  }
-
   modifier notExpired(uint expiration) {
     if (block.timestamp < expiration)
       _;
@@ -173,79 +165,6 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     return fillValueM;
   }
 
-  function matchOrders(
-    address[2][2] traders,
-    address caller,
-    address[2] feeRecipients,
-    address[2][2] tokens,
-    uint[2][2] values,
-    uint[2][2] fees,
-    uint[2] expirations,
-    uint8[2] v,
-    bytes32[2][2] rs)
-    /*notExpired(expirations[0])
-    notExpired(expirations[1])*/
-    returns (uint orderAFillValueM, uint orderBFillValueM)
-  {
-    assert(validCaller(traders[0][1], caller));
-    assert(validCaller(traders[1][1], caller));
-    assert(isMatchable(tokens, values));
-    if(block.timestamp > expirations[0] || block.timestamp > expirations[1]) return (0, 0);
-    Pair memory pair;
-    pair.orderHashes = [
-      getOrderHash(
-        traders[0],
-        tokens[0],
-        values[0],
-        expirations[0]
-      ),
-      getOrderHash(
-        traders[1],
-        tokens[1],
-        values[1],
-        expirations[1]
-      )
-    ];
-    assert(validSignature(
-      traders[0][0],
-      getMsgHash(pair.orderHashes[0], feeRecipients[0], fees[0]),
-      v[0],
-      rs[0][0],
-      rs[0][1]
-    ));
-    assert(validSignature(
-      traders[1][0],
-      getMsgHash(pair.orderHashes[1], feeRecipients[1], fees[1]),
-      v[1],
-      rs[1][0],
-      rs[1][1]
-    ));
-    //initialize fillValues to remaining amounts
-    pair.fillValuesM[0] = getFillValueM(values[0][0], values[0][0], fills[pair.orderHashes[0]]);
-    pair.fillValuesM[1] = getFillValueM(values[1][0], values[1][0], fills[pair.orderHashes[1]]);
-    pair.fillValuesT[0] = getPartialValue(values[0][0], pair.fillValuesM[0], values[0][1]);
-    pair.fillValuesT[1] = getPartialValue(values[1][0], pair.fillValuesM[1], values[1][1]);
-    //calculate max values to fill within order parameters
-    pair.fillValuesM[0] = min(
-      min(pair.fillValuesM[0], pair.fillValuesT[1]),
-      safeDiv(
-        safeMul(max(pair.fillValuesM[0], pair.fillValuesT[1]), min(pair.fillValuesT[0], pair.fillValuesM[1])),
-        max(pair.fillValuesT[0], pair.fillValuesM[1])
-      )
-    );
-    pair.fillValuesT[0] = getPartialValue(values[0][0], pair.fillValuesM[0], values[0][1]);
-    pair.fillValuesT[1] = pair.fillValuesM[0];
-    pair.fillValuesM[1] = getPartialValue(values[1][1], pair.fillValuesT[1], values[1][0]);
-    assert(tradeTokens(
-      traders[0][0],
-      traders[1][0],
-      tokens[0],
-      [pair.fillValuesM[0], pair.fillValuesM[1]],
-      pair.fillValuesM[0]
-    ));
-    return (pair.fillValuesM[0], pair.fillValuesM[1]);
-  }
-
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
@@ -303,23 +222,6 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   {
     assert(caller == msg.sender || caller == tx.origin);
     assert(required == address(0) || caller == required);
-    return true;
-  }
-
-  function isMatchable(
-    address[2][2] tokens,
-    uint[2][2] values
-  )
-    constant
-    returns (bool matchable)
-  {
-    assert(tokens[0][0] == tokens[1][1]);
-    assert(tokens[0][1] == tokens[1][0]);
-    uint multiplier = 10**18;
-    assert(safeDiv(
-      safeMul(safeMul(values[0][0], values[1][0]), multiplier),
-      safeMul(values[0][1], values[1][1])
-    ) >= multiplier);
     return true;
   }
 
