@@ -1,5 +1,5 @@
 exports.createOrderFactory = defaultParams => {
-  const orderFactory = params => Object.assign(
+  const orderFactory = (params = {}) => Object.assign(
     {},
     {
       expiration: Math.floor((Date.now() + (Math.random() * 1000000)) / 1000),

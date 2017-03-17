@@ -335,10 +335,10 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x20a422aa1980a3a2908f49d48ec0e4000ae60c1d",
-      "updated_at": 1489782274583
+      "address": "0x222f9c1ed7dfc358e9b185dca592b1d9592cf364",
+      "updated_at": 1489784672436
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1489782274583
+  "updated_at": 1489784672436
 }

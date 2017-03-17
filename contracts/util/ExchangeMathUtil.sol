@@ -14,7 +14,6 @@ contract ExchangeMathUtil is SafeMath {
     uint fillValueM,
     uint filledValueM)
     constant
-    internal
     returns (uint toFillValueM)
   {
     if (safeAdd(filledValueM, fillValueM) > valueM) {
@@ -30,7 +29,6 @@ contract ExchangeMathUtil is SafeMath {
   /// @return Partial value of target.
   function getPartialValue(uint value, uint fillValue, uint target)
     constant
-    internal
     returns (uint partial)
   {
     assert(fillValue <= value);

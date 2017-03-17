@@ -13,6 +13,7 @@ contract('Exchange', accounts => {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
+
   const INIT_BAL = toSmallestUnits(10000);
   const INIT_ALLOW = toSmallestUnits(10000);
 
@@ -102,59 +103,8 @@ contract('Exchange', accounts => {
   });
 
   describe('utility functions', () => {
-    beforeEach(done => {
-      util.createOrder(orderFactory()).then(newOrder => {
-        order = newOrder;
-        done();
-      });
-    });
-
-    it('getOrderHash should output the correct orderHash', done => {
-      exUtil.getOrderHash(order).then(orderHash => {
-        assert(order.orderHash === orderHash);
-        done();
-      });
-    });
-
-    it('getMsgHash should output the correct msgHash', done => {
-      exUtil.getMsgHash(order).then(msgHash => {
-        assert(util.getMsgHash(order, { hex: true }) === msgHash);
-        done();
-      });
-    });
-
-    it('validSignature should return true with a valid signature', done => {
-      exUtil.validSignature(order).then(success => {
-        assert(util.validSignature(order));
-        assert(success);
-        done();
-      });
-    });
-
-    it('validSignature should return false with an invalid signature', done => {
-      order.r = util.sha3('invalidR');
-      order.s = util.sha3('invalidS');
-      exUtil.validSignature(order).then(success => {
-        assert(!util.validSignature(order));
-        assert(!success);
-        done();
-      });
-    });
-
-    it('validSignature should return false with an invalid message hash', done => {
-      order.orderHash = util.sha3('invalid');
-      exUtil.validSignature(order).then(success => {
-        assert(!success);
-        done();
-      });
-    });
-
     it('transferFrom should be private', done => {
       assert(exchange.transferFrom === undefined);
-      done();
-    });
-
-    it('getFillValueT should throw if there is a rounding error', done => {
       done();
     });
   });
