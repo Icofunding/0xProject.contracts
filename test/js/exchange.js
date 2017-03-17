@@ -26,6 +26,7 @@ contract('Exchange', accounts => {
   let balances;
 
   let exUtil;
+  let getDmyBalances;
 
   const orderFactory = util.createOrderFactory({
     exchange: Exchange.address,
@@ -39,43 +40,6 @@ contract('Exchange', accounts => {
     feeT: toSmallestUnits(1),
   });
 
-  const getDmyBalances = function() {
-    return new Promise((resolve, reject) => {
-      Promise.all([
-        dmyA.balanceOf(maker),
-        dmyA.balanceOf(taker),
-        dmyA.balanceOf(feeRecipient),
-        dmyB.balanceOf(maker),
-        dmyB.balanceOf(taker),
-        dmyB.balanceOf(feeRecipient),
-        dmyPT.balanceOf(maker),
-        dmyPT.balanceOf(taker),
-        dmyPT.balanceOf(feeRecipient),
-      ]).then(res => {
-        const newBalances = {
-          [maker]: {},
-          [taker]: {},
-          [feeRecipient]: {},
-        };
-        const balanceStrs = res.map(balance => balance.toString());
-        [
-          newBalances[maker][dmyA.address],
-          newBalances[taker][dmyA.address],
-          newBalances[feeRecipient][dmyA.address],
-          newBalances[maker][dmyB.address],
-          newBalances[taker][dmyB.address],
-          newBalances[feeRecipient][dmyB.address],
-          newBalances[maker][dmyPT.address],
-          newBalances[taker][dmyPT.address],
-          newBalances[feeRecipient][dmyPT.address],
-      ] = balanceStrs;
-        resolve(newBalances);
-      }).catch(() => {
-        reject();
-      });
-    });
-  };
-
   before(done => {
     Promise.all([
       Exchange.deployed(),
@@ -85,6 +49,7 @@ contract('Exchange', accounts => {
     ]).then(instances => {
       [exchange, dmyA, dmyB, dmyPT] = instances;
       exUtil = util.exchangeUtil(exchange);
+      getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
       return Promise.all([
         dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
         dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),

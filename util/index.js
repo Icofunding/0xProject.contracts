@@ -48,6 +48,7 @@ module.exports = web3 => {
       }
     },
     createOrderFactory: testUtil.createOrderFactory,
+    getBalancesFactory: testUtil.getBalancesFactory,
     sha3: ethUtil.sha3,
     getOrderHash,
     getMsgHash,
