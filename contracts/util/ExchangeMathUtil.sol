@@ -24,18 +24,18 @@ contract ExchangeMathUtil is SafeMath {
   }
 
   /// @dev Calculates partial value given fillValueM and order valueM.
-  /// @param valueM Amount of tokenM specified in order.
-  /// @param fillValueM Amount of tokenM to be filled.
+  /// @param value Amount of token specified in order.
+  /// @param fillValue Amount of token to be filled.
   /// @param target Value to calculate partial.
   /// @return Partial value of target.
-  function getPartialValue(uint valueM, uint fillValueM, uint target)
+  function getPartialValue(uint value, uint fillValue, uint target)
     constant
     internal
     returns (uint partial)
   {
-    assert(fillValueM <= valueM);
-    assert(!(target < 10**3 && target * fillValueM % valueM != 0)); // throw if rounding error > 0.1%
-    return safeDiv(safeMul(fillValueM, target), valueM);
+    assert(fillValue <= value);
+    assert(!(target < 10**3 && target * fillValue % value != 0)); // throw if rounding error > 0.1%
+    return safeDiv(safeMul(fillValue, target), value);
   }
 
   function max(uint a, uint b) constant internal returns (uint) {

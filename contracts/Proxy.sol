@@ -44,5 +44,4 @@ contract Proxy is Ownable {
   {
     return authorities[_target];
   }
-
 }

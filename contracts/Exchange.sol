@@ -13,11 +13,11 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   mapping (bytes32 => uint) public fills;
 
   struct Pair {
-    bytes32 orderAHash;
-    bytes32 orderBHash;
-    uint orderATotalFillValueM;
-    uint orderAFillValueM;
-    uint orderBFillValueM;
+    bytes32[2] orderHashes;
+    uint[2] fillValuesM;
+    uint[2] fillValuesT;
+    address matcherToken;
+    uint matcherValue;
   }
 
   modifier notExpired(uint expiration) {
@@ -173,7 +173,7 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     return fillValueM;
   }
 
-  /*function matchOrders(
+  function matchOrders(
     address[2][2] traders,
     address caller,
     address[2] feeRecipients,
@@ -183,57 +183,68 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
     uint[2] expirations,
     uint8[2] v,
     bytes32[2][2] rs)
+    /*notExpired(expirations[0])
+    notExpired(expirations[1])*/
     returns (uint orderAFillValueM, uint orderBFillValueM)
   {
     assert(validCaller(traders[0][1], caller));
     assert(validCaller(traders[1][1], caller));
     assert(isMatchable(tokens, values));
     if(block.timestamp > expirations[0] || block.timestamp > expirations[1]) return (0, 0);
-    Pair memory pair = Pair({
-      orderAHash: getOrderHash(
+    Pair memory pair;
+    pair.orderHashes = [
+      getOrderHash(
         traders[0],
         tokens[0],
         values[0],
         expirations[0]
       ),
-      orderBHash: getOrderHash(
+      getOrderHash(
         traders[1],
         tokens[1],
         values[1],
         expirations[1]
-      ),
-      orderATotalFillValueM: 0,
-      orderAFillValueM: 0,
-      orderBFillValueM: 0
-    });
-    pair.orderATotalFillValueM = min(
-      getFillValueM(values[0][0], values[0][0], fills[pair.orderAHash]),
-      getPartialValue(
-        values[1][0],
-        getFillValueM(values[1][1], values[1][1], fills[pair.orderBHash]),
-        values[1][1]
       )
-    );
-    pair.orderAFillValueM = safeDiv(
-      safeMul(pair.orderATotalFillValueM, min(values[0][1], values[1][0])),
-      max(values[0][1], values[1][0])
-    );
+    ];
     assert(validSignature(
       traders[0][0],
-      getMsgHash(pair.orderAHash, feeRecipients[0], fees[0]),
+      getMsgHash(pair.orderHashes[0], feeRecipients[0], fees[0]),
       v[0],
       rs[0][0],
       rs[0][1]
     ));
     assert(validSignature(
       traders[1][0],
-      getMsgHash(pair.orderBHash, feeRecipients[1], fees[1]),
+      getMsgHash(pair.orderHashes[1], feeRecipients[1], fees[1]),
       v[1],
       rs[1][0],
       rs[1][1]
     ));
-    return (pair.orderAFillValueM, pair.orderBFillValueM);
-  }*/
+    //initialize fillValues to remaining amounts
+    pair.fillValuesM[0] = getFillValueM(values[0][0], values[0][0], fills[pair.orderHashes[0]]);
+    pair.fillValuesM[1] = getFillValueM(values[1][0], values[1][0], fills[pair.orderHashes[1]]);
+    pair.fillValuesT[0] = getPartialValue(values[0][0], pair.fillValuesM[0], values[0][1]);
+    pair.fillValuesT[1] = getPartialValue(values[1][0], pair.fillValuesM[1], values[1][1]);
+    //calculate max values to fill within order parameters
+    pair.fillValuesM[0] = min(
+      min(pair.fillValuesM[0], pair.fillValuesT[1]),
+      safeDiv(
+        safeMul(max(pair.fillValuesM[0], pair.fillValuesT[1]), min(pair.fillValuesT[0], pair.fillValuesM[1])),
+        max(pair.fillValuesT[0], pair.fillValuesM[1])
+      )
+    );
+    pair.fillValuesT[0] = getPartialValue(values[0][0], pair.fillValuesM[0], values[0][1]);
+    pair.fillValuesT[1] = pair.fillValuesM[0];
+    pair.fillValuesM[1] = getPartialValue(values[1][1], pair.fillValuesT[1], values[1][0]);
+    assert(tradeTokens(
+      traders[0][0],
+      traders[1][0],
+      tokens[0],
+      [pair.fillValuesM[0], pair.fillValuesM[1]],
+      pair.fillValuesM[0]
+    ));
+    return (pair.fillValuesM[0], pair.fillValuesM[1]);
+  }
 
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
@@ -282,6 +293,10 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   * Constant functions
   */
 
+  /// @dev Checks if function is being called from a valid address.
+  /// @param required Required address to call function from.
+  /// @param caller Address of user or smart contract calling function.
+  /// @return Caller is valid.
   function validCaller(address required, address caller)
     constant
     returns (bool success)
@@ -395,7 +410,6 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
   /// @param orderHash Keccak-256 hash of order.
   function LogFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
     private
-    returns (bool success)
   {
     LogFillByUser(
       addresses[0],
@@ -427,6 +441,5 @@ contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
       values[5],
       values[6]
     );
-    return true;
   }
 }
