@@ -3,10 +3,11 @@ const { getMsgHash } = require('./hashUtil.js');
 
 module.exports = exchange => {
   const exchangeUtil = {
-    fill: (order, { fillValueM, from }) => {
-      const params = createFill(order, fillValueM);
+    fill: (order, { fillValueM, from, caller }) => {
+      const params = createFill(order, caller || from, fillValueM);
       return exchange.fill(
         params.traders,
+        params.caller,
         params.feeRecipient,
         params.tokens,
         params.values,
@@ -33,10 +34,11 @@ module.exports = exchange => {
         { from }
       );
     },
-    cancel: (order, { cancelValueM, from }) => {
-      const params = createCancel(order, cancelValueM);
+    cancel: (order, { cancelValueM, from, caller }) => {
+      const params = createCancel(order, caller || from, cancelValueM);
       return exchange.cancel(
         params.traders,
+        params.caller,
         params.tokens,
         params.values,
         params.expiration,

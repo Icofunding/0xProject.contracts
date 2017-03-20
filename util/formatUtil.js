@@ -1,6 +1,7 @@
-exports.createFill = (order, fillValueM) => {
+exports.createFill = (order, caller, fillValueM) => {
   const fill = {
     traders: [order.maker, order.taker],
+    caller,
     feeRecipient: order.feeRecipient,
     tokens: [order.tokenM, order.tokenT],
     values: [order.valueM, order.valueT],
@@ -39,9 +40,10 @@ exports.createBatchFill = (orders, fillValuesM) => {
   return ret;
 };
 
-exports.createCancel = (order, cancelValueM) => {
+exports.createCancel = (order, caller, cancelValueM) => {
   const cancel = {
     traders: [order.maker, order.taker],
+    caller,
     tokens: [order.tokenM, order.tokenT],
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],
