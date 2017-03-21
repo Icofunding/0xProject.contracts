@@ -1,4 +1,4 @@
-const { createFill, createBatchFill, createFillUpTo, createCancel } = require('./formatUtil.js');
+const { createFill, createBatchFill, createFillUpTo, createCancel, createBatchCancel } = require('./formatUtil.js');
 
 module.exports = exchangeW => {
   const exchangeWUtil = {
@@ -79,7 +79,7 @@ module.exports = exchangeW => {
     },
     cancel: (order, { cancelValueM, from }) => {
       const params = createCancel(order, null, cancelValueM);
-      return exchange.cancel(
+      return exchangeW.cancel(
         params.traders,
         params.tokens,
         params.values,
@@ -90,7 +90,7 @@ module.exports = exchangeW => {
     },
     batchCancel: (orders, { cancelValuesM, from }) => {
       const params = createBatchCancel(orders, cancelValuesM);
-      return exchange.cancel(
+      return exchangeW.batchCancel(
         params.traders,
         params.tokens,
         params.values,

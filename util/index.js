@@ -2,6 +2,7 @@ const ethUtil = require('ethereumjs-util');
 const { getOrderHash, getMsgHash } = require('./hashUtil.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
+const exchangeWUtil = require('./exchangeWUtil.js');
 const testUtil = require('./testUtil.js');
 
 module.exports = web3 => {
@@ -54,6 +55,7 @@ module.exports = web3 => {
     getMsgHash,
     BNutil,
     exchangeUtil,
+    exchangeWUtil,
   };
   return index;
 };
