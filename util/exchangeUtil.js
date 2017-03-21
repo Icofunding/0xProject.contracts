@@ -1,4 +1,4 @@
-const { createFill, createBatchFill, createCancel } = require('./formatUtil.js');
+const { createFill, createCancel } = require('./formatUtil.js');
 const { getMsgHash } = require('./hashUtil.js');
 
 module.exports = exchange => {
@@ -14,21 +14,6 @@ module.exports = exchange => {
         params.fees,
         params.expiration,
         params.fillValueM,
-        params.v,
-        params.rs,
-        { from }
-      );
-    },
-    batchFill: (orders, { fillValuesM, from }) => {
-      const params = createBatchFill(orders, fillValuesM);
-      return exchange.batchFill(
-        params.traders,
-        params.feeRecipients,
-        params.tokens,
-        params.values,
-        params.fees,
-        params.expirations,
-        params.fillValuesM,
         params.v,
         params.rs,
         { from }

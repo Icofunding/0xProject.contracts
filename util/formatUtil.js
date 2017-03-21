@@ -22,18 +22,42 @@ exports.createBatchFill = (orders, fillValuesM) => {
     values: [],
     fees: [],
     expirations: [],
-    fillValuesM: [],
+    fillValuesM,
     v: [],
     rs: [],
   };
-  orders.forEach((order, i) => {
+  orders.forEach(order => {
     ret.traders.push([order.maker, order.taker]);
     ret.feeRecipients.push(order.feeRecipient);
     ret.tokens.push([order.tokenM, order.tokenT]);
     ret.values.push([order.valueM, order.valueT]);
     ret.fees.push([order.feeM, order.feeT]);
     ret.expirations.push(order.expiration);
-    ret.fillValuesM.push(fillValuesM[i]);
+    ret.v.push(order.v);
+    ret.rs.push([order.r, order.s]);
+  });
+  return ret;
+};
+
+exports.createFillUpTo = (orders, fillValueM) => {
+  const ret = {
+    traders: [],
+    feeRecipients: [],
+    tokens: [],
+    values: [],
+    fees: [],
+    expirations: [],
+    fillValueM,
+    v: [],
+    rs: [],
+  };
+  orders.forEach(order => {
+    ret.traders.push([order.maker, order.taker]);
+    ret.feeRecipients.push(order.feeRecipient);
+    ret.tokens.push([order.tokenM, order.tokenT]);
+    ret.values.push([order.valueM, order.valueT]);
+    ret.fees.push([order.feeM, order.feeT]);
+    ret.expirations.push(order.expiration);
     ret.v.push(order.v);
     ret.rs.push([order.r, order.s]);
   });
@@ -51,4 +75,21 @@ exports.createCancel = (order, caller, cancelValueM) => {
     cancelValueM,
   };
   return cancel;
+};
+
+exports.createBatchCancel = (orders, cancelValuesM) => {
+  const ret = {
+    traders: [],
+    tokens: [],
+    values: [],
+    expirations: [],
+    cancelValuesM,
+  };
+  orders.forEach(order => {
+    ret.traders.push([order.maker, order.taker]);
+    ret.tokens.push([order.tokenM, order.tokenT]);
+    ret.values.push([order.valueM, order.valueT]);
+    ret.expirations.push(order.expiration);
+  });
+  return ret;
 };

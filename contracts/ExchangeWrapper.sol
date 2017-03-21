@@ -174,7 +174,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param v Array ECDSA signature v parameters.
   /// @param rs Array of ECDSA signature parameters r and s tuples.
   /// @return Total amount of fillValueM filled in orders.
-  function fillUntil(
+  function fillUpTo(
     address[2][] traders,
     address[] feeRecipients,
     address[2][] tokens,
@@ -237,7 +237,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT tuples.
   /// @param expirations Array of times orders expire in seconds.
   /// @param fillValuesM Array of desired amounts of tokenM to cancel in orders.
-  /// @return Success of all orders being cancelled with at least desired amounts.
+  /// @return Success if no cancels throw.
   function batchCancel(
     address[2][] traders,
     address[2][] tokens,
