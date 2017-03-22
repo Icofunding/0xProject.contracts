@@ -51,6 +51,15 @@ contract('Proxy', accounts => {
     });
   });
 
+  describe('isOptedOut', () => {
+    it('should default to false', done => {
+      proxy.isOptedOut(Exchange.address, accounts[0]).then(optedOut => {
+        assert(!optedOut);
+        done();
+      });
+    });
+  });
+
   describe('setAuthorization', () => {
     it('should throw if not called by owner', done => {
       proxy.setAuthorization(accounts[0], true).catch(e => {
@@ -96,11 +105,42 @@ contract('Proxy', accounts => {
     });
   });
 
+  describe('setPersonalAuthorization', () => {
+    it('should allow any account to opt out', done => {
+      proxy.setPersonalAuthorization(Exchange.address, true, { from: accounts[0] }).then(() => {
+        proxy.isOptedOut(Exchange.address, accounts[0]).then(optedOut => {
+          assert(optedOut);
+          done();
+        });
+      });
+    });
+
+    it('should allow any account to opt back in', done => {
+      proxy.setPersonalAuthorization(Exchange.address, false, { from: accounts[0] }).then(() => {
+        proxy.isOptedOut(Exchange.address, accounts[0]).then(optedOut => {
+          assert(!optedOut);
+          done();
+        });
+      });
+    });
+  });
+
   describe('transferFrom', () => {
     it('should throw when called by an unauthorized address', done => {
       proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: accounts[0] }).catch(e => {
         assert(e);
         done();
+      });
+    });
+
+    it('should throw when the transfer from account is opted out', done => {
+      proxy.setPersonalAuthorization(Exchange.address, true, { from: accounts[0] }).then(() => {
+        proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: accounts[0] }).catch(e => {
+          assert(e);
+          proxy.setPersonalAuthorization(Exchange.address, false, { from: accounts[0] }).then(() => {
+            done();
+          });
+        });
       });
     });
 
