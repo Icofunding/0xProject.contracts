@@ -14,7 +14,7 @@ exports.solSHA3 = (...args) => {
   return solSha3;
 };
 
-exports.getOrderHash = (params, { hex = false, hashPersonal = false } = {}) => {
+exports.getOrderHash = (params, { hex = false } = {}) => {
   let orderHash = exports.solSHA3(
       params.exchange,
       params.maker,
@@ -28,11 +28,5 @@ exports.getOrderHash = (params, { hex = false, hashPersonal = false } = {}) => {
       params.feeT,
       params.expiration
     );
-  if (hashPersonal) {
-    orderHash = ethUtil.hashPersonalMessage(orderHash);
-  }
-  if (hex) {
-    orderHash = ethUtil.bufferToHex(orderHash);
-  }
-  return orderHash;
+  return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };

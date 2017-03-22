@@ -10,8 +10,9 @@ module.exports = web3 => {
   const index = {
     createOrder: (params, { hashPersonal = true } = {}) => {
       const order = new Promise((resolve, reject) => {
-        const orderHash = getOrderHash(params, { hex: true, hashPersonal });
-        web3.eth.sign(params.maker, orderHash, (err, sig) => {
+        const orderHashBuff = getOrderHash(params);
+        const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHashBuff) : orderHashBuff;
+        web3.eth.sign(params.maker, ethUtil.bufferToHex(toSign), (err, sig) => {
           if (err) {
             reject(err);
           }
@@ -27,7 +28,7 @@ module.exports = web3 => {
             valueT,
             feeM,
             feeT,
-            orderHash,
+            orderHash: ethUtil.bufferToHex(orderHashBuff),
             expiration,
             v,
             r: ethUtil.bufferToHex(r),
@@ -40,13 +41,14 @@ module.exports = web3 => {
     validSignature: (order, { hashPersonal = true } = {}) => {
       let orderHash;
       if (!order.orderHash) {
-        orderHash = getOrderHash(order, { hashPersonal });
+        orderHash = getOrderHash(order);
       } else {
         orderHash = ethUtil.toBuffer(order.orderHash);
       }
+      const signed = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
       const { v, r, s } = order;
       try {
-        const pubKey = ethUtil.ecrecover(orderHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+        const pubKey = ethUtil.ecrecover(signed, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
         return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
       } catch (err) {
         return false;

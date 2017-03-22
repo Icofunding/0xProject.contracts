@@ -1,5 +1,4 @@
 const { createFill, createCancel } = require('./formatUtil.js');
-const { getMsgHash } = require('./hashUtil.js');
 
 module.exports = exchange => {
   const exchangeUtil = {

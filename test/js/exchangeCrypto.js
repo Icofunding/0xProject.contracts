@@ -47,15 +47,6 @@ contract('ExchangeCrypto', accounts => {
     });
   });
 
-  describe('getMsgHash', () => {
-    it('should output the correct msgHash', done => {
-      exUtil.getMsgHash(order).then(msgHash => {
-        assert(util.getMsgHash(order, { hex: true }) === msgHash);
-        done();
-      });
-    });
-  });
-
   describe('validSignature', () => {
     beforeEach(done => {
       util.createOrder(orderFactory()).then(newOrder => {
@@ -77,14 +68,6 @@ contract('ExchangeCrypto', accounts => {
       order.s = util.sha3('invalidS');
       exUtil.validSignature(order).then(success => {
         assert(!util.validSignature(order));
-        assert(!success);
-        done();
-      });
-    });
-
-    it('should return false with an invalid message hash', done => {
-      order.orderHash = util.sha3('invalid');
-      exUtil.validSignature(order).then(success => {
         assert(!success);
         done();
       });

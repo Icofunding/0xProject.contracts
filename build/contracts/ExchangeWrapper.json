@@ -351,10 +351,10 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0x379b56d0abca5e86d0bf6565a6e890cf987caa8a",
-      "updated_at": 1490212409336
+      "address": "0xa6331621a879f00e603cfe6babf664f8a2b41b49",
+      "updated_at": 1490214932666
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1490212409336
+  "updated_at": 1490214932666
 }

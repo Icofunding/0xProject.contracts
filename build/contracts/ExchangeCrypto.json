@@ -79,10 +79,10 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0xeb0b9819f2d8f1bd0576244991834c0837c6e936",
-      "updated_at": 1490212409336
+      "address": "0x120675fa38310dc0feab78a24b45d6ca958ed431",
+      "updated_at": 1490214932656
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1490212409336
+  "updated_at": 1490214932656
 }
