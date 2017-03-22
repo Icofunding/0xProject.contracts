@@ -278,4 +278,22 @@ contract('ExchangeWrapper', accounts => {
       });
     });
   });
+
+  describe('batchCancel', () => {
+    it('should be able to cancel multiple orders', done => {
+      Promise.all([
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+      ]).then(orders => {
+        const cancelValuesM = orders.map(order => order.valueM);
+        exUtil.batchCancel(orders, { cancelValuesM, from: maker }).then(() => {
+          exUtil.batchFill(orders, { fillValuesM: cancelValuesM, from: taker }).then(res => {
+            assert(res.logs.length === 0);
+            done();
+          });
+        });
+      });
+    });
+  });
 });

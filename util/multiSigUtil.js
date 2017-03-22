@@ -10,9 +10,9 @@ module.exports = multiSig => {
       if (abi[i].name === name) {
         types = abi[i].inputs.map(input => input.type);
         funcSig = ethUtil.bufferToHex(ABI.methodID(name, types));
-        argsData = args.map((arg, j) => {
+        argsData = args.map(arg => {
           if (typeof arg === 'boolean') {
-            return ethUtil.setLengthLeft(ethUtil.toBuffer(+arg), 32).toString('hex');
+            arg = +arg;
           }
           return ethUtil.setLengthLeft(ethUtil.toBuffer(arg), 32).toString('hex');
         });
@@ -27,13 +27,11 @@ module.exports = multiSig => {
     return multiSig.submitTransaction(destination, value, data, { from });
   };
 
-  const confirmTransaction = ({ transactionId, from }) => {
-    return multiSig.confirmTransaction(transactionId, { from });
-  }
+  const confirmTransaction = ({ transactionId, from }) => multiSig.confirmTransaction(transactionId, { from });
 
   return {
     encodeFnArgs,
     submitTransaction,
-    confirmTransaction
+    confirmTransaction,
   };
 };
