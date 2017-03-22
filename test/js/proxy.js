@@ -1,30 +1,36 @@
 const Exchange = artifacts.require('./Exchange.sol');
+const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 const Proxy = artifacts.require('./Proxy.sol');
-const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
-const BNutil = require('../../util/BNutil.js');
+const DummyTokenA = artifacts.require('./DummyTokenA.sol');
+const util = require('../../util/index.js')(web3);
+const PROXY_ABI = require('../../build/contracts/Proxy.json').abi;
+const { add, sub } = require('../../util/BNutil.js');
 
 contract('Proxy', accounts => {
-  const owner = accounts[0];
-  const notOwner = accounts[1];
-
   const INIT_BAL = 100000000;
   const INIT_ALLOW = 100000000;
 
+  let multiSig;
   let proxy;
   let dmyA;
 
+  let multiSigUtil;
+  let getDmyBalances;
+
   before(done => {
     Promise.all([
-      Exchange.deployed(),
+      MultiSigWallet.deployed(),
       Proxy.deployed(),
       DummyTokenA.deployed(),
     ]).then(instances => {
-      [exchange, proxy, dmyA] = instances;
+      [multiSig, proxy, dmyA] = instances;
+      multiSigUtil = util.multiSigUtil(multiSig);
+      getDmyBalances = util.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
       Promise.all([
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: owner }),
-        dmyA.setBalance(INIT_BAL, { from: owner }),
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: notOwner }),
-        dmyA.setBalance(INIT_BAL, { from: notOwner }),
+        dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
+        dmyA.setBalance(INIT_BAL, { from: accounts[0] }),
+        dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[1] }),
+        dmyA.setBalance(INIT_BAL, { from: accounts[1] }),
       ]).then(() => done());
     });
   });
@@ -38,7 +44,7 @@ contract('Proxy', accounts => {
     });
 
     it('should return false if not authorized', done => {
-      proxy.isAuthorized(owner).then(authorized => {
+      proxy.isAuthorized(accounts[0]).then(authorized => {
         assert(!authorized);
         done();
       });
@@ -47,75 +53,78 @@ contract('Proxy', accounts => {
 
   describe('setAuthorization', () => {
     it('should throw if not called by owner', done => {
-      proxy.setAuthorization(notOwner, true).then(res => {
-        assert(!res);
-        done();
-      }).catch(e => {
+      proxy.setAuthorization(accounts[0], true).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should allow owner to set authorization', done => {
-      proxy.setAuthorization(notOwner, true, { from: owner }).then(() => {
-        proxy.isAuthorized(notOwner).then(authorized => {
-          assert(authorized);
-          proxy.setAuthorization(notOwner, false, { from: owner }).then(() => {
-            proxy.isAuthorized(notOwner).then(innerAuthorized => {
-              assert(!innerAuthorized);
-              done();
+      multiSigUtil.submitTransaction({
+        destination: Proxy.address,
+        from: accounts[0],
+        dataParams: {
+          name: 'setAuthorization',
+          abi: PROXY_ABI,
+          args: [accounts[0], true],
+        },
+      }).then(res1 => {
+        let transactionId = res1.logs[1].args.transactionId.toString();
+        multiSigUtil.confirmTransaction({ transactionId, from: accounts[1] }).then(() => {
+          proxy.isAuthorized(accounts[0]).then(authorized => {
+            assert(authorized);
+            multiSigUtil.submitTransaction({
+              destination: Proxy.address,
+              from: accounts[0],
+              dataParams: {
+                name: 'setAuthorization',
+                abi: PROXY_ABI,
+                args: [accounts[0], false],
+              },
+            }).then(res2 => {
+              transactionId = res2.logs[1].args.transactionId.toString();
+              multiSigUtil.confirmTransaction({ transactionId, from: accounts[1] }).then(() => {
+                proxy.isAuthorized(accounts[0]).then(newAuth => {
+                  assert(!newAuth);
+                  done();
+                });
+              });
             });
           });
         });
-      }).catch(e => {
-        assert(!e);
-        done();
-      });
-    });
-
-    it('should log 1 event', done => {
-      proxy.setAuthorization(notOwner, false, { from: owner }).then(res => {
-        assert(res.logs.length === 1);
-        done();
-      }).catch(e => {
-        assert(!e);
-        done();
       });
     });
   });
 
   describe('transferFrom', () => {
     it('should throw when called by an unauthorized address', done => {
-      proxy.transferFrom(dmyA.address, owner, notOwner, 1000).then(res => {
-        assert(!res);
-        done();
-      }).catch(e => {
+      proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: accounts[0] }).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should allow an authorized address to transfer', done => {
-      Promise.all([
-        dmyA.balanceOf(owner),
-        dmyA.balanceOf(notOwner),
-      ]).then(bigNumberBalances => {
-        balances = bigNumberBalances.map(balance => balance.toString());
-        const [ownerBalance, notOwnerBalance] = balances;
-        proxy.setAuthorization(owner, true, { from: owner }).then(() => {
-          const transferAmt = 10000;
-          proxy.transferFrom(dmyA.address, owner, notOwner, transferAmt, { from: owner }).then(() => {
-            Promise.all([
-              dmyA.balanceOf(owner),
-              dmyA.balanceOf(notOwner),
-            ]).then(newBalances => {
-              assert(BNutil.sub(ownerBalance, transferAmt) === newBalances[0].toString());
-              assert(BNutil.add(notOwnerBalance, transferAmt) === newBalances[1].toString());
-              done();
+      getDmyBalances().then(balances => {
+        multiSigUtil.submitTransaction({
+          destination: Proxy.address,
+          from: accounts[0],
+          dataParams: {
+            name: 'setAuthorization',
+            abi: PROXY_ABI,
+            args: [accounts[0], true],
+          },
+        }).then(res => {
+          const transactionId = res.logs[1].args.transactionId.toString();
+          multiSigUtil.confirmTransaction({ transactionId, from: accounts[1] }).then(() => {
+            const transferAmt = 10000;
+            proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: accounts[0] }).then(() => {
+              getDmyBalances().then(newBalances => {
+                assert(newBalances[accounts[0]][dmyA.address] === sub(balances[accounts[0]][dmyA.address], transferAmt));
+                assert(newBalances[accounts[1]][dmyA.address] === add(balances[accounts[1]][dmyA.address], transferAmt));
+                done();
+              });
             });
-          }).catch(e => {
-            assert(!e);
-            done();
           });
         });
       });

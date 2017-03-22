@@ -97,10 +97,10 @@
     "42": {
       "events": {},
       "links": {},
-      "address": "0xca58f90ecd8e9a7c54cfa9198fc6a546d7ec475b",
-      "updated_at": 1490114156076
+      "address": "0x1808bd4f184820c2820db72e272180575f040c96",
+      "updated_at": 1490137364393
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1490114156076
+  "updated_at": 1490137364393
 }
