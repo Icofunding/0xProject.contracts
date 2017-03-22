@@ -37,22 +37,16 @@ module.exports = exchange => {
       return exchange.getOrderHash(
         params.traders,
         params.tokens,
+        params.feeRecipient,
         params.values,
+        params.fees,
         params.expiration
       );
-    },
-    getMsgHash: order => {
-      const msgHash = exchange.getMsgHash(
-        order.orderHash,
-        order.feeRecipient,
-        [order.feeM, order.feeT]
-      );
-      return msgHash;
     },
     validSignature: order => {
       const validSignature = exchange.validSignature(
         order.maker,
-        getMsgHash(order, { hex: true }),
+        order.orderHash,
         order.v,
         order.r,
         order.s

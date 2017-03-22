@@ -14,32 +14,25 @@ exports.solSHA3 = (...args) => {
   return solSha3;
 };
 
-exports.getOrderHash = (params, { hex = false } = {}) => {
-  const orderHash = exports.solSHA3(
+exports.getOrderHash = (params, { hex = false, hashPersonal = false } = {}) => {
+  let orderHash = exports.solSHA3(
       params.exchange,
       params.maker,
       params.taker,
       params.tokenM,
       params.tokenT,
+      params.feeRecipient,
       params.valueM,
       params.valueT,
+      params.feeM,
+      params.feeT,
       params.expiration
     );
-  return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
-};
-
-exports.getMsgHash = (params, { hex = false, hashPersonal = false } = {}) => {
-  let msgHash = exports.solSHA3(
-    params.orderHash,
-    params.feeRecipient,
-    params.feeM,
-    params.feeT
-  );
   if (hashPersonal) {
-    msgHash = ethUtil.hashPersonalMessage(msgHash);
+    orderHash = ethUtil.hashPersonalMessage(orderHash);
   }
   if (hex) {
-    msgHash = ethUtil.bufferToHex(msgHash);
+    orderHash = ethUtil.bufferToHex(orderHash);
   }
-  return msgHash;
+  return orderHash;
 };
