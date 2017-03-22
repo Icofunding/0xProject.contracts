@@ -7,9 +7,9 @@ module.exports = exchange => {
       const params = createFill(order, caller || from, fillValueM);
       return exchange.fill(
         params.traders,
+        params.tokens,
         params.caller,
         params.feeRecipient,
-        params.tokens,
         params.values,
         params.fees,
         params.expiration,
@@ -19,13 +19,14 @@ module.exports = exchange => {
         { from }
       );
     },
-    cancel: (order, { cancelValueM, from, caller }) => {
-      const params = createCancel(order, caller || from, cancelValueM);
+    cancel: (order, { cancelValueM, from }) => {
+      const params = createCancel(order, cancelValueM);
       return exchange.cancel(
         params.traders,
-        params.caller,
         params.tokens,
+        params.feeRecipient,
         params.values,
+        params.fees,
         params.expiration,
         params.cancelValueM,
         { from }

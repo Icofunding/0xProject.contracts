@@ -87,9 +87,9 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
 
   /// @dev Fills an order with specified parameters and ECDSA signature.
   /// @param traders Array of order maker and taker addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param caller Address to execute fill with.
   /// @param feeRecipient Address that receives order fees.
-  /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -99,9 +99,9 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
+    address[2] tokens,
     address caller,
     address feeRecipient,
-    address[2] tokens,
     uint[2] values,
     uint[2] fees,
     uint expiration,
@@ -170,8 +170,8 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
 
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
-  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -179,8 +179,8 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
-    address feeRecipient,
     address[2] tokens,
+    address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,

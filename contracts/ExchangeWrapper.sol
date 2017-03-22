@@ -13,8 +13,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Fills an order with specified parameters and ECDSA signature, with caller as msg.sender.
   /// @param traders Array of order maker and taker addresses.
-  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -24,8 +24,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
-    address feeRecipient,
     address[2] tokens,
+    address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,
@@ -36,9 +36,9 @@ contract ExchangeWrapper is SafeMath {
   {
     return exchange.fill(
       traders,
+      tokens,
       msg.sender,
       feeRecipient,
-      tokens,
       values,
       fees,
       expiration,
@@ -50,8 +50,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Fills an order with specified parameters and ECDSA signature, throws if specified amount not filled entirely.
   /// @param traders Array of order maker and taker addresses.
-  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -61,8 +61,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Success of entire fillValueM being filled.
   function fillOrKill(
     address[2] traders,
-    address feeRecipient,
     address[2] tokens,
+    address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,
@@ -73,8 +73,8 @@ contract ExchangeWrapper is SafeMath {
   {
     assert(fill(
       traders,
-      feeRecipient,
       tokens,
+      feeRecipient,
       values,
       fees,
       expiration,
@@ -87,8 +87,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Synchronously executes multiple fill orders in a single transaction.
   /// @param traders Array of order maker and taker address tuples.
-  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
@@ -98,8 +98,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return True if no fills throw.
   function batchFill(
     address[2][] traders,
-    address[] feeRecipients,
     address[2][] tokens,
+    address[] feeRecipients,
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
@@ -111,8 +111,8 @@ contract ExchangeWrapper is SafeMath {
     for (uint i = 0; i < traders.length; i++) {
       fill(
         traders[i],
-        feeRecipients[i],
         tokens[i],
+        feeRecipients[i],
         values[i],
         fees[i],
         expirations[i],
@@ -126,8 +126,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Synchronously executes multiple fillOrKill orders in a single transaction.
   /// @param traders Array of order maker and taker address tuples.
-  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
@@ -137,8 +137,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Success of all orders being filled with respective fillValueM.
   function batchFillOrKill(
     address[2][] traders,
-    address[] feeRecipients,
     address[2][] tokens,
+    address[] feeRecipients,
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
@@ -150,8 +150,8 @@ contract ExchangeWrapper is SafeMath {
     for (uint i = 0; i < traders.length; i++) {
       assert(fillOrKill(
         traders[i],
-        feeRecipients[i],
         tokens[i],
+        feeRecipients[i],
         values[i],
         fees[i],
         expirations[i],
@@ -165,8 +165,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Synchronously executes multiple fill orders in a single transaction until total fillValueM filled.
   /// @param traders Array of order maker and taker address tuples.
-  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
@@ -176,8 +176,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Total amount of fillValueM filled in orders.
   function fillUpTo(
     address[2][] traders,
-    address[] feeRecipients,
     address[2][] tokens,
+    address[] feeRecipients,
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
@@ -192,8 +192,8 @@ contract ExchangeWrapper is SafeMath {
       assert(tokenM == tokens[i][0]);
       fillValueMLeft = safeSub(fillValueMLeft, fill(
         traders[i],
-        feeRecipients[i],
         tokens[i],
+        feeRecipients[i],
         values[i],
         fees[i],
         expirations[i],
@@ -208,8 +208,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
-  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -217,8 +217,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
-    address feeRecipient,
     address[2] tokens,
+    address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,
@@ -227,8 +227,8 @@ contract ExchangeWrapper is SafeMath {
   {
     return exchange.cancel(
       traders,
-      feeRecipient,
       tokens,
+      feeRecipient,
       values,
       fees,
       expiration,
@@ -238,8 +238,8 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Synchronously cancels multiple orders in a single transaction.
   /// @param traders Array of order maker and taker address tuples.
-  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
@@ -247,8 +247,8 @@ contract ExchangeWrapper is SafeMath {
   /// @return Success if no cancels throw.
   function batchCancel(
     address[2][] traders,
-    address[] feeRecipients,
     address[2][] tokens,
+    address[] feeRecipients,
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
@@ -258,8 +258,8 @@ contract ExchangeWrapper is SafeMath {
     for (uint i = 0; i < traders.length; i++) {
       cancel(
         traders[i],
-        feeRecipients[i],
         tokens[i],
+        feeRecipients[i],
         values[i],
         fees[i],
         expirations[i],
