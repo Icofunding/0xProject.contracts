@@ -206,26 +206,31 @@ contract ExchangeWrapper is SafeMath {
     return safeSub(fillValueM, fillValueMLeft);
   }
 
-  /// @dev Cancels provided amount of an order with given parameters and caller as msg.sender.
+  /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
+  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
   /// @param fillValueM Desired amount of tokenM to cancel in order.
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
+    address feeRecipient,
     address[2] tokens,
     uint[2] values,
+    uint[2] fees,
     uint expiration,
     uint fillValueM)
     returns (uint cancelledValueM)
   {
     return exchange.cancel(
       traders,
-      msg.sender,
+      feeRecipient,
       tokens,
       values,
+      fees,
       expiration,
       fillValueM
     );
@@ -233,15 +238,19 @@ contract ExchangeWrapper is SafeMath {
 
   /// @dev Synchronously cancels multiple orders in a single transaction.
   /// @param traders Array of order maker and taker address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
   /// @param tokens Array of order tokenM and tokenT address tuples.
   /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
   /// @param fillValuesM Array of desired amounts of tokenM to cancel in orders.
   /// @return Success if no cancels throw.
   function batchCancel(
     address[2][] traders,
+    address[] feeRecipients,
     address[2][] tokens,
     uint[2][] values,
+    uint[2][] fees,
     uint[] expirations,
     uint[] fillValuesM)
     returns (bool success)
@@ -249,8 +258,10 @@ contract ExchangeWrapper is SafeMath {
     for (uint i = 0; i < traders.length; i++) {
       cancel(
         traders[i],
+        feeRecipients[i],
         tokens[i],
         values[i],
+        fees[i],
         expirations[i],
         fillValuesM[i]
       );
