@@ -1,4 +1,4 @@
-const { createFill, createCancel } = require('./formatUtil.js');
+const { createFill, createCancel } = require('./formatters.js');
 
 module.exports = exchange => {
   const exchangeUtil = {

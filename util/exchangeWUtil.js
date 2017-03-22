@@ -1,4 +1,4 @@
-const { createFill, createBatchFill, createFillUpTo, createCancel, createBatchCancel } = require('./formatUtil.js');
+const { createFill, createBatchFill, createFillUpTo, createCancel, createBatchCancel } = require('./formatters.js');
 
 module.exports = exchangeW => {
   const exchangeWUtil = {

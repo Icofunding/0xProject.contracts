@@ -30,3 +30,20 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
     );
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
+
+exports.validSignature = (order, { hashPersonal = true } = {}) => {
+  let orderHash;
+  if (!order.orderHash) {
+    orderHash = getOrderHash(order);
+  } else {
+    orderHash = ethUtil.toBuffer(order.orderHash);
+  }
+  const signed = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
+  const { v, r, s } = order;
+  try {
+    const pubKey = ethUtil.ecrecover(signed, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+    return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
+  } catch (err) {
+    return false;
+  }
+};

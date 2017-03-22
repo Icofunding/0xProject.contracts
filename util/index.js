@@ -1,5 +1,5 @@
 const ethUtil = require('ethereumjs-util');
-const { getOrderHash } = require('./hashUtil.js');
+const { getOrderHash, validSignature } = require('./crypto.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
 const exchangeWUtil = require('./exchangeWUtil.js');
@@ -38,25 +38,10 @@ module.exports = web3 => {
       });
       return order;
     },
-    validSignature: (order, { hashPersonal = true } = {}) => {
-      let orderHash;
-      if (!order.orderHash) {
-        orderHash = getOrderHash(order);
-      } else {
-        orderHash = ethUtil.toBuffer(order.orderHash);
-      }
-      const signed = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
-      const { v, r, s } = order;
-      try {
-        const pubKey = ethUtil.ecrecover(signed, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
-        return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
-      } catch (err) {
-        return false;
-      }
-    },
     createOrderFactory: testUtil.createOrderFactory,
     getBalancesFactory: testUtil.getBalancesFactory,
     sha3: ethUtil.sha3,
+    validSignature,
     getOrderHash,
     BNutil,
     exchangeUtil,
