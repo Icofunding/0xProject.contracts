@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-contract ExchangeCryptoUtil {
+contract ExchangeCrypto {
 
   /// @dev Calculates Keccak-256 hash of order with specified parameters.
   /// @param traders Array of order maker and taker addresses.

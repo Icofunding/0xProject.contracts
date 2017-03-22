@@ -2,7 +2,7 @@ pragma solidity ^0.4.8;
 
 import "./SafeMath.sol";
 
-contract ExchangeMathUtil is SafeMath {
+contract ExchangeMath is SafeMath {
 
   /// @dev Calculates the amount of tokenM to be filled.
   /// @param valueM Value of tokenM specified in order.

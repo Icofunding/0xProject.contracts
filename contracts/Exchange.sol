@@ -2,10 +2,10 @@ pragma solidity ^0.4.8;
 
 import "./Proxy.sol";
 import "./tokens/Token.sol";
-import "./util/ExchangeMathUtil.sol";
-import "./util/ExchangeCryptoUtil.sol";
+import "./util/ExchangeMath.sol";
+import "./util/ExchangeCrypto.sol";
 
-contract Exchange is ExchangeMathUtil, ExchangeCryptoUtil {
+contract Exchange is ExchangeMath, ExchangeCrypto {
 
   address public PROTOCOL_TOKEN;
   address public PROXY;

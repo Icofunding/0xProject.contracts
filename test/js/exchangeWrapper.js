@@ -209,4 +209,73 @@ contract('ExchangeWrapper', accounts => {
       });
     });
   });
+
+  describe('fillUpTo', () => {
+    let orders;
+    beforeEach(done => {
+      Promise.all([
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory()),
+      ]).then(newOrders => {
+        orders = newOrders;
+        getDmyBalances().then(newBalances => {
+          balances = newBalances;
+          done();
+        });
+      });
+    });
+
+    it('should stop when the entire fillValueM is filled', done => {
+      const fillValueM = add(orders[0].valueM, div(orders[1].valueM, 2));
+      exUtil.fillUpTo(orders, { fillValueM, from: taker }).then(() => {
+        getDmyBalances().then(newBalances => {
+          const fillValueT = add(orders[0].valueT, div(orders[1].valueT, 2));
+          const feeValueM = add(orders[0].feeM, div(orders[1].feeM, 2));
+          const feeValueT = add(orders[0].feeT, div(orders[1].feeT, 2));
+          assert(newBalances[maker][orders[0].tokenM] === sub(balances[maker][orders[0].tokenM], fillValueM));
+          assert(newBalances[maker][orders[0].tokenT] === add(balances[maker][orders[0].tokenT], fillValueT));
+          assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
+          assert(newBalances[taker][orders[0].tokenT] === sub(balances[taker][orders[0].tokenT], fillValueT));
+          assert(newBalances[taker][orders[0].tokenM] === add(balances[taker][orders[0].tokenM], fillValueM));
+          assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
+          assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+          done();
+        });
+      });
+    });
+
+    it('should fill all orders if cannot fill entire fillValueM', done => {
+      const fillValueM = toSmallestUnits(100000);
+      orders.forEach(order => {
+        balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], order.valueM);
+        balances[maker][order.tokenT] = add(balances[maker][order.tokenT], order.valueT);
+        balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], order.feeM);
+        balances[taker][order.tokenM] = add(balances[taker][order.tokenM], order.valueM);
+        balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], order.valueT);
+        balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], order.feeT);
+        balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(order.feeM, order.feeT));
+      });
+      exUtil.fillUpTo(orders, { fillValueM, from: taker }).then(() => {
+        getDmyBalances().then(newBalances => {
+          expect(newBalances).to.deep.equal(balances);
+          done();
+        });
+      });
+    });
+
+    it('should throw if an order does not use the same tokenM', done => {
+      Promise.all([
+        util.createOrder(orderFactory()),
+        util.createOrder(orderFactory({ tokenM: dmyPT.address })),
+        util.createOrder(orderFactory()),
+      ]).then(newOrders => {
+        orders = newOrders;
+        exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker }).catch(e => {
+          assert(e);
+          done();
+        });
+      });
+    });
+  });
 });

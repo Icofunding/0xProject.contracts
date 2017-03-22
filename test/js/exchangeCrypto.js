@@ -1,4 +1,4 @@
-const ExchangeCryptoUtil = artifacts.require('./util/ExchangeCryptoUtil.sol');
+const ExchangeCrypto = artifacts.require('./util/ExchangeCrypto.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 
@@ -7,12 +7,12 @@ const util = require('../../util/index.js')(web3);
 
 const { toSmallestUnits } = util.BNutil;
 
-contract('ExchangeCryptoUtil', accounts => {
+contract('ExchangeCrypto', accounts => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
   const orderFactory = util.createOrderFactory({
-    exchange: ExchangeCryptoUtil.address,
+    exchange: ExchangeCrypto.address,
     maker,
     feeRecipient,
     tokenM: DummyTokenA.address,
@@ -26,7 +26,7 @@ contract('ExchangeCryptoUtil', accounts => {
   let order;
   let exUtil;
   before(done => {
-    ExchangeCryptoUtil.deployed().then(exchange => {
+    ExchangeCrypto.deployed().then(exchange => {
       exUtil = util.exchangeUtil(exchange);
       done();
     });
