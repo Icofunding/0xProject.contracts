@@ -228,6 +228,7 @@ contract ExchangeWrapper is SafeMath {
     return exchange.cancel(
       traders,
       tokens,
+      msg.sender,
       feeRecipient,
       values,
       fees,

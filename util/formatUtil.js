@@ -64,10 +64,11 @@ exports.createFillUpTo = (orders, fillValueM) => {
   return ret;
 };
 
-exports.createCancel = (order, cancelValueM) => {
+exports.createCancel = (order, caller, cancelValueM) => {
   const cancel = {
     traders: [order.maker, order.taker],
     tokens: [order.tokenM, order.tokenT],
+    caller,
     feeRecipient: order.feeRecipient,
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],

@@ -18,11 +18,12 @@ module.exports = exchange => {
         { from }
       );
     },
-    cancel: (order, { cancelValueM, from }) => {
-      const params = createCancel(order, cancelValueM);
+    cancel: (order, { cancelValueM, from, caller }) => {
+      const params = createCancel(order, caller || from, cancelValueM);
       return exchange.cancel(
         params.traders,
         params.tokens,
+        params.caller,
         params.feeRecipient,
         params.values,
         params.fees,

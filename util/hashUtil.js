@@ -15,7 +15,7 @@ exports.solSHA3 = (...args) => {
 };
 
 exports.getOrderHash = (params, { hex = false } = {}) => {
-  let orderHash = exports.solSHA3(
+  const orderHash = exports.solSHA3(
       params.exchange,
       params.maker,
       params.taker,

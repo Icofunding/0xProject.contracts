@@ -171,6 +171,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param caller Address to execute cancel with.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
@@ -180,6 +181,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   function cancel(
     address[2] traders,
     address[2] tokens,
+    address caller,
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
@@ -187,7 +189,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
     uint fillValueM)
     returns (uint cancelledValueM)
   {
-    assert(validCaller(traders[0], msg.sender));
+    assert(validCaller(traders[0], caller));
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
