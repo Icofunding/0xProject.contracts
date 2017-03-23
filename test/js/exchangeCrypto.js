@@ -41,7 +41,7 @@ contract('ExchangeCrypto', accounts => {
   describe('getOrderHash', () => {
     it('should output the correct orderHash', done => {
       exUtil.getOrderHash(order).then(orderHash => {
-        assert(order.orderHash === orderHash);
+        assert(`0x${order.orderHash.toString('hex')}` === orderHash);
         done();
       });
     });

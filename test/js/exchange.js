@@ -329,6 +329,13 @@ contract('Exchange', accounts => {
       });
     });
 
+    it('should throw with an invalid caller', done => {
+      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).catch(e => {
+        assert(e);
+        done();
+      });
+    });
+
     it('should be able to cancel a full order', done => {
       exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(() => {
         exUtil.fill(order, { fillValueM: 1, from: taker }).then(() => {
