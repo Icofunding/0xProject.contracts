@@ -74,16 +74,6 @@ contract('Exchange', accounts => {
       done();
     });
 
-    it('should include tradeTokens', done => {
-      assert(exchange.tradeTokens === undefined);
-      done();
-    });
-
-    it('should include tradeFees', done => {
-      assert(exchange.tradeFees === undefined);
-      done();
-    });
-
     it('should include LogFillEvents', done => {
       assert(exchange.LogFillEvents === undefined);
       done();
@@ -270,6 +260,7 @@ contract('Exchange', accounts => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(() => {
+          // console.log(res.receipt.gasUsed);
           getDmyBalances().then(newBalances => {
             expect(newBalances).to.deep.equal(balances);
             done();
@@ -294,6 +285,7 @@ contract('Exchange', accounts => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
+          // console.log(res.receipt.gasUsed);
           assert(res.logs.length === 0);
           done();
         });
