@@ -7,7 +7,7 @@ import "./util/ExchangeCrypto.sol";
 
 contract Exchange is ExchangeMath, ExchangeCrypto {
 
-  address public PROTOCOL_TOKEN;
+  address public PROTOCOLTOKEN;
   address public PROXY;
 
   mapping (bytes32 => uint) public fills;
@@ -56,9 +56,9 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
     uint remainingValueM
   );
 
-  function Exchange(address _protocolToken, address _proxy) {
-    PROTOCOL_TOKEN = _protocolToken;
-    PROXY = _proxy;
+  function Exchange(address protocolToken, address proxy) {
+    PROTOCOLTOKEN = protocolToken;
+    PROXY = proxy;
   }
 
   /*
@@ -68,29 +68,29 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @dev Fills an order with specified parameters and ECDSA signature.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
-  /// @param _caller Address to execute fill with.
+  /// @param caller Address to execute fill with.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
-  /// @param _fillValueM Desired amount of tokenM to fill in order.
+  /// @param fillValueM Desired amount of tokenM to fill in order.
   /// @param v ECDSA signature parameter v.
   /// @param rs Array of ECDSA signature parameters r and s.
   /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
     address[2] tokens,
-    address _caller,
+    address caller,
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,
-    uint _fillValueM,
+    uint fillValueM,
     uint8 v,
     bytes32[2] rs)
     returns (uint filledValueM)
   {
-    assert(isValidCaller(traders[1], _caller));
+    assert(isValidCaller(traders[1], caller));
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
@@ -100,10 +100,10 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       fees,
       expiration
     );
-    filledValueM = getFillValueM(values[0], _fillValueM, fills[orderHash]);
+    filledValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);
     if (filledValueM == 0) return 0;
     if (!isTransferable(
-      [traders[0], _caller],
+      [traders[0], caller],
       tokens,
       feeRecipient,
       values,
@@ -117,41 +117,41 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       rs[0],
       rs[1]
     ));
-    assert(transferFrom(
+    assert(transferViaProxy(
       tokens[0],
       traders[0],
-      _caller,
+      caller,
       filledValueM
     ));
-    assert(transferFrom(
+    assert(transferViaProxy(
       tokens[1],
-      _caller,
+      caller,
       traders[0],
       getPartialValue(values[0], filledValueM, values[1])
     ));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     if (feeRecipient != address(0)) {
       if (fees[0] > 0) {
-        assert(transferFrom(
-          PROTOCOL_TOKEN,
+        assert(transferViaProxy(
+          PROTOCOLTOKEN,
           traders[0],
           feeRecipient,
           getPartialValue(values[0], filledValueM, fees[0])
         ));
       }
       if (fees[1] > 0) {
-        assert(transferFrom(
-          PROTOCOL_TOKEN,
-          _caller,
+        assert(transferViaProxy(
+          PROTOCOLTOKEN,
+          caller,
           feeRecipient,
           getPartialValue(values[0], filledValueM, fees[1])
         ));
       }
     }
-    LogFillEvents(
+    logFillEvents(
       [
         traders[0],
-        _caller,
+        caller,
         tokens[0],
         tokens[1],
         feeRecipient
@@ -173,25 +173,25 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
-  /// @param _caller Address to execute cancel with.
+  /// @param caller Address to execute cancel with.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
-  /// @param _cancelValueM Desired amount of tokenM to cancel in order.
+  /// @param cancelValueM Desired amount of tokenM to cancel in order.
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
     address[2] tokens,
-    address _caller,
+    address caller,
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
     uint expiration,
-    uint _cancelValueM)
+    uint cancelValueM)
     returns (uint cancelledValueM)
   {
-    assert(isValidCaller(traders[0], _caller));
+    assert(isValidCaller(traders[0], caller));
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
@@ -201,7 +201,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       fees,
       expiration
     );
-    cancelledValueM = getFillValueM(values[0], _cancelValueM, fills[orderHash]);
+    cancelledValueM = getFillValueM(values[0], cancelValueM, fills[orderHash]);
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
     LogCancel(
@@ -223,15 +223,15 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   */
 
   /// @dev Checks if function is being called from a valid address.
-  /// @param _required Required address to call function from.
-  /// @param _caller Address of user or smart contract calling function.
+  /// @param required Required address to call function from.
+  /// @param caller Address of user or smart contract calling function.
   /// @return Caller is valid.
-  function isValidCaller(address _required, address _caller)
+  function isValidCaller(address required, address caller)
     constant
     returns (bool success)
   {
-    assert(_caller == msg.sender || _caller == tx.origin);
-    assert(_required == address(0) || _caller == _required);
+    assert(caller == msg.sender || caller == tx.origin);
+    assert(required == address(0) || caller == required);
     return true;
   }
 
@@ -241,7 +241,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
-  /// @param _fillValueM Amount of tokenM to be filled in order.
+  /// @param fillValueM Amount of tokenM to be filled in order.
   /// @return Predicted result of transfers.
   function isTransferable(
     address[2] traders,
@@ -249,50 +249,50 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
-    uint _fillValueM)
+    uint fillValueM)
     constant
     returns (bool transferable)
   {
-    uint fillValueT = getPartialValue(values[0], _fillValueM, values[1]);
+    uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
     if (
-      getBalance(tokens[0], traders[0]) < _fillValueM ||
-      getAllowance(tokens[0], traders[0]) < _fillValueM ||
+      getBalance(tokens[0], traders[0]) < fillValueM ||
+      getAllowance(tokens[0], traders[0]) < fillValueM ||
       getBalance(tokens[1], traders[1]) < fillValueT ||
       getAllowance(tokens[1], traders[1]) < fillValueT
     ) return false;
     if (feeRecipient != address(0)) {
-      uint feeValueM = getPartialValue(values[0], _fillValueM, fees[0]);
-      uint feeValueT = getPartialValue(values[0], _fillValueM, fees[1]);
+      uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
+      uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
       if (
-        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
-        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+        getBalance(PROTOCOLTOKEN, traders[0]) < feeValueM ||
+        getAllowance(PROTOCOLTOKEN, traders[0]) < feeValueM ||
+        getBalance(PROTOCOLTOKEN, traders[1]) < feeValueT ||
+        getAllowance(PROTOCOLTOKEN, traders[1]) < feeValueT
       ) return false;
     }
     return true;
   }
 
   /// @dev Get token balance of an address.
-  /// @param _token Address of token.
-  /// @param _owner Address of owner.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
   /// @return Token balance of owner.
-  function getBalance(address _token, address _owner)
+  function getBalance(address token, address owner)
     constant
     returns (uint balance)
   {
-    return Token(_token).balanceOf(_owner);
+    return Token(token).balanceOf(owner);
   }
 
   /// @dev Get allowance of token given to Proxy by an address.
-  /// @param _token Address of token.
-  /// @param _owner Address of owner.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
   /// @return Allowance of token given to Proxy by owner.
-  function getAllowance(address _token, address _owner)
+  function getAllowance(address token, address owner)
     constant
     returns (uint allowance)
   {
-    return Token(_token).allowance(_owner, PROXY);
+    return Token(token).allowance(owner, PROXY);
   }
 
   /*
@@ -300,24 +300,24 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   */
 
   /// @dev Transfers a token using Proxy transferFrom function.
-  /// @param _token Address of token to transferFrom.
-  /// @param _from Address transfering token.
-  /// @param _to Address receiving token.
-  /// @param _value Amount of token to transfer.
+  /// @param token Address of token to transferFrom.
+  /// @param from Address transfering token.
+  /// @param to Address receiving token.
+  /// @param value Amount of token to transfer.
   /// @return Success of token transfer.
-  function transferFrom(
-    address _token,
-    address _from,
-    address _to,
-    uint _value)
+  function transferViaProxy(
+    address token,
+    address from,
+    address to,
+    uint value)
     private
     returns (bool success)
   {
     return Proxy(PROXY).transferFrom(
-      _token,
-      _from,
-      _to,
-      _value
+      token,
+      from,
+      to,
+      value
     );
   }
 
@@ -325,7 +325,7 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @param addresses Array of maker, taker, tokenM, tokenT, and feeRecipient addresses.
   /// @param values Array of valueM, valueT, expiration, feeM, feeT, fillValueM, and remainingValueM.
   /// @param orderHash Keccak-256 hash of order.
-  function LogFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
+  function logFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
     private
   {
     LogFillByUser(

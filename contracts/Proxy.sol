@@ -18,30 +18,30 @@ contract Proxy is Ownable {
 
   // Proxy calls into ERC20 Token contract, invoking transferFrom
   function transferFrom(
-    address _token,
-    address _from,
-    address _to,
-    uint _value)
+    address token,
+    address from,
+    address to,
+    uint value)
     onlyAuthorized
     returns (bool success)
   {
-    if (!Token(_token).transferFrom(_from, _to, _value)) throw;
+    if (!Token(token).transferFrom(from, to, value)) throw;
     return true;
   }
 
-  function setAuthorization(address _target, bool _value)
+  function setAuthorization(address target, bool value)
     onlyOwner
     returns (bool success)
   {
-    authorities[_target] = _value;
-    LogAuthorizationChange(_target, _value, msg.sender);
+    authorities[target] = value;
+    LogAuthorizationChange(target, value, msg.sender);
     return true;
   }
 
-  function isAuthorized(address _target)
+  function isAuthorized(address target)
     constant
-    returns (bool _value)
+    returns (bool value)
   {
-    return authorities[_target];
+    return authorities[target];
   }
 }
