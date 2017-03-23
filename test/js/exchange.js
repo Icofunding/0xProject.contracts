@@ -224,34 +224,40 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should throw when taker is specified and order is claimed by other', done => {
+    it('should not change balances when taker is specified and order is claimed by other', done => {
       util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).catch(e => {
-          assert(e);
-          done();
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            expect(newBalances).to.deep.equal(balances);
+            done();
+          });
         });
       });
     });
 
-    it('should throw with an invalid caller', done => {
+    it('should not change balances with an invalid caller', done => {
       util.createOrder(orderFactory()).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker, caller: maker }).catch(e => {
-          assert(e);
-          done();
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker, caller: maker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            expect(newBalances).to.deep.equal(balances);
+            done();
+          });
         });
       });
     });
 
-    it('should throw if signature is invalid', done => {
+    it('should not change balances if signature is invalid', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(10) })).then(newOrder => {
         order = newOrder;
         order.r = util.sha3('invalidR');
         order.s = util.sha3('invalidS');
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).catch(e => {
-          assert(e);
-          done();
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            expect(newBalances).to.deep.equal(balances);
+            done();
+          });
         });
       });
     });
@@ -316,10 +322,25 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should throw if not sent by maker', done => {
-      exUtil.cancel(order, { cancelValueM: order.valueM, from: taker }).catch(e => {
-        assert(e);
-        done();
+    it('should not cancel if not sent by maker', done => {
+      const cancelValueM = order.valueM;
+      exUtil.cancel(order, { cancelValueM, from: taker }).then(() => {
+        const fillValueM = order.valueM;
+        exUtil.fill(order, { fillValueM, from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
+            assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
+            assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
+            assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
+            assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
+            assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
+            assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+            done();
+          });
+        });
       });
     });
 

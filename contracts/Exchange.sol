@@ -97,9 +97,9 @@ contract Exchange is SafeMath {
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
     if (!isTransferable([traders[0], caller], tokens, feeRecipient, values, fees, filledValueM)) return 0;
     if (!isValidSignature(traders[0], orderHash, v, rs[0], rs[1])) return 0;
+    fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     assert(transferViaProxy(tokens[0], traders[0], caller, filledValueM));
     assert(transferViaProxy(tokens[1], caller, traders[0], getPartialValue(values[0], filledValueM, values[1])));
-    fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     if (feeRecipient != address(0)) {
       if (fees[0] > 0) assert(transferViaProxy(PROTOCOLTOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
       if (fees[1] > 0) assert(transferViaProxy(PROTOCOLTOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
@@ -129,7 +129,7 @@ contract Exchange is SafeMath {
     uint cancelValueM)
     returns (uint cancelledValueM)
   {
-    assert(isValidCaller(traders[0], caller));
+    if (!isValidCaller(traders[0], caller)) return 0;
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
@@ -151,9 +151,10 @@ contract Exchange is SafeMath {
     constant
     returns (bool isValid)
   {
-    assert(caller == msg.sender || caller == tx.origin);
-    assert(required == address(0) || caller == required);
-    return true;
+    return (
+      (caller == msg.sender || caller == tx.origin) &&
+      (required == address(0) || caller == required)
+    );
   }
 
   /// @dev Predicts if any order transfers will fail.
