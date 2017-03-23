@@ -1,5 +1,5 @@
 const ethUtil = require('ethereumjs-util');
-const { getOrderHash, validSignature } = require('./crypto.js');
+const { getOrderHash, isValidSignature } = require('./crypto.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
 const exchangeWUtil = require('./exchangeWUtil.js');
@@ -41,7 +41,7 @@ module.exports = web3 => {
     createOrderFactory: testUtil.createOrderFactory,
     getBalancesFactory: testUtil.getBalancesFactory,
     sha3: ethUtil.sha3,
-    validSignature,
+    isValidSignature,
     getOrderHash,
     BNutil,
     exchangeUtil,

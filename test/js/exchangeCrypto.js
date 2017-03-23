@@ -1,4 +1,4 @@
-const ExchangeCrypto = artifacts.require('./util/ExchangeCrypto.sol');
+const Exchange = artifacts.require('./util/Exchange.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 
@@ -7,12 +7,12 @@ const util = require('../../util/index.js')(web3);
 
 const { toSmallestUnits } = util.BNutil;
 
-contract('ExchangeCrypto', accounts => {
+contract('Exchange', accounts => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
   const orderFactory = util.createOrderFactory({
-    exchange: ExchangeCrypto.address,
+    exchange: Exchange.address,
     maker,
     feeRecipient,
     tokenM: DummyTokenA.address,
@@ -26,7 +26,7 @@ contract('ExchangeCrypto', accounts => {
   let order;
   let exUtil;
   before(done => {
-    ExchangeCrypto.deployed().then(exchange => {
+    Exchange.deployed().then(exchange => {
       exUtil = util.exchangeUtil(exchange);
       done();
     });
@@ -47,7 +47,7 @@ contract('ExchangeCrypto', accounts => {
     });
   });
 
-  describe('validSignature', () => {
+  describe('isValidSignature', () => {
     beforeEach(done => {
       util.createOrder(orderFactory()).then(newOrder => {
         order = newOrder;
@@ -56,8 +56,8 @@ contract('ExchangeCrypto', accounts => {
     });
 
     it('should return true with a valid signature', done => {
-      exUtil.validSignature(order).then(success => {
-        assert(util.validSignature(order));
+      exUtil.isValidSignature(order).then(success => {
+        assert(util.isValidSignature(order));
         assert(success);
         done();
       });
@@ -66,8 +66,8 @@ contract('ExchangeCrypto', accounts => {
     it('should return false with an invalid signature', done => {
       order.r = util.sha3('invalidR');
       order.s = util.sha3('invalidS');
-      exUtil.validSignature(order).then(success => {
-        assert(!util.validSignature(order));
+      exUtil.isValidSignature(order).then(success => {
+        assert(!util.isValidSignature(order));
         assert(!success);
         done();
       });
