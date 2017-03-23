@@ -99,7 +99,7 @@ contract Exchange is ExchangeMath {
       fees,
       expiration
     );
-    filledValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);
+    filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (!isTransferable(
       [traders[0], caller],
@@ -200,7 +200,7 @@ contract Exchange is ExchangeMath {
       fees,
       expiration
     );
-    cancelledValueM = getFillValueM(values[0], cancelValueM, fills[orderHash]);
+    cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
     LogCancel(
@@ -349,6 +349,32 @@ contract Exchange is ExchangeMath {
       r,
       s
     );
+  }
+
+  /// @dev Calculates minimum of two values.
+  /// @param a First value.
+  /// @param b Second value.
+  /// @return Minimum of values.
+  function min(uint a, uint b)
+    constant
+    returns (uint)
+  {
+    if (a < b) return a;
+    return b;
+  }
+
+  /// @dev Calculates partial value given fillValueM and order valueM.
+  /// @param value Amount of token specified in order.
+  /// @param fillValue Amount of token to be filled.
+  /// @param target Value to calculate partial.
+  /// @return Partial value of target.
+  function getPartialValue(uint value, uint fillValue, uint target)
+    constant
+    returns (uint partialValue)
+  {
+    assert(fillValue <= value);
+    assert(!(target < 10**3 && target * fillValue % value != 0)); // throw if rounding error > 0.1%
+    return safeDiv(safeMul(fillValue, target), value);
   }
 
   /*
