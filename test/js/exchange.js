@@ -266,12 +266,14 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should throw if a transfer fails', done => {
+    it('should not change balances if a transfer fails', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: order.valueM, from: taker }).catch(e => {
-          assert(e);
-          done();
+        exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            expect(newBalances).to.deep.equal(balances);
+            done();
+          });
         });
       });
     });
