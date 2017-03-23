@@ -44,9 +44,10 @@ module.exports = exchange => {
       );
     },
     validSignature: order => {
+      const orderHash = typeof order.orderHash === 'string' ? order.orderHash : `0x${order.orderHash.toString('hex')}`;
       const validSignature = exchange.validSignature(
         order.maker,
-        order.orderHash,
+        orderHash,
         order.v,
         order.r,
         order.s

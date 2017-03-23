@@ -10,8 +10,8 @@ module.exports = web3 => {
   const index = {
     createOrder: (params, { hashPersonal = true } = {}) => {
       const order = new Promise((resolve, reject) => {
-        const orderHashBuff = getOrderHash(params);
-        const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHashBuff) : orderHashBuff;
+        const orderHash = getOrderHash(params);
+        const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
         web3.eth.sign(params.maker, ethUtil.bufferToHex(toSign), (err, sig) => {
           if (err) {
             reject(err);
@@ -28,7 +28,7 @@ module.exports = web3 => {
             valueT,
             feeM,
             feeT,
-            orderHash: ethUtil.bufferToHex(orderHashBuff),
+            orderHash,
             expiration,
             v,
             r: ethUtil.bufferToHex(r),

@@ -31,18 +31,13 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
-exports.validSignature = (order, { hashPersonal = true } = {}) => {
-  let orderHash;
-  if (!order.orderHash) {
-    orderHash = getOrderHash(order);
-  } else {
-    orderHash = ethUtil.toBuffer(order.orderHash);
-  }
-  const signed = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
+exports.validSignature = order => {
+  const orderHash = order.orderHash ? order.orderHash : getOrderHash(order);
+  const prefixedHash = ethUtil.hashPersonalMessage(orderHash);
   const { v, r, s } = order;
   try {
-    const pubKey = ethUtil.ecrecover(signed, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
-    return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey, true)) === order.maker;
+    const pubKey = ethUtil.ecrecover(prefixedHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+    return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey)) === order.maker;
   } catch (err) {
     return false;
   }
