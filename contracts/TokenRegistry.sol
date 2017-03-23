@@ -21,8 +21,9 @@ contract TokenRegistry is Ownable {
       address _addr,
       bytes32 _symbol,
       bytes32 _name,
-      uint8 _decimals
-      ) returns (bool success) {
+      uint8 _decimals)
+      onlyOwner
+      returns (bool success) {
         tokenContracts.push(_addr);
         tokenIndex[_addr] = tokenContracts.length;
         tokens[_addr] = TokenInfo({
@@ -34,7 +35,7 @@ contract TokenRegistry is Ownable {
         return true;
     }
 
-    function removeToken(address _addr) returns (bool success) {
+    function removeToken(address _addr) onlyOwner returns (bool success) {
         tokenContracts[tokenIndex[_addr]] = 0x0;
         tokenIndex[_addr] = 0;
         delete tokens[_addr];
