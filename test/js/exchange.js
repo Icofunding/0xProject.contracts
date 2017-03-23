@@ -205,7 +205,7 @@ contract('Exchange', accounts => {
       const fillValueM = div(order.valueM, 2);
       exUtil.fill(order, { fillValueM, from: taker }).then(() => {
         exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(res => {
-          assert(res.logs[0].args.fillValueM.toString() === sub(order.valueM, fillValueM));
+          assert(res.logs[0].args.filledValueM.toString() === sub(order.valueM, fillValueM));
           getDmyBalances().then(newBalances => {
             assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], order.valueM));
             assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], order.valueT));
@@ -356,7 +356,7 @@ contract('Exchange', accounts => {
       const cancelValueM = div(order.valueM, 2);
       exUtil.cancel(order, { cancelValueM, from: maker }).then(() => {
         exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(res => {
-          assert(res.logs[0].args.fillValueM.toString() === sub(order.valueM, cancelValueM));
+          assert(res.logs[0].args.filledValueM.toString() === sub(order.valueM, cancelValueM));
           getDmyBalances().then(newBalances => {
             const cancelValueT = div(mul(cancelValueM, order.valueT), order.valueM);
             const feeValueM = div(mul(order.feeM, cancelValueM), order.valueM);

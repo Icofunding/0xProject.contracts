@@ -18,7 +18,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
-  /// @param fillValueM Desired amount of tokenM to fill in order.
+  /// @param _fillValueM Desired amount of tokenM to fill in order.
   /// @param v ECDSA signature parameter v.
   /// @param rs Array of ECDSA signature parameters r and s.
   /// @return Total amount of tokenM filled in trade.
@@ -29,7 +29,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2] values,
     uint[2] fees,
     uint expiration,
-    uint fillValueM,
+    uint _fillValueM,
     uint8 v,
     bytes32[2] rs)
   returns (uint filledValueM)
@@ -42,7 +42,7 @@ contract ExchangeWrapper is SafeMath {
       values,
       fees,
       expiration,
-      fillValueM,
+      _fillValueM,
       v,
       rs
     );
@@ -55,7 +55,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
-  /// @param fillValueM Desired amount of tokenM to fill in order.
+  /// @param _fillValueM Desired amount of tokenM to fill in order.
   /// @param v ECDSA signature parameter v.
   /// @param rs Array of ECDSA signature parameters r and s.
   /// @return Success of entire fillValueM being filled.
@@ -66,7 +66,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2] values,
     uint[2] fees,
     uint expiration,
-    uint fillValueM,
+    uint _fillValueM,
     uint8 v,
     bytes32[2] rs)
     returns (bool success)
@@ -78,10 +78,10 @@ contract ExchangeWrapper is SafeMath {
       values,
       fees,
       expiration,
-      fillValueM,
+      _fillValueM,
       v,
       rs
-    ) == fillValueM);
+    ) == _fillValueM);
     return true;
   }
 
@@ -92,7 +92,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
-  /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+  /// @param _fillValueM Array of desired amounts of tokenM to fill in orders.
   /// @param v Array ECDSA signature v parameters.
   /// @param rs Array of ECDSA signature parameters r and s tuples.
   /// @return True if no fills throw.
@@ -103,7 +103,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
-    uint[] fillValuesM,
+    uint[] _fillValueM,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
@@ -116,7 +116,7 @@ contract ExchangeWrapper is SafeMath {
         values[i],
         fees[i],
         expirations[i],
-        fillValuesM[i],
+        _fillValueM[i],
         v[i],
         rs[i]
       );
@@ -131,7 +131,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
-  /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+  /// @param _fillValueM Array of desired amounts of tokenM to fill in orders.
   /// @param v Array ECDSA signature v parameters.
   /// @param rs Array of ECDSA signature parameters r and s tuples.
   /// @return Success of all orders being filled with respective fillValueM.
@@ -142,7 +142,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
-    uint[] fillValuesM,
+    uint[] _fillValueM,
     uint8[] v,
     bytes32[2][] rs)
     returns (bool success)
@@ -155,7 +155,7 @@ contract ExchangeWrapper is SafeMath {
         values[i],
         fees[i],
         expirations[i],
-        fillValuesM[i],
+        _fillValueM[i],
         v[i],
         rs[i]
       ));
@@ -170,7 +170,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
-  /// @param fillValueM Desired total amount of tokenM to fill in orders.
+  /// @param _fillValueM Desired total amount of tokenM to fill in orders.
   /// @param v Array ECDSA signature v parameters.
   /// @param rs Array of ECDSA signature parameters r and s tuples.
   /// @return Total amount of fillValueM filled in orders.
@@ -181,29 +181,29 @@ contract ExchangeWrapper is SafeMath {
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
-    uint fillValueM,
+    uint _fillValueM,
     uint8[] v,
     bytes32[2][] rs)
     returns (uint filledValueM)
   {
     address tokenM = tokens[0][0];
-    uint fillValueMLeft = fillValueM;
+    filledValueM = 0;
     for (uint i = 0; i < traders.length; i++) {
       assert(tokenM == tokens[i][0]);
-      fillValueMLeft = safeSub(fillValueMLeft, fill(
+      filledValueM = safeAdd(filledValueM, fill(
         traders[i],
         tokens[i],
         feeRecipients[i],
         values[i],
         fees[i],
         expirations[i],
-        fillValueMLeft,
+        safeSub(_fillValueM, filledValueM),
         v[i],
         rs[i]
       ));
-      if (fillValueMLeft == 0) break;
+      if (filledValueM == _fillValueM) break;
     }
-    return safeSub(fillValueM, fillValueMLeft);
+    return filledValueM;
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
@@ -213,7 +213,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
-  /// @param fillValueM Desired amount of tokenM to cancel in order.
+  /// @param _cancelValueM Desired amount of tokenM to cancel in order.
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
@@ -222,7 +222,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2] values,
     uint[2] fees,
     uint expiration,
-    uint fillValueM)
+    uint _cancelValueM)
     returns (uint cancelledValueM)
   {
     return exchange.cancel(
@@ -233,7 +233,7 @@ contract ExchangeWrapper is SafeMath {
       values,
       fees,
       expiration,
-      fillValueM
+      _cancelValueM
     );
   }
 
@@ -244,7 +244,7 @@ contract ExchangeWrapper is SafeMath {
   /// @param values Array of order valueM and valueT tuples.
   /// @param fees Array of order feeM and feeT tuples.
   /// @param expirations Array of times orders expire in seconds.
-  /// @param fillValuesM Array of desired amounts of tokenM to cancel in orders.
+  /// @param _cancelValueM Array of desired amounts of tokenM to cancel in orders.
   /// @return Success if no cancels throw.
   function batchCancel(
     address[2][] traders,
@@ -253,7 +253,7 @@ contract ExchangeWrapper is SafeMath {
     uint[2][] values,
     uint[2][] fees,
     uint[] expirations,
-    uint[] fillValuesM)
+    uint[] _cancelValueM)
     returns (bool success)
   {
     for (uint i = 0; i < traders.length; i++) {
@@ -264,7 +264,7 @@ contract ExchangeWrapper is SafeMath {
         values[i],
         fees[i],
         expirations[i],
-        fillValuesM[i]
+        _cancelValueM[i]
       );
     }
     return true;
