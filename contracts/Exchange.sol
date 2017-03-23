@@ -2,9 +2,9 @@ pragma solidity ^0.4.8;
 
 import "./Proxy.sol";
 import "./tokens/Token.sol";
-import "./util/ExchangeMath.sol";
+import "./util/SafeMath.sol";
 
-contract Exchange is ExchangeMath {
+contract Exchange is SafeMath {
 
   address public PROTOCOLTOKEN;
   address public PROXY;
@@ -89,83 +89,22 @@ contract Exchange is ExchangeMath {
     bytes32[2] rs)
     returns (uint filledValueM)
   {
-    assert(isValidCaller(traders[1], caller));
+    if (!isValidCaller(traders[1], caller)) return 0;
     if (block.timestamp > expiration) return 0;
-    bytes32 orderHash = getOrderHash(
-      traders,
-      tokens,
-      feeRecipient,
-      values,
-      fees,
-      expiration
-    );
+    bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
-    if (!isTransferable(
-      [traders[0], caller],
-      tokens,
-      feeRecipient,
-      values,
-      fees,
-      filledValueM)
-    ) return 0;
-    assert(isValidSignature(
-      traders[0],
-      orderHash,
-      v,
-      rs[0],
-      rs[1]
-    ));
-    assert(transferViaProxy(
-      tokens[0],
-      traders[0],
-      caller,
-      filledValueM
-    ));
-    assert(transferViaProxy(
-      tokens[1],
-      caller,
-      traders[0],
-      getPartialValue(values[0], filledValueM, values[1])
-    ));
+    if (isRoundingError(values[0], filledValueM, values[1])) return 0;
+    if (!isTransferable([traders[0], caller], tokens, feeRecipient, values, fees, filledValueM)) return 0;
+    if (!isValidSignature(traders[0], orderHash, v, rs[0], rs[1])) return 0;
+    assert(transferViaProxy(tokens[0], traders[0], caller, filledValueM));
+    assert(transferViaProxy(tokens[1], caller, traders[0], getPartialValue(values[0], filledValueM, values[1])));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     if (feeRecipient != address(0)) {
-      if (fees[0] > 0) {
-        assert(transferViaProxy(
-          PROTOCOLTOKEN,
-          traders[0],
-          feeRecipient,
-          getPartialValue(values[0], filledValueM, fees[0])
-        ));
-      }
-      if (fees[1] > 0) {
-        assert(transferViaProxy(
-          PROTOCOLTOKEN,
-          caller,
-          feeRecipient,
-          getPartialValue(values[0], filledValueM, fees[1])
-        ));
-      }
+      if (fees[0] > 0) assert(transferViaProxy(PROTOCOLTOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
+      if (fees[1] > 0) assert(transferViaProxy(PROTOCOLTOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
     }
-    logFillEvents(
-      [
-        traders[0],
-        caller,
-        tokens[0],
-        tokens[1],
-        feeRecipient
-      ],
-      [
-        values[0],
-        values[1],
-        expiration,
-        fees[0],
-        fees[1],
-        filledValueM,
-        values[0] - fills[orderHash]
-      ],
-      orderHash
-    );
+    logFillEvents([traders[0], caller, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
     return filledValueM;
   }
 
@@ -192,28 +131,11 @@ contract Exchange is ExchangeMath {
   {
     assert(isValidCaller(traders[0], caller));
     if (block.timestamp > expiration) return 0;
-    bytes32 orderHash = getOrderHash(
-      traders,
-      tokens,
-      feeRecipient,
-      values,
-      fees,
-      expiration
-    );
+    bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
-    LogCancel(
-      traders[0],
-      tokens[0],
-      tokens[1],
-      values[0],
-      values[1],
-      expiration,
-      orderHash,
-      cancelledValueM,
-      values[0] - fills[orderHash]
-    );
+    LogCancel(traders[0], tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelledValueM, values[0] - fills[orderHash]);
     return cancelledValueM;
   }
 
@@ -227,7 +149,7 @@ contract Exchange is ExchangeMath {
   /// @return Caller is valid.
   function isValidCaller(address required, address caller)
     constant
-    returns (bool success)
+    returns (bool isValid)
   {
     assert(caller == msg.sender || caller == tx.origin);
     assert(required == address(0) || caller == required);
@@ -250,7 +172,7 @@ contract Exchange is ExchangeMath {
     uint[2] fees,
     uint fillValueM)
     constant
-    returns (bool transferable)
+    returns (bool isTransferable)
   {
     uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
     if (
@@ -343,12 +265,7 @@ contract Exchange is ExchangeMath {
     constant
     returns (bool isValid)
   {
-    return pubKey == ecrecover(
-      sha3("\x19Ethereum Signed Message:\n32", hash),
-      v,
-      r,
-      s
-    );
+    return pubKey == ecrecover(sha3("\x19Ethereum Signed Message:\n32", hash), v, r, s);
   }
 
   /// @dev Calculates minimum of two values.
@@ -357,10 +274,22 @@ contract Exchange is ExchangeMath {
   /// @return Minimum of values.
   function min(uint a, uint b)
     constant
-    returns (uint)
+    returns (uint min)
   {
     if (a < b) return a;
     return b;
+  }
+
+  /// @dev Checks if rounding error > 0.1%.
+  /// @param denominator Denominator
+  /// @param numerator Numerator
+  /// @param target Value to multiply with numerator/denominator.
+  /// @return Rounding error is present
+  function isRoundingError(uint denominator, uint numerator, uint target)
+    constant
+    returns (bool isError)
+  {
+    return (target < 10**3 && safeMul(target, numerator) % denominator != 0);
   }
 
   /// @dev Calculates partial value given fillValueM and order valueM.
@@ -372,8 +301,6 @@ contract Exchange is ExchangeMath {
     constant
     returns (uint partialValue)
   {
-    assert(fillValue <= value);
-    assert(!(target < 10**3 && target * fillValue % value != 0)); // throw if rounding error > 0.1%
     return safeDiv(safeMul(fillValue, target), value);
   }
 
@@ -395,12 +322,7 @@ contract Exchange is ExchangeMath {
     private
     returns (bool success)
   {
-    return Proxy(PROXY).transferFrom(
-      token,
-      from,
-      to,
-      value
-    );
+    return Proxy(PROXY).transferFrom(token, from, to, value);
   }
 
   /// @dev Logs fill events indexed by user and by token.
@@ -410,35 +332,7 @@ contract Exchange is ExchangeMath {
   function logFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
     private
   {
-    LogFillByUser(
-      addresses[0],
-      addresses[1],
-      addresses[2],
-      addresses[3],
-      values[0],
-      values[1],
-      values[2],
-      orderHash,
-      addresses[4],
-      values[3],
-      values[4],
-      values[5],
-      values[6]
-    );
-    LogFillByToken(
-      addresses[0],
-      addresses[1],
-      addresses[2],
-      addresses[3],
-      values[0],
-      values[1],
-      values[2],
-      orderHash,
-      addresses[4],
-      values[3],
-      values[4],
-      values[5],
-      values[6]
-    );
+    LogFillByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+    LogFillByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
   }
 }

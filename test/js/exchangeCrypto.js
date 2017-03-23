@@ -31,6 +31,7 @@ contract('Exchange', accounts => {
       done();
     });
   });
+
   beforeEach(done => {
     util.createOrder(orderFactory()).then(newOrder => {
       order = newOrder;

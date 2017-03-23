@@ -69,13 +69,13 @@ contract('Exchange', accounts => {
   });
 
   describe('private functions', () => {
-    it('should include transferFrom', done => {
-      assert(exchange.transferFrom === undefined);
+    it('should include transferViaProxy', done => {
+      assert(exchange.transferViaProxy === undefined);
       done();
     });
 
-    it('should include LogFillEvents', done => {
-      assert(exchange.LogFillEvents === undefined);
+    it('should include logFillEvents', done => {
+      assert(exchange.logFillEvents === undefined);
       done();
     });
   });
