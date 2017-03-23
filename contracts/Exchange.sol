@@ -101,50 +101,72 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       expiration
     );
     fillValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);
-    if (fillValueM > 0) {
-      assert(validSignature(
-        traders[0],
-        orderHash,
-        v,
-        rs[0],
-        rs[1]
-      ));
-      assert(tradeTokens(
-        traders[0],
-        caller,
-        tokens,
-        values,
-        fillValueM
-      ));
-      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
-      assert(tradeFees(
-        traders[0],
-        caller,
-        feeRecipient,
-        values,
-        fees,
-        fillValueM
-      ));
-      LogFillEvents(
-        [
+    if (fillValueM == 0) return 0;
+    if (!isTransferable(
+      [traders[0], caller],
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      fillValueM)
+    ) return 0;
+    assert(validSignature(
+      traders[0],
+      orderHash,
+      v,
+      rs[0],
+      rs[1]
+    ));
+    assert(transferFrom(
+      tokens[0],
+      traders[0],
+      caller,
+      fillValueM
+    ));
+    assert(transferFrom(
+      tokens[1],
+      caller,
+      traders[0],
+      getPartialValue(values[0], fillValueM, values[1])
+    ));
+    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
+    if (feeRecipient != address(0)) {
+      if (fees[0] > 0) {
+        assert(transferFrom(
+          PROTOCOL_TOKEN,
           traders[0],
+          feeRecipient,
+          getPartialValue(values[0], fillValueM, fees[0])
+        ));
+      }
+      if (fees[1] > 0) {
+        assert(transferFrom(
+          PROTOCOL_TOKEN,
           caller,
-          tokens[0],
-          tokens[1],
-          feeRecipient
-        ],
-        [
-          values[0],
-          values[1],
-          expiration,
-          fees[0],
-          fees[1],
-          fillValueM,
-          values[0] - fills[orderHash]
-        ],
-        orderHash
-      );
+          feeRecipient,
+          getPartialValue(values[0], fillValueM, fees[1])
+        ));
+      }
     }
+    LogFillEvents(
+      [
+        traders[0],
+        caller,
+        tokens[0],
+        tokens[1],
+        feeRecipient
+      ],
+      [
+        values[0],
+        values[1],
+        expiration,
+        fees[0],
+        fees[1],
+        fillValueM,
+        values[0] - fills[orderHash]
+      ],
+      orderHash
+    );
     return fillValueM;
   }
 
@@ -180,20 +202,19 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       expiration
     );
     fillValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);
-    if (fillValueM > 0) {
-      fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
-      LogCancel(
-        traders[0],
-        tokens[0],
-        tokens[1],
-        values[0],
-        values[1],
-        expiration,
-        orderHash,
-        fillValueM,
-        values[0] - fills[orderHash]
-      );
-    }
+    if (fillValueM == 0) return 0;
+    fills[orderHash] = safeAdd(fills[orderHash], fillValueM);
+    LogCancel(
+      traders[0],
+      tokens[0],
+      tokens[1],
+      values[0],
+      values[1],
+      expiration,
+      orderHash,
+      fillValueM,
+      values[0] - fills[orderHash]
+    );
     return fillValueM;
   }
 
@@ -212,6 +233,65 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
     assert(caller == msg.sender || caller == tx.origin);
     assert(required == address(0) || caller == required);
     return true;
+  }
+
+  /// @dev Predicts if any order transfers will fail.
+  /// @param traders Array of maker and caller addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
+  /// @param fillValueM Amount of tokenM to be filled in order.
+  function isTransferable(
+    address[2] traders,
+    address[2] tokens,
+    address feeRecipient,
+    uint[2] values,
+    uint[2] fees,
+    uint fillValueM)
+    constant
+    returns (bool)
+  {
+    uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
+    if (
+      getBalance(tokens[0], traders[0]) < fillValueM ||
+      getAllowance(tokens[0], traders[0]) < fillValueM ||
+      getBalance(tokens[1], traders[1]) < fillValueT ||
+      getAllowance(tokens[1], traders[1]) < fillValueT
+    ) return false;
+    if (feeRecipient != address(0)) {
+      uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
+      uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
+      if (
+        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
+        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+      ) return false;
+    }
+    return true;
+  }
+
+  /// @dev Get token balance of an address.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
+  /// @return Token balance of owner.
+  function getBalance(address token, address owner)
+    constant
+    returns (uint)
+  {
+    return Token(token).balanceOf(owner);
+  }
+
+  /// @dev Get allowance of token given to Proxy by an address.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
+  /// @return Allowance of token given to Proxy by owner.
+  function getAllowance(address token, address owner)
+    constant
+    returns (uint)
+  {
+    return Token(token).allowance(owner, PROXY);
   }
 
   /*
@@ -238,61 +318,6 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
       _to,
       _value
     );
-  }
-
-  function tradeTokens(
-    address maker,
-    address taker,
-    address[2] tokens,
-    uint[2] values,
-    uint fillValueM)
-    private
-    returns (bool success)
-  {
-    assert(transferFrom(
-      tokens[0],
-      maker,
-      taker,
-      fillValueM
-    ));
-    assert(transferFrom(
-      tokens[1],
-      taker,
-      maker,
-      getPartialValue(values[0], fillValueM, values[1])
-    ));
-    return true;
-  }
-
-  function tradeFees(
-    address maker,
-    address taker,
-    address feeRecipient,
-    uint[2] values,
-    uint[2] fees,
-    uint fillValueM)
-    private
-    returns (bool success)
-  {
-    if (feeRecipient != address(0)) {
-      if (fees[0] > 0) {
-        assert(transferFrom(
-          PROTOCOL_TOKEN,
-          maker,
-          feeRecipient,
-          getPartialValue(values[0], fillValueM, fees[0])
-        ));
-      }
-      if (fees[1] > 0) {
-        assert(transferFrom(
-          PROTOCOL_TOKEN,
-          taker,
-          feeRecipient,
-          getPartialValue(values[0], fillValueM, fees[1])
-        ));
-      }
-    }
-    return true;
   }
 
   /// @dev Logs fill events indexed by user and by token.
