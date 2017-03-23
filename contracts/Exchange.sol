@@ -12,26 +12,6 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
 
   mapping (bytes32 => uint) public fills;
 
-  /*modifier notExpired(uint expiration) {
-    if (block.timestamp < expiration)
-      _;
-  }
-
-  modifier callerIsControlled(address caller) {
-    assert(caller == msg.sender || caller == tx.origin);
-    _;
-  }
-
-  modifier callerIsMaker(address[2] traders, address caller) {
-    assert(traders[0] == address(0) || caller == traders[0]);
-    _;
-  }
-
-  modifier callerIsTaker(address[2] traders, address caller) {
-    assert(traders[1] == address(0) || caller == traders[1]);
-    _;
-  }*/
-
   event LogFillByUser(
     address indexed maker,
     address indexed taker,
