@@ -9,7 +9,7 @@ module.exports = (deployer, network) => {
     deployer.deploy([
         [DummyTokenA, 10000000],
         [DummyTokenB, 10000000],
-        [EtherToken, 10000000],
+        [EtherToken],
     ])
     .then(() => TokenRegistry.deployed())
     .then(tokenRegistryInstance => {
@@ -44,12 +44,12 @@ module.exports = (deployer, network) => {
       Promise.all([
         etherToken.symbol(),
         etherToken.name(),
+        etherToken.decimals(),
       ])
     ))
     .then(results => {
-      [symbol, name] = results;
-      const numDecimals = 0;
-      tokenRegistry.addToken(EtherToken.address, symbol, name, numDecimals);
+      [symbol, name, decimals] = results;
+      tokenRegistry.addToken(EtherToken.address, symbol, name, decimals);
     });
   }
 };
