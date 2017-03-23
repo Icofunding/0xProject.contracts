@@ -6,6 +6,7 @@ const Exchange = artifacts.require('./Exchange.sol');
 const ExchangeWrapper = artifacts.require('./ExchangeWrapper.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
+const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
 module.exports = (deployer, network) => {
   if (network !== 'live') {
@@ -16,6 +17,7 @@ module.exports = (deployer, network) => {
       [DummyProtocolToken, 0],
       ExchangeMath,
       ExchangeCrypto,
+      TokenRegistry,
     ])
     .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
     .then(() => deployer.deploy(ExchangeWrapper, Exchange.address))
