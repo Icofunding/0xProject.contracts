@@ -6,7 +6,7 @@ import "./util/SafeMath.sol";
 
 contract Exchange is SafeMath {
 
-  address public PROTOCOLTOKEN;
+  address public PROTOCOL_TOKEN;
   address public PROXY;
 
   mapping (bytes32 => uint) public fills;
@@ -55,8 +55,8 @@ contract Exchange is SafeMath {
     uint remainingValueM
   );
 
-  function Exchange(address protocolToken, address proxy) {
-    PROTOCOLTOKEN = protocolToken;
+  function Exchange(address _protocolToken, address _proxy) {
+    PROTOCOL_TOKEN = protocolToken;
     PROXY = proxy;
   }
 
@@ -101,8 +101,8 @@ contract Exchange is SafeMath {
     assert(transferViaProxy(tokens[0], traders[0], caller, filledValueM));
     assert(transferViaProxy(tokens[1], caller, traders[0], getPartialValue(values[0], filledValueM, values[1])));
     if (feeRecipient != address(0)) {
-      if (fees[0] > 0) assert(transferViaProxy(PROTOCOLTOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
-      if (fees[1] > 0) assert(transferViaProxy(PROTOCOLTOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
+      if (fees[0] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
+      if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
     }
     logFillEvents([traders[0], caller, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
     return filledValueM;
@@ -186,10 +186,10 @@ contract Exchange is SafeMath {
       uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
       uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
       if (
-        getBalance(PROTOCOLTOKEN, traders[0]) < feeValueM ||
-        getAllowance(PROTOCOLTOKEN, traders[0]) < feeValueM ||
-        getBalance(PROTOCOLTOKEN, traders[1]) < feeValueT ||
-        getAllowance(PROTOCOLTOKEN, traders[1]) < feeValueT
+        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
+        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
       ) return false;
     }
     return true;
