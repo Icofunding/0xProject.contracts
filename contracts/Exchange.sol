@@ -56,8 +56,8 @@ contract Exchange is SafeMath {
   );
 
   function Exchange(address _protocolToken, address _proxy) {
-    PROTOCOL_TOKEN = protocolToken;
-    PROXY = proxy;
+    PROTOCOL_TOKEN = _protocolToken;
+    PROXY = _proxy;
   }
 
   /*
