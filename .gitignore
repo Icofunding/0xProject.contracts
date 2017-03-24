@@ -3,4 +3,3 @@ node_modules
 .flooignore
 .soliumignore
 .soliumrc.json
-build
