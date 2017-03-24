@@ -144,16 +144,16 @@ contract Exchange is SafeMath {
   */
 
   /// @dev Checks if function is being called from a valid address.
-  /// @param required Required address to call function from.
-  /// @param caller Address of user or smart contract calling function.
+  /// @param expected Required address to call function from.
+  /// @param provided Address of user or contract calling function.
   /// @return Caller is valid.
-  function isValidCaller(address required, address caller)
+  function isValidCaller(address expected, address provided)
     constant
     returns (bool isValid)
   {
     return (
-      (caller == msg.sender || caller == tx.origin) &&
-      (required == address(0) || caller == required)
+      (provided == msg.sender || provided == tx.origin) &&
+      (expected == address(0) || expected == provided)
     );
   }
 
