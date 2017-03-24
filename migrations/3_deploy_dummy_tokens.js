@@ -11,45 +11,43 @@ module.exports = (deployer, network) => {
         [DummyTokenB, 10000000],
         [EtherToken],
     ])
-    .then(() => TokenRegistry.deployed())
-    .then(tokenRegistryInstance => {
-      tokenRegistry = tokenRegistryInstance;
-    })
-    .then(() => DummyTokenA.deployed())
-    .then(dummyTokenA => (
-      Promise.all([
+    .then(() => (
+        Promise.all([
+          TokenRegistry.deployed(),
+          DummyTokenA.deployed(),
+          DummyTokenB.deployed(),
+          EtherToken.deployed(),
+        ])
+    ))
+    .then(contracts => {
+      [tokenRegistry, dummyTokenA, dummyTokenB, etherToken] = contracts;
+      return Promise.all([
         dummyTokenA.symbol(),
         dummyTokenA.name(),
-      ])
-    ))
-    .then(results => {
-      [symbol, name] = results;
-      const numDecimals = 0;
-      tokenRegistry.addToken(DummyTokenA.address, symbol, name, numDecimals);
-    })
-    .then(() => DummyTokenB.deployed())
-    .then(dummyTokenB => (
-      Promise.all([
         dummyTokenB.symbol(),
         dummyTokenB.name(),
-      ])
-    ))
-    .then(results => {
-      [symbol, name] = results;
-      const numDecimals = 0;
-      tokenRegistry.addToken(DummyTokenB.address, symbol, name, numDecimals);
-    })
-    .then(() => EtherToken.deployed())
-    .then(etherToken => (
-      Promise.all([
         etherToken.symbol(),
         etherToken.name(),
         etherToken.decimals(),
-      ])
-    ))
-    .then(results => {
-      [symbol, name, decimals] = results;
-      tokenRegistry.addToken(EtherToken.address, symbol, name, decimals);
+      ]);
+    })
+    .then(tokenInfo => {
+      [
+        dummyTokenASymbol,
+        dummyTokenAName,
+        dummyTokenBSymbol,
+        dummyTokenBName,
+        etherTokenSymbol,
+        etherTokenName,
+        etherTokenDecimals,
+      ] = tokenInfo;
+      const numDecimals = 0;
+
+      Promise.all([
+        tokenRegistry.addToken(DummyTokenA.address, dummyTokenASymbol, dummyTokenAName, numDecimals),
+        tokenRegistry.addToken(DummyTokenA.address, dummyTokenBSymbol, dummyTokenBName, numDecimals),
+        tokenRegistry.addToken(EtherToken.address, etherTokenSymbol, etherTokenName, etherTokenDecimals),
+      ]);
     });
   }
 };
