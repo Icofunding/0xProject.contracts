@@ -31,7 +31,7 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
-exports.validSignature = order => {
+exports.isValidSignature = order => {
   const orderHash = order.orderHash ? order.orderHash : getOrderHash(order);
   const prefixedHash = ethUtil.hashPersonalMessage(orderHash);
   const { v, r, s } = order;

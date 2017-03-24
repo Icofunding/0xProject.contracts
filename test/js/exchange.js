@@ -344,10 +344,24 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should throw with an invalid caller', done => {
-      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).catch(e => {
-        assert(e);
-        done();
+    it('should not cancel with an invalid caller', done => {
+      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).then(() => {
+        const fillValueM = order.valueM;
+        exUtil.fill(order, { fillValueM, from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+            assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
+            assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
+            assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
+            assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
+            assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
+            assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
+            assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+            done();
+          });
+        });
       });
     });
 
