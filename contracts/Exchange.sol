@@ -104,6 +104,7 @@ contract Exchange is SafeMath {
       if (fees[0] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
       if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
     }
+    assert(fills[orderHash] <= values[0]);
     logFillEvents([traders[0], caller, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
     return filledValueM;
   }
