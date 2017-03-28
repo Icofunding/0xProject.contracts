@@ -10,7 +10,7 @@ const util = require('../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
 
-contract('ExchangeWrapper', accounts => {
+contract('Exchange', accounts => {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
@@ -67,39 +67,6 @@ contract('ExchangeWrapper', accounts => {
     });
   });
 
-  describe('fill', () => {
-    beforeEach(done => {
-      getDmyBalances().then(newBalances => {
-        balances = newBalances;
-        done();
-      });
-    });
-
-    it('should transfer the correct amounts', done => {
-      util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(order => {
-        const fillValueM = div(order.valueM, 2);
-        exUtil.fill(order, { fillValueM, from: taker }).then(() => {
-          getDmyBalances().then(newBalances => {
-            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-            assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-            assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-            assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-            assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-            assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-            assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-            assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
-            done();
-          });
-        }).catch(e => {
-          assert(!e);
-          done();
-        });
-      });
-    });
-  });
-
   describe('fillOrKill', () => {
     beforeEach(done => {
       getDmyBalances().then(newBalances => {
@@ -134,7 +101,7 @@ contract('ExchangeWrapper', accounts => {
 
     it('should throw if an order is expired', done => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(order => {
-        exUtil.fillOrKill(order, { fillValueM: order.valueM, from: taker }).catch(e => {
+        exUtil.fillOrKill(order, { from: taker }).catch(e => {
           assert(e);
           done();
         });
@@ -144,7 +111,7 @@ contract('ExchangeWrapper', accounts => {
     it('should throw if entire fillValueM not filled', done => {
       util.createOrder(orderFactory()).then(order => {
         exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
-          exUtil.fillOrKill(order, { fillValueM: order.valueM, from: taker }).catch(e => {
+          exUtil.fillOrKill(order, { from: taker }).catch(e => {
             assert(e);
             done();
           });

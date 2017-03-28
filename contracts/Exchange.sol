@@ -325,68 +325,8 @@ contract Exchange is SafeMath {
   }
 
   /*
-  * Constant functions
+  * Constant public functions
   */
-
-  /// @dev Checks if any order transfers will fail.
-  /// @param traders Array of maker and caller addresses.
-  /// @param tokens Array of order tokenM and tokenT addresses.
-  /// @param feeRecipient Address that receives order fees.
-  /// @param values Array of order valueM and valueT.
-  /// @param fees Array of order feeM and feeT.
-  /// @param fillValueM Amount of tokenM to be filled in order.
-  /// @return Predicted result of transfers.
-  function isTransferable(
-    address[2] traders,
-    address[2] tokens,
-    address feeRecipient,
-    uint[2] values,
-    uint[2] fees,
-    uint fillValueM)
-    constant
-    returns (bool isTransferable)
-  {
-    uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
-    if (
-      getBalance(tokens[0], traders[0]) < fillValueM ||
-      getAllowance(tokens[0], traders[0]) < fillValueM ||
-      getBalance(tokens[1], traders[1]) < fillValueT ||
-      getAllowance(tokens[1], traders[1]) < fillValueT
-    ) return false;
-    if (feeRecipient != address(0)) {
-      uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
-      uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
-      if (
-        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
-        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
-      ) return false;
-    }
-    return true;
-  }
-
-  /// @dev Get token balance of an address.
-  /// @param token Address of token.
-  /// @param owner Address of owner.
-  /// @return Token balance of owner.
-  function getBalance(address token, address owner)
-    constant
-    returns (uint balance)
-  {
-    return Token(token).balanceOf(owner);
-  }
-
-  /// @dev Get allowance of token given to Proxy by an address.
-  /// @param token Address of token.
-  /// @param owner Address of owner.
-  /// @return Allowance of token given to Proxy by owner.
-  function getAllowance(address token, address owner)
-    constant
-    returns (uint allowance)
-  {
-    return Token(token).allowance(owner, PROXY);
-  }
 
   /// @dev Calculates Keccak-256 hash of order with specified parameters.
   /// @param traders Array of order maker and taker addresses.
@@ -517,6 +457,7 @@ contract Exchange is SafeMath {
     uint filledValueM,
     bytes32 orderHash)
     private
+    constant
     returns (uint)
   {
     LogFill(traders[0], traders[1], feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, filledValueM, sha3(tokens[0], tokens[1]), orderHash);
@@ -543,9 +484,73 @@ contract Exchange is SafeMath {
     uint cancelledValueM,
     bytes32 orderHash)
     private
+    constant
     returns (uint)
   {
     LogCancel(maker, feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, cancelledValueM, sha3(tokens[0], tokens[1]), orderHash);
     return cancelledValueM;
+  }
+
+  /// @dev Checks if any order transfers will fail.
+  /// @param traders Array of maker and caller addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
+  /// @param fillValueM Amount of tokenM to be filled in order.
+  /// @return Predicted result of transfers.
+  function isTransferable(
+    address[2] traders,
+    address[2] tokens,
+    address feeRecipient,
+    uint[2] values,
+    uint[2] fees,
+    uint fillValueM)
+    private
+    constant
+    returns (bool isTransferable)
+  {
+    uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
+    if (
+      getBalance(tokens[0], traders[0]) < fillValueM ||
+      getAllowance(tokens[0], traders[0]) < fillValueM ||
+      getBalance(tokens[1], traders[1]) < fillValueT ||
+      getAllowance(tokens[1], traders[1]) < fillValueT
+    ) return false;
+    if (feeRecipient != address(0)) {
+      uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
+      uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
+      if (
+        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
+        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+      ) return false;
+    }
+    return true;
+  }
+
+  /// @dev Get token balance of an address.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
+  /// @return Token balance of owner.
+  function getBalance(address token, address owner)
+    private
+    constant
+    returns (uint balance)
+  {
+    return Token(token).balanceOf(owner);
+  }
+
+  /// @dev Get allowance of token given to Proxy by an address.
+  /// @param token Address of token.
+  /// @param owner Address of owner.
+  /// @return Allowance of token given to Proxy by owner.
+  function getAllowance(address token, address owner)
+    private
+    constant
+    returns (uint allowance)
+  {
+    return Token(token).allowance(owner, PROXY);
   }
 }

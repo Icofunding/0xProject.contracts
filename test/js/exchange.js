@@ -69,14 +69,28 @@ contract('Exchange', accounts => {
   });
 
   describe('private functions', () => {
-    it('should include transferViaProxy', done => {
+    it('should include transferViaProxy', () => {
       assert(exchange.transferViaProxy === undefined);
-      done();
     });
 
-    it('should include logFillEvents', done => {
-      assert(exchange.logFillEvents === undefined);
-      done();
+    it('should include fillSuccess', () => {
+      assert(exchange.fillSuccess === undefined);
+    });
+
+    it('should include cancelSuccess', () => {
+      assert(exchange.cancelSuccess === undefined);
+    });
+
+    it('should include isTransferable', () => {
+      assert(exchange.isTransferable === undefined);
+    });
+
+    it('should include getBalance', () => {
+      assert(exchange.getBalance === undefined);
+    });
+
+    it('should include getAllowance', () => {
+      assert(exchange.getAllowance === undefined);
     });
   });
 
