@@ -68,6 +68,7 @@ contract Exchange is SafeMath {
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param feeRecipient Address that receives order fees.
+  /// @param shouldCheckTransfer Test if transfer will fail before attempting.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -79,6 +80,7 @@ contract Exchange is SafeMath {
     address[2] traders,
     address[2] tokens,
     address feeRecipient,
+    bool shouldCheckTransfer,
     uint[2] values,
     uint[2] fees,
     uint expiration,
@@ -93,7 +95,7 @@ contract Exchange is SafeMath {
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
-    if (!isTransferable([traders[0], msg.sender], tokens, feeRecipient, values, fees, filledValueM)) return 0;
+    if (shouldCheckTransfer && !isTransferable([traders[0], msg.sender], tokens, feeRecipient, values, fees, filledValueM)) return 0;
     assert(isValidSignature(traders[0], orderHash, v, rs[0], rs[1]));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     assert(transferViaProxy(tokens[0], traders[0], msg.sender, filledValueM));
@@ -134,6 +136,207 @@ contract Exchange is SafeMath {
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
     LogCancel(traders[0], tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelledValueM, values[0] - fills[orderHash]);
     return cancelledValueM;
+  }
+
+  /*
+  * Wrapper functions
+  */
+
+  /// @dev Fills an order with specified parameters and ECDSA signature, throws if specified amount not filled entirely.
+  /// @param traders Array of order maker and taker addresses.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
+  /// @param expiration Time order expires in seconds.
+  /// @param fillValueM Desired amount of tokenM to fill in order.
+  /// @param v ECDSA signature parameter v.
+  /// @param rs Array of ECDSA signature parameters r and s.
+  /// @return Success of entire fillValueM being filled.
+  function fillOrKill(
+    address[2] traders,
+    address[2] tokens,
+    address feeRecipient,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint fillValueM,
+    uint8 v,
+    bytes32[2] rs)
+    returns (bool success)
+  {
+    assert(fill(
+      traders,
+      tokens,
+      feeRecipient,
+      false,
+      values,
+      fees,
+      expiration,
+      fillValueM,
+      v,
+      rs
+    ) == fillValueM);
+    return true;
+  }
+
+  /// @dev Synchronously executes multiple fill orders in a single transaction.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+  /// @param v Array ECDSA signature v parameters.
+  /// @param rs Array of ECDSA signature parameters r and s tuples.
+  /// @param shouldCheckTransfer Test if transfers will fail before attempting.
+  /// @return True if no fills throw.
+  function batchFill(
+    address[2][] traders,
+    address[2][] tokens,
+    address[] feeRecipients,
+    bool shouldCheckTransfer,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint[] fillValuesM,
+    uint8[] v,
+    bytes32[2][] rs)
+    returns (bool success)
+  {
+    for (uint i = 0; i < traders.length; i++) {
+      fill(
+        traders[i],
+        tokens[i],
+        feeRecipients[i],
+        shouldCheckTransfer,
+        values[i],
+        fees[i],
+        expirations[i],
+        fillValuesM[i],
+        v[i],
+        rs[i]
+      );
+    }
+    return true;
+  }
+
+  /// @dev Synchronously executes multiple fillOrKill orders in a single transaction.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+  /// @param v Array ECDSA signature v parameters.
+  /// @param rs Array of ECDSA signature parameters r and s tuples.
+  /// @return Success of all orders being filled with respective fillValueM.
+  function batchFillOrKill(
+    address[2][] traders,
+    address[2][] tokens,
+    address[] feeRecipients,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint[] fillValuesM,
+    uint8[] v,
+    bytes32[2][] rs)
+    returns (bool success)
+  {
+    for (uint i = 0; i < traders.length; i++) {
+      assert(fillOrKill(
+        traders[i],
+        tokens[i],
+        feeRecipients[i],
+        values[i],
+        fees[i],
+        expirations[i],
+        fillValuesM[i],
+        v[i],
+        rs[i]
+      ));
+    }
+    return true;
+  }
+
+  /// @dev Synchronously executes multiple fill orders in a single transaction until total fillValueM filled.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param fillValueM Desired total amount of tokenM to fill in orders.
+  /// @param v Array ECDSA signature v parameters.
+  /// @param rs Array of ECDSA signature parameters r and s tuples.
+  /// @param shouldCheckTransfer Test if transfers will fail before attempting.
+  /// @return Total amount of fillValueM filled in orders.
+  function fillUpTo(
+    address[2][] traders,
+    address[2][] tokens,
+    address[] feeRecipients,
+    bool shouldCheckTransfer,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint fillValueM,
+    uint8[] v,
+    bytes32[2][] rs)
+    returns (uint filledValueM)
+  {
+    filledValueM = 0;
+    for (uint i = 0; i < traders.length; i++) {
+      assert(tokens[i][0] == tokens[0][0]);
+      filledValueM = safeAdd(filledValueM, fill(
+        traders[i],
+        tokens[i],
+        feeRecipients[i],
+        shouldCheckTransfer,
+        values[i],
+        fees[i],
+        expirations[i],
+        safeSub(fillValueM, filledValueM),
+        v[i],
+        rs[i]
+      ));
+      if (filledValueM == fillValueM) break;
+    }
+    return filledValueM;
+  }
+
+  /// @dev Synchronously cancels multiple orders in a single transaction.
+  /// @param traders Array of order maker and taker address tuples.
+  /// @param tokens Array of order tokenM and tokenT address tuples.
+  /// @param feeRecipients Array of addresses that receive order fees.
+  /// @param values Array of order valueM and valueT tuples.
+  /// @param fees Array of order feeM and feeT tuples.
+  /// @param expirations Array of times orders expire in seconds.
+  /// @param cancelValuesM Array of desired amounts of tokenM to cancel in orders.
+  /// @return Success if no cancels throw.
+  function batchCancel(
+    address[2][] traders,
+    address[2][] tokens,
+    address[] feeRecipients,
+    uint[2][] values,
+    uint[2][] fees,
+    uint[] expirations,
+    uint[] cancelValuesM)
+    returns (bool success)
+  {
+    for (uint i = 0; i < traders.length; i++) {
+      cancel(
+        traders[i],
+        tokens[i],
+        feeRecipients[i],
+        values[i],
+        fees[i],
+        expirations[i],
+        cancelValuesM[i]
+      );
+    }
+    return true;
   }
 
   /*
