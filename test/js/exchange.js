@@ -215,7 +215,6 @@ contract('Exchange', accounts => {
 
     it('should log 2 events', done => {
       exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
-        // console.log('gasUsed:', res.receipt.gasUsed);
         assert(res.logs.length === 2);
         done();
       }).catch(e => {
@@ -227,7 +226,7 @@ contract('Exchange', accounts => {
     it('should throw when taker is specified and order is claimed by other', done => {
       util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).catch(e => {
+        exUtil.fill(order, { from: taker }).catch(e => {
           assert(e);
           done();
         });
@@ -239,33 +238,71 @@ contract('Exchange', accounts => {
         order = newOrder;
         order.r = util.sha3('invalidR');
         order.s = util.sha3('invalidS');
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).catch(e => {
+        exUtil.fill(order, { from: taker }).catch(e => {
           assert(e);
           done();
         });
       });
     });
 
-    it('should not change balances if balances are too low to fill order', done => {
+    it('should not change balances if balances are too low to fill order and shouldCheckTransfer = true', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(() => {
+        exUtil.fill(order, { shouldCheckTransfer: true, from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
             expect(newBalances).to.deep.equal(balances);
             done();
           });
+        }).catch(e => {
+          assert(!e);
+          done();
         });
+      });
+    });
+
+
+    it('should throw if balances are too low to fill order and shouldCheckTransfer = false', done => {
+      util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
+        order = newOrder;
+        exUtil.fill(order, { from: taker }).catch(e => {
+          assert(e);
+          done();
+        });
+      });
+    });
+
+    it('should not change balances if allowances are too low to fill order and shouldCheckTransfer = true', done => {
+      dmyA.approve(Proxy.address, 0, { from: maker }).then(() => {
+        exUtil.fill(order, { shouldCheckTransfer: true, from: taker }).then(() => {
+          getDmyBalances().then(newBalances => {
+            expect(newBalances).to.deep.equal(balances);
+            done();
+          });
+        }).catch(e => {
+          assert(!e);
+          done();
+        });
+      });
+    });
+
+    it('should throw if allowances are too low to fill order and shouldCheckTransfer = false', done => {
+      exUtil.fill(order, { from: taker }).catch(e => {
+        assert(e);
+        dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }).then(() => done());
       });
     });
 
     it('should not change balances if an order is expired', done => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
+        exUtil.fill(order, { from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
             expect(newBalances).to.deep.equal(balances);
             done();
           });
+        }).catch(e => {
+          assert(!e);
+          done();
         });
       });
     });
@@ -273,16 +310,19 @@ contract('Exchange', accounts => {
     it('should not log events if an order is expired', done => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
+        exUtil.fill(order, { from: taker }).then(res => {
           assert(res.logs.length === 0);
+          done();
+        }).catch(e => {
+          assert(!e);
           done();
         });
       });
     });
 
     it('should not log events if no value is filled', done => {
-      exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(() => {
-        exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(res => {
+      exUtil.fill(order, { from: taker }).then(() => {
+        exUtil.fill(order, { from: taker }).then(res => {
           assert(res.logs.length === 0);
           done();
         }).catch(e => {
@@ -305,16 +345,15 @@ contract('Exchange', accounts => {
     });
 
     it('should throw if not sent by maker', done => {
-      const cancelValueM = order.valueM;
-      exUtil.cancel(order, { cancelValueM, from: taker }).catch(e => {
+      exUtil.cancel(order, { from: taker }).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should be able to cancel a full order', done => {
-      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(() => {
-        exUtil.fill(order, { fillValueM: 1, from: taker }).then(() => {
+      exUtil.cancel(order, { from: maker }).then(() => {
+        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
           getDmyBalances().then(newBalances => {
             expect(newBalances).to.deep.equal(balances);
             done();
@@ -362,8 +401,8 @@ contract('Exchange', accounts => {
     });
 
     it('should not log events if no value is cancelled', done => {
-      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(() => {
-        exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(res => {
+      exUtil.cancel(order, { from: maker }).then(() => {
+        exUtil.cancel(order, { from: maker }).then(res => {
           assert(res.logs.length === 0);
           done();
         });
@@ -376,7 +415,7 @@ contract('Exchange', accounts => {
     it('should not log events if order is expired', done => {
       util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(newOrder => {
         order = newOrder;
-        exUtil.cancel(order, { cancelValueM: order.valueM, from: maker }).then(res => {
+        exUtil.cancel(order, { from: maker }).then(res => {
           assert(res.logs.length === 0);
           done();
         }).catch(e => {
