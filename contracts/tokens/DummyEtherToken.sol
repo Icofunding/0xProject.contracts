@@ -1,16 +1,16 @@
 pragma solidity ^0.4.8;
-import "./StandardToken.sol";
+import "./Mintable.sol";
 
 /// @title Token contract - Token exchanging Ether 1:1.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract EtherToken is StandardToken {
+contract DummyEtherToken is Mintable {
 
     /*
      *  Constants
      */
     // Token meta data
     string constant public name = "Ether Token";
-    string constant public symbol = "ETH";
+    string constant public symbol = "WETH";
     uint8 constant public decimals = 18;
     event LogBuyTokens(address indexed owner, uint indexed balance);
     event LogSellTokens(address indexed owner, uint indexed balance);

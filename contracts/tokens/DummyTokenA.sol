@@ -1,8 +1,8 @@
 pragma solidity ^0.4.8;
 
-import "./StandardToken.sol";
+import "./Mintable.sol";
 
-contract DummyTokenA is StandardToken {
+contract DummyTokenA is Mintable {
   string public name = "TokenA";
   string public symbol = "TA";
 
