@@ -45,7 +45,7 @@ module.exports = (deployer, network) => {
 
       Promise.all([
         tokenRegistry.addToken(DummyTokenA.address, dummyTokenASymbol, dummyTokenAName, numDecimals),
-        tokenRegistry.addToken(DummyTokenA.address, dummyTokenBSymbol, dummyTokenBName, numDecimals),
+        tokenRegistry.addToken(DummyTokenB.address, dummyTokenBSymbol, dummyTokenBName, numDecimals),
         tokenRegistry.addToken(EtherToken.address, etherTokenSymbol, etherTokenName, etherTokenDecimals),
       ]);
     });
