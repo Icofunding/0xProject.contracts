@@ -11,48 +11,35 @@ contract Exchange is SafeMath {
 
   mapping (bytes32 => uint) public fills;
 
-  event LogFillByUser(
+  event LogFill(
     address indexed maker,
-    address indexed taker,
+    address taker,
+    address indexed feeRecipient,
     address tokenM,
     address tokenT,
     uint valueM,
     uint valueT,
-    uint expiration,
-    bytes32 orderHash,
-    address indexed feeRecipient,
     uint feeM,
     uint feeT,
-    uint filledValueM,
-    uint remainingValueM
-  );
-
-  event LogFillByToken(
-    address maker,
-    address taker,
-    address indexed tokenM,
-    address indexed tokenT,
-    uint valueM,
-    uint valueT,
     uint expiration,
-    bytes32 indexed orderHash,
-    address feeRecipient,
-    uint feeM,
-    uint feeT,
     uint filledValueM,
-    uint remainingValueM
+    bytes32 indexed tokens,
+    bytes32 orderHash
   );
 
   event LogCancel(
     address indexed maker,
-    address indexed tokenM,
-    address indexed tokenT,
+    address indexed feeRecipient,
+    address tokenM,
+    address tokenT,
     uint valueM,
     uint valueT,
+    uint feeM,
+    uint feeT,
     uint expiration,
-    bytes32 orderHash,
     uint cancelledValueM,
-    uint remainingValueM
+    bytes32 indexed tokens,
+    bytes32 orderHash
   );
 
   function Exchange(address _protocolToken, address _proxy) {
@@ -105,8 +92,7 @@ contract Exchange is SafeMath {
       if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, msg.sender, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
     }
     assert(fills[orderHash] <= values[0]);
-    logFillEvents([traders[0], msg.sender, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
-    return filledValueM;
+    return fillSuccess([traders[0], msg.sender], tokens, feeRecipient, values, fees, expiration, filledValueM, orderHash);
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
@@ -134,8 +120,7 @@ contract Exchange is SafeMath {
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
-    LogCancel(traders[0], tokens[0], tokens[1], values[0], values[1], expiration, orderHash, cancelledValueM, values[0] - fills[orderHash]);
-    return cancelledValueM;
+    return cancelSuccess(traders[0], tokens, feeRecipient, values, fees, expiration, cancelledValueM, orderHash);
   }
 
   /*
@@ -512,14 +497,55 @@ contract Exchange is SafeMath {
     return Proxy(PROXY).transferFrom(token, from, to, value);
   }
 
-  /// @dev Logs fill events indexed by user and by token.
-  /// @param addresses Array of maker, taker, tokenM, tokenT, and feeRecipient addresses.
-  /// @param values Array of valueM, valueT, expiration, feeM, feeT, fillValueM, and remainingValueM.
+  /// @dev Logs fill event and returns value filled.
+  /// @param traders Array of order maker and caller of fill.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
+  /// @param expiration Time order expires in seconds.
+  /// @param filledValueM Value of tokenM to filled transaction.
   /// @param orderHash Keccak-256 hash of order.
-  function logFillEvents(address[5] addresses, uint[7] values, bytes32 orderHash)
+  /// @return Value of tokenM filled in transaction.
+  function fillSuccess(
+    address[2] traders,
+    address[2] tokens,
+    address feeRecipient,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint filledValueM,
+    bytes32 orderHash)
     private
+    returns (uint)
   {
-    LogFillByUser(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
-    LogFillByToken(addresses[0], addresses[1], addresses[2], addresses[3], values[0], values[1], values[2], orderHash, addresses[4], values[3], values[4], values[5], values[6]);
+    LogFill(traders[0], traders[1], feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, filledValueM, sha3(tokens[0], tokens[1]), orderHash);
+    return filledValueM;
+  }
+
+  /// @dev Logs cancel event and returns value cancelled.
+  /// @param maker Address of order maker.
+  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param feeRecipient Address that receives order fees.
+  /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
+  /// @param expiration Time order expires in seconds.
+  /// @param cancelledValueM Value of tokenM cancelled in transaction.
+  /// @param orderHash Keccak-256 hash of order.
+  /// @return Value of tokenM cancelled in transaction.
+  function cancelSuccess(
+    address maker,
+    address[2] tokens,
+    address feeRecipient,
+    uint[2] values,
+    uint[2] fees,
+    uint expiration,
+    uint cancelledValueM,
+    bytes32 orderHash)
+    private
+    returns (uint)
+  {
+    LogCancel(maker, feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, cancelledValueM, sha3(tokens[0], tokens[1]), orderHash);
+    return cancelledValueM;
   }
 }

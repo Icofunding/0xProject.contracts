@@ -213,9 +213,9 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should log 2 events', done => {
+    it('should log 1 event', done => {
       exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(res => {
-        assert(res.logs.length === 2);
+        assert(res.logs.length === 1);
         done();
       }).catch(e => {
         assert(!e);
