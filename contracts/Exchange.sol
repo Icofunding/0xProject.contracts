@@ -67,7 +67,6 @@ contract Exchange is SafeMath {
   /// @dev Fills an order with specified parameters and ECDSA signature.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
-  /// @param caller Address to execute fill with.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
@@ -79,7 +78,6 @@ contract Exchange is SafeMath {
   function fill(
     address[2] traders,
     address[2] tokens,
-    address caller,
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
@@ -89,30 +87,29 @@ contract Exchange is SafeMath {
     bytes32[2] rs)
     returns (uint filledValueM)
   {
-    assert(isValidCaller(traders[1], caller));
-    if (block.timestamp > expiration) return 0;
+    assert(traders[1] == address(0) || traders[1] == msg.sender);
+    if (block.timestamp >= expiration) return 0;
     bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
-    if (!isTransferable([traders[0], caller], tokens, feeRecipient, values, fees, filledValueM)) return 0;
+    if (!isTransferable([traders[0], msg.sender], tokens, feeRecipient, values, fees, filledValueM)) return 0;
     assert(isValidSignature(traders[0], orderHash, v, rs[0], rs[1]));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
-    assert(transferViaProxy(tokens[0], traders[0], caller, filledValueM));
-    assert(transferViaProxy(tokens[1], caller, traders[0], getPartialValue(values[0], filledValueM, values[1])));
+    assert(transferViaProxy(tokens[0], traders[0], msg.sender, filledValueM));
+    assert(transferViaProxy(tokens[1], msg.sender, traders[0], getPartialValue(values[0], filledValueM, values[1])));
     if (feeRecipient != address(0)) {
       if (fees[0] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
-      if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, caller, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
+      if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, msg.sender, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
     }
     assert(fills[orderHash] <= values[0]);
-    logFillEvents([traders[0], caller, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
+    logFillEvents([traders[0], msg.sender, tokens[0], tokens[1], feeRecipient], [values[0], values[1], expiration, fees[0], fees[1], filledValueM, values[0] - fills[orderHash]], orderHash);
     return filledValueM;
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
-  /// @param caller Address to execute cancel with.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
@@ -122,7 +119,6 @@ contract Exchange is SafeMath {
   function cancel(
     address[2] traders,
     address[2] tokens,
-    address caller,
     address feeRecipient,
     uint[2] values,
     uint[2] fees,
@@ -130,8 +126,8 @@ contract Exchange is SafeMath {
     uint cancelValueM)
     returns (uint cancelledValueM)
   {
-    assert(isValidCaller(traders[0], caller));
-    if (block.timestamp > expiration) return 0;
+    assert(traders[0] == msg.sender);
+    if (block.timestamp >= expiration) return 0;
     bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
@@ -144,21 +140,7 @@ contract Exchange is SafeMath {
   * Constant functions
   */
 
-  /// @dev Checks if function is being called from a valid address.
-  /// @param expected Required address to call function from.
-  /// @param provided Address of user or contract calling function.
-  /// @return Caller is valid.
-  function isValidCaller(address expected, address provided)
-    constant
-    returns (bool isValid)
-  {
-    return (
-      (provided == msg.sender || provided == tx.origin) &&
-      (expected == address(0) || expected == provided)
-    );
-  }
-
-  /// @dev Predicts if any order transfers will fail.
+  /// @dev Checks if any order transfers will fail.
   /// @param traders Array of maker and caller addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
   /// @param feeRecipient Address that receives order fees.

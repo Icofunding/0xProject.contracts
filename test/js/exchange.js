@@ -256,7 +256,7 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should not change balances if balances are too low', done => {
+    it('should not change balances if balances are too low to fill order', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) })).then(newOrder => {
         order = newOrder;
         exUtil.fill(order, { fillValueM: order.valueM, from: taker }).then(() => {
