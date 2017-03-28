@@ -21,25 +21,24 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
       params.taker,
       params.tokenM,
       params.tokenT,
+      params.feeRecipient,
       params.valueM,
       params.valueT,
+      params.feeM,
+      params.feeT,
       params.expiration
     );
   return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
 };
 
-exports.getMsgHash = (params, { hex = false, hashPersonal = false } = {}) => {
-  let msgHash = exports.solSHA3(
-    params.orderHash,
-    params.feeRecipient,
-    params.feeM,
-    params.feeT
-  );
-  if (hashPersonal) {
-    msgHash = ethUtil.hashPersonalMessage(msgHash);
+exports.validSignature = order => {
+  const orderHash = order.orderHash ? order.orderHash : getOrderHash(order);
+  const prefixedHash = ethUtil.hashPersonalMessage(orderHash);
+  const { v, r, s } = order;
+  try {
+    const pubKey = ethUtil.ecrecover(prefixedHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
+    return ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey)) === order.maker;
+  } catch (err) {
+    return false;
   }
-  if (hex) {
-    msgHash = ethUtil.bufferToHex(msgHash);
-  }
-  return msgHash;
 };

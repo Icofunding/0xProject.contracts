@@ -12,26 +12,6 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
 
   mapping (bytes32 => uint) public fills;
 
-  modifier notExpired(uint expiration) {
-    if (block.timestamp < expiration)
-      _;
-  }
-
-  /*modifier callerIsControlled(address caller) {
-    assert(caller == msg.sender || caller == tx.origin);
-    _;
-  }
-
-  modifier callerIsMaker(address[2] traders, address caller) {
-    assert(traders[0] == address(0) || caller == traders[0]);
-    _;
-  }
-
-  modifier callerIsTaker(address[2] traders, address caller) {
-    assert(traders[1] == address(0) || caller == traders[1]);
-    _;
-  }*/
-
   event LogFillByUser(
     address indexed maker,
     address indexed taker,
@@ -87,8 +67,9 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
 
   /// @dev Fills an order with specified parameters and ECDSA signature.
   /// @param traders Array of order maker and taker addresses.
-  /// @param feeRecipient Address that receives order fees.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param caller Address to execute fill with.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
@@ -98,30 +79,32 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @return Total amount of tokenM filled in trade.
   function fill(
     address[2] traders,
+    address[2] tokens,
     address caller,
     address feeRecipient,
-    address[2] tokens,
     uint[2] values,
     uint[2] fees,
     uint expiration,
     uint fillValueM,
     uint8 v,
     bytes32[2] rs)
-    notExpired(expiration)
     returns (uint filledValueM)
   {
     assert(validCaller(traders[1], caller));
+    if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
+      feeRecipient,
       values,
+      fees,
       expiration
     );
     fillValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);
     if (fillValueM > 0) {
       assert(validSignature(
         traders[0],
-        getMsgHash(orderHash, feeRecipient, fees),
+        orderHash,
         v,
         rs[0],
         rs[1]
@@ -168,26 +151,32 @@ contract Exchange is ExchangeMath, ExchangeCrypto {
   /// @dev Cancels provided amount of an order with given parameters.
   /// @param traders Array of order maker and taker addresses.
   /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param caller Address to execute cancel with.
+  /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
+  /// @param fees Array of order feeM and feeT.
   /// @param expiration Time order expires in seconds.
   /// @param fillValueM Desired amount of tokenM to cancel in order.
   /// @return Amount of tokenM cancelled.
   function cancel(
     address[2] traders,
-    address caller,
     address[2] tokens,
+    address caller,
+    address feeRecipient,
     uint[2] values,
+    uint[2] fees,
     uint expiration,
     uint fillValueM)
-    notExpired(expiration)
     returns (uint cancelledValueM)
   {
     assert(validCaller(traders[0], caller));
-    //if (block.timestamp < expiration) return 0;
+    if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
+      feeRecipient,
       values,
+      fees,
       expiration
     );
     fillValueM = getFillValueM(values[0], fillValueM, fills[orderHash]);

@@ -1,5 +1,4 @@
-const { createFill, createCancel } = require('./formatUtil.js');
-const { getMsgHash } = require('./hashUtil.js');
+const { createFill, createCancel } = require('./formatters.js');
 
 module.exports = exchange => {
   const exchangeUtil = {
@@ -7,9 +6,9 @@ module.exports = exchange => {
       const params = createFill(order, caller || from, fillValueM);
       return exchange.fill(
         params.traders,
+        params.tokens,
         params.caller,
         params.feeRecipient,
-        params.tokens,
         params.values,
         params.fees,
         params.expiration,
@@ -23,9 +22,11 @@ module.exports = exchange => {
       const params = createCancel(order, caller || from, cancelValueM);
       return exchange.cancel(
         params.traders,
-        params.caller,
         params.tokens,
+        params.caller,
+        params.feeRecipient,
         params.values,
+        params.fees,
         params.expiration,
         params.cancelValueM,
         { from }
@@ -36,22 +37,17 @@ module.exports = exchange => {
       return exchange.getOrderHash(
         params.traders,
         params.tokens,
+        params.feeRecipient,
         params.values,
+        params.fees,
         params.expiration
       );
     },
-    getMsgHash: order => {
-      const msgHash = exchange.getMsgHash(
-        order.orderHash,
-        order.feeRecipient,
-        [order.feeM, order.feeT]
-      );
-      return msgHash;
-    },
     validSignature: order => {
+      const orderHash = typeof order.orderHash === 'string' ? order.orderHash : `0x${order.orderHash.toString('hex')}`;
       const validSignature = exchange.validSignature(
         order.maker,
-        getMsgHash(order, { hex: true }),
+        orderHash,
         order.v,
         order.r,
         order.s

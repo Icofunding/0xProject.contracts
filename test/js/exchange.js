@@ -330,12 +330,9 @@ contract('Exchange', accounts => {
     });
 
     it('should throw with an invalid caller', done => {
-      util.createOrder(orderFactory()).then(newOrder => {
-        order = newOrder;
-        exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).catch(e => {
-          assert(e);
-          done();
-        });
+      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).catch(e => {
+        assert(e);
+        done();
       });
     });
 

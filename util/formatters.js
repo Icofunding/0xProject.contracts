@@ -1,9 +1,9 @@
 exports.createFill = (order, caller, fillValueM) => {
   const fill = {
     traders: [order.maker, order.taker],
+    tokens: [order.tokenM, order.tokenT],
     caller,
     feeRecipient: order.feeRecipient,
-    tokens: [order.tokenM, order.tokenT],
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],
     expiration: order.expiration,
@@ -17,8 +17,8 @@ exports.createFill = (order, caller, fillValueM) => {
 exports.createBatchFill = (orders, fillValuesM) => {
   const ret = {
     traders: [],
-    feeRecipients: [],
     tokens: [],
+    feeRecipients: [],
     values: [],
     fees: [],
     expirations: [],
@@ -28,8 +28,8 @@ exports.createBatchFill = (orders, fillValuesM) => {
   };
   orders.forEach(order => {
     ret.traders.push([order.maker, order.taker]);
-    ret.feeRecipients.push(order.feeRecipient);
     ret.tokens.push([order.tokenM, order.tokenT]);
+    ret.feeRecipients.push(order.feeRecipient);
     ret.values.push([order.valueM, order.valueT]);
     ret.fees.push([order.feeM, order.feeT]);
     ret.expirations.push(order.expiration);
@@ -42,8 +42,8 @@ exports.createBatchFill = (orders, fillValuesM) => {
 exports.createFillUpTo = (orders, fillValueM) => {
   const ret = {
     traders: [],
-    feeRecipients: [],
     tokens: [],
+    feeRecipients: [],
     values: [],
     fees: [],
     expirations: [],
@@ -53,8 +53,8 @@ exports.createFillUpTo = (orders, fillValueM) => {
   };
   orders.forEach(order => {
     ret.traders.push([order.maker, order.taker]);
-    ret.feeRecipients.push(order.feeRecipient);
     ret.tokens.push([order.tokenM, order.tokenT]);
+    ret.feeRecipients.push(order.feeRecipient);
     ret.values.push([order.valueM, order.valueT]);
     ret.fees.push([order.feeM, order.feeT]);
     ret.expirations.push(order.expiration);
@@ -67,8 +67,9 @@ exports.createFillUpTo = (orders, fillValueM) => {
 exports.createCancel = (order, caller, cancelValueM) => {
   const cancel = {
     traders: [order.maker, order.taker],
-    caller,
     tokens: [order.tokenM, order.tokenT],
+    caller,
+    feeRecipient: order.feeRecipient,
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],
     expiration: order.expiration,
@@ -81,14 +82,18 @@ exports.createBatchCancel = (orders, cancelValuesM) => {
   const ret = {
     traders: [],
     tokens: [],
+    feeRecipients: [],
     values: [],
+    fees: [],
     expirations: [],
     cancelValuesM,
   };
   orders.forEach(order => {
     ret.traders.push([order.maker, order.taker]);
     ret.tokens.push([order.tokenM, order.tokenT]);
+    ret.feeRecipients.push(order.feeRecipient);
     ret.values.push([order.valueM, order.valueT]);
+    ret.fees.push([order.feeM, order.feeT]);
     ret.expirations.push(order.expiration);
   });
   return ret;

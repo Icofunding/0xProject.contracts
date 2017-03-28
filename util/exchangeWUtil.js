@@ -1,4 +1,4 @@
-const { createFill, createBatchFill, createFillUpTo, createCancel, createBatchCancel } = require('./formatUtil.js');
+const { createFill, createBatchFill, createFillUpTo, createCancel, createBatchCancel } = require('./formatters.js');
 
 module.exports = exchangeW => {
   const exchangeWUtil = {
@@ -6,8 +6,8 @@ module.exports = exchangeW => {
       const params = createFill(order, null, fillValueM);
       return exchangeW.fill(
         params.traders,
-        params.feeRecipient,
         params.tokens,
+        params.feeRecipient,
         params.values,
         params.fees,
         params.expiration,
@@ -21,8 +21,8 @@ module.exports = exchangeW => {
       const params = createFill(order, null, fillValueM);
       return exchangeW.fillOrKill(
         params.traders,
-        params.feeRecipient,
         params.tokens,
+        params.feeRecipient,
         params.values,
         params.fees,
         params.expiration,
@@ -36,8 +36,8 @@ module.exports = exchangeW => {
       const params = createBatchFill(orders, fillValuesM);
       return exchangeW.batchFill(
         params.traders,
-        params.feeRecipients,
         params.tokens,
+        params.feeRecipients,
         params.values,
         params.fees,
         params.expirations,
@@ -51,8 +51,8 @@ module.exports = exchangeW => {
       const params = createBatchFill(orders, fillValuesM);
       return exchangeW.batchFillOrKill(
         params.traders,
-        params.feeRecipients,
         params.tokens,
+        params.feeRecipients,
         params.values,
         params.fees,
         params.expirations,
@@ -66,8 +66,8 @@ module.exports = exchangeW => {
       const params = createFillUpTo(orders, fillValueM);
       return exchangeW.fillUpTo(
         params.traders,
-        params.feeRecipients,
         params.tokens,
+        params.feeRecipients,
         params.values,
         params.fees,
         params.expirations,
@@ -78,11 +78,13 @@ module.exports = exchangeW => {
       );
     },
     cancel: (order, { cancelValueM, from }) => {
-      const params = createCancel(order, null, cancelValueM);
+      const params = createCancel(order, cancelValueM);
       return exchangeW.cancel(
         params.traders,
         params.tokens,
+        params.feeRecipient,
         params.values,
+        params.fees,
         params.expiration,
         params.cancelValueM,
         { from }
@@ -93,7 +95,9 @@ module.exports = exchangeW => {
       return exchangeW.batchCancel(
         params.traders,
         params.tokens,
+        params.feeRecipients,
         params.values,
+        params.fees,
         params.expirations,
         params.cancelValuesM,
         { from }
