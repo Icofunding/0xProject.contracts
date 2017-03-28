@@ -1,8 +1,7 @@
 pragma solidity ^0.4.8;
 import "./Mintable.sol";
 
-/// @title Token contract - Token exchanging Ether 1:1.
-/// @author Stefan George - <stefan.george@consensys.net>
+/// @title Mintable token contract - Token exchanging Ether 1:1 with additional mint functionality.
 contract DummyEtherToken is Mintable {
 
     /*
