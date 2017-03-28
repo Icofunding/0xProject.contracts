@@ -1,24 +1,25 @@
-exports.createFill = (order, caller, fillValueM) => {
+exports.createFill = (order, shouldCheckTransfer, fillValueM) => {
   const fill = {
     traders: [order.maker, order.taker],
     tokens: [order.tokenM, order.tokenT],
-    caller,
     feeRecipient: order.feeRecipient,
+    shouldCheckTransfer,
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],
     expiration: order.expiration,
-    fillValueM,
+    fillValueM: fillValueM || order.valueM,
     v: order.v,
     rs: [order.r, order.s],
   };
   return fill;
 };
 
-exports.createBatchFill = (orders, fillValuesM) => {
+exports.createBatchFill = (orders, shouldCheckTransfer, fillValuesM = []) => {
   const ret = {
     traders: [],
     tokens: [],
     feeRecipients: [],
+    shouldCheckTransfer,
     values: [],
     fees: [],
     expirations: [],
@@ -35,15 +36,19 @@ exports.createBatchFill = (orders, fillValuesM) => {
     ret.expirations.push(order.expiration);
     ret.v.push(order.v);
     ret.rs.push([order.r, order.s]);
+    if (fillValuesM.length < orders.length) {
+      ret.fillValuesM.push(order.valueM);
+    }
   });
   return ret;
 };
 
-exports.createFillUpTo = (orders, fillValueM) => {
+exports.createFillUpTo = (orders, shouldCheckTransfer, fillValueM) => {
   const ret = {
     traders: [],
     tokens: [],
     feeRecipients: [],
+    shouldCheckTransfer,
     values: [],
     fees: [],
     expirations: [],
@@ -64,21 +69,20 @@ exports.createFillUpTo = (orders, fillValueM) => {
   return ret;
 };
 
-exports.createCancel = (order, caller, cancelValueM) => {
+exports.createCancel = (order, cancelValueM) => {
   const cancel = {
     traders: [order.maker, order.taker],
     tokens: [order.tokenM, order.tokenT],
-    caller,
     feeRecipient: order.feeRecipient,
     values: [order.valueM, order.valueT],
     fees: [order.feeM, order.feeT],
     expiration: order.expiration,
-    cancelValueM,
+    cancelValueM: cancelValueM || order.valueM,
   };
   return cancel;
 };
 
-exports.createBatchCancel = (orders, cancelValuesM) => {
+exports.createBatchCancel = (orders, cancelValuesM = []) => {
   const ret = {
     traders: [],
     tokens: [],
@@ -95,6 +99,9 @@ exports.createBatchCancel = (orders, cancelValuesM) => {
     ret.values.push([order.valueM, order.valueT]);
     ret.fees.push([order.feeM, order.feeT]);
     ret.expirations.push(order.expiration);
+    if (cancelValuesM.length < orders.length) {
+      ret.cancelValuesM.push(order.valueM);
+    }
   });
   return ret;
 };

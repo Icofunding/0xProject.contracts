@@ -2,7 +2,6 @@ const ethUtil = require('ethereumjs-util');
 const { getOrderHash, isValidSignature } = require('./crypto.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
-const exchangeWUtil = require('./exchangeWUtil.js');
 const multiSigUtil = require('./multiSigUtil.js');
 const testUtil = require('./testUtil.js');
 
@@ -45,7 +44,6 @@ module.exports = web3 => {
     getOrderHash,
     BNutil,
     exchangeUtil,
-    exchangeWUtil,
     multiSigUtil,
   };
   return index;

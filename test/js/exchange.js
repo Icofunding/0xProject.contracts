@@ -234,16 +234,6 @@ contract('Exchange', accounts => {
       });
     });
 
-    it('should throw with an invalid caller', done => {
-      util.createOrder(orderFactory()).then(newOrder => {
-        order = newOrder;
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker, caller: maker }).catch(e => {
-          assert(e);
-          done();
-        });
-      });
-    });
-
     it('should throw if signature is invalid', done => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(10) })).then(newOrder => {
         order = newOrder;
@@ -317,13 +307,6 @@ contract('Exchange', accounts => {
     it('should throw if not sent by maker', done => {
       const cancelValueM = order.valueM;
       exUtil.cancel(order, { cancelValueM, from: taker }).catch(e => {
-        assert(e);
-        done();
-      });
-    });
-
-    it('should throw with an invalid caller', done => {
-      exUtil.cancel(order, { cancelValueM: order.valueM, from: maker, caller: taker }).catch(e => {
         assert(e);
         done();
       });

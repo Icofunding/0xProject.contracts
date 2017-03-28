@@ -1,7 +1,6 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const Exchange = artifacts.require('./Exchange.sol');
-const ExchangeWrapper = artifacts.require('./ExchangeWrapper.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
@@ -16,7 +15,6 @@ module.exports = (deployer, network) => {
       TokenRegistry,
     ])
     .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
-    .then(() => deployer.deploy(ExchangeWrapper, Exchange.address))
     .then(() => Proxy.deployed())
     .then(instance => {
       const proxy = instance;

@@ -1,5 +1,4 @@
 const Exchange = artifacts.require('./Exchange.sol');
-const ExchangeWrapper = artifacts.require('./ExchangeWrapper.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
@@ -22,7 +21,7 @@ contract('ExchangeWrapper', accounts => {
   let dmyA;
   let dmyB;
   let dmyPT;
-  let exchangeW;
+  let exchange;
 
   let balances;
 
@@ -43,13 +42,13 @@ contract('ExchangeWrapper', accounts => {
 
   before(done => {
     Promise.all([
-      ExchangeWrapper.deployed(),
+      Exchange.deployed(),
       DummyTokenA.deployed(),
       DummyTokenB.deployed(),
       DummyProtocolToken.deployed(),
     ]).then(instances => {
-      [exchangeW, dmyA, dmyB, dmyPT] = instances;
-      exUtil = util.exchangeWUtil(exchangeW);
+      [exchange, dmyA, dmyB, dmyPT] = instances;
+      exUtil = util.exchangeUtil(exchange);
       getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
       return Promise.all([
         dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
