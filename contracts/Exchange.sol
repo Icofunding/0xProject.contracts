@@ -89,14 +89,14 @@ contract Exchange is SafeMath {
     bytes32[2] rs)
     returns (uint filledValueM)
   {
-    if (!isValidCaller(traders[1], caller)) return 0;
+    assert(isValidCaller(traders[1], caller));
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
     if (!isTransferable([traders[0], caller], tokens, feeRecipient, values, fees, filledValueM)) return 0;
-    if (!isValidSignature(traders[0], orderHash, v, rs[0], rs[1])) return 0;
+    assert(isValidSignature(traders[0], orderHash, v, rs[0], rs[1]));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     assert(transferViaProxy(tokens[0], traders[0], caller, filledValueM));
     assert(transferViaProxy(tokens[1], caller, traders[0], getPartialValue(values[0], filledValueM, values[1])));
@@ -130,7 +130,7 @@ contract Exchange is SafeMath {
     uint cancelValueM)
     returns (uint cancelledValueM)
   {
-    if (!isValidCaller(traders[0], caller)) return 0;
+    assert(isValidCaller(traders[0], caller));
     if (block.timestamp > expiration) return 0;
     bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));

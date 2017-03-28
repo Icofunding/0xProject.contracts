@@ -189,20 +189,19 @@ contract ExchangeWrapper is SafeMath {
     address tokenM = tokens[0][0];
     filledValueM = 0;
     for (uint i = 0; i < traders.length; i++) {
-      if (tokenM == tokens[i][0]) {
-        filledValueM = safeAdd(filledValueM, fill(
-          traders[i],
-          tokens[i],
-          feeRecipients[i],
-          values[i],
-          fees[i],
-          expirations[i],
-          safeSub(fillValueM, filledValueM),
-          v[i],
-          rs[i]
-        ));
-        if (filledValueM == fillValueM) break;
-      }
+      assert(tokens[i][0] == tokenM);
+      filledValueM = safeAdd(filledValueM, fill(
+        traders[i],
+        tokens[i],
+        feeRecipients[i],
+        values[i],
+        fees[i],
+        expirations[i],
+        safeSub(fillValueM, filledValueM),
+        v[i],
+        rs[i]
+      ));
+      if (filledValueM == fillValueM) break;
     }
     return filledValueM;
   }

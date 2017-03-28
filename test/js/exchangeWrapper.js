@@ -113,7 +113,6 @@ contract('ExchangeWrapper', accounts => {
       util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(order => {
         const fillValueM = div(order.valueM, 2);
         exUtil.fillOrKill(order, { fillValueM, from: taker }).then(() => {
-          // console.log('gasUsed:', res.receipt.gasUsed);
           getDmyBalances().then(newBalances => {
             const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
             const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
@@ -255,36 +254,16 @@ contract('ExchangeWrapper', accounts => {
       });
     });
 
-    it('should skip an order does not use the same tokenM', done => {
+    it('should throw when an order does not use the same tokenM', done => {
       Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory({ tokenM: dmyPT.address })),
         util.createOrder(orderFactory()),
       ]).then(newOrders => {
         orders = newOrders;
-        const tokenM = orders[0].tokenM;
-        let fillValueMLeft = toSmallestUnits(10000);
-        orders.forEach(order => {
-          if (order.tokenM === tokenM) {
-            const fillValueM = Math.min(fillValueMLeft, order.valueM);
-            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-            balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], fillValueM);
-            balances[maker][order.tokenT] = add(balances[maker][order.tokenT], fillValueT);
-            balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], feeValueM);
-            balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], fillValueT);
-            balances[taker][order.tokenM] = add(balances[taker][order.tokenM], fillValueM);
-            balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
-            balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
-            fillValueMLeft = sub(fillValueMLeft, fillValueM);
-          }
-        });
-        exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker }).then(() => {
-          getDmyBalances().then(newBalances => {
-            expect(newBalances).to.deep.equal(balances);
-            done();
-          });
+        exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker }).catch(e => {
+          assert(e);
+          done();
         });
       });
     });
