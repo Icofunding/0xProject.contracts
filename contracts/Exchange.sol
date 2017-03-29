@@ -78,21 +78,75 @@ contract Exchange is SafeMath {
   {
     assert(traders[1] == address(0) || traders[1] == msg.sender);
     if (block.timestamp >= expiration) return 0;
-    bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
+    bytes32 orderHash = getOrderHash(
+      traders,
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      expiration
+    );
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
-    if (shouldCheckTransfer && !isTransferable([traders[0], msg.sender], tokens, feeRecipient, values, fees, filledValueM)) return 0;
-    assert(isValidSignature(traders[0], orderHash, v, rs[0], rs[1]));
+    if (shouldCheckTransfer && !isTransferable(
+        [traders[0], msg.sender],
+        tokens,
+        feeRecipient,
+        values,
+        fees,
+        filledValueM
+      )
+    ) return 0;
+    assert(isValidSignature(
+      traders[0],
+      orderHash,
+      v,
+      rs[0],
+      rs[1]
+    ));
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
-    assert(transferViaProxy(tokens[0], traders[0], msg.sender, filledValueM));
-    assert(transferViaProxy(tokens[1], msg.sender, traders[0], getPartialValue(values[0], filledValueM, values[1])));
+    assert(transferViaProxy(
+      tokens[0],
+      traders[0],
+      msg.sender,
+      filledValueM
+    ));
+    assert(transferViaProxy(
+      tokens[1],
+      msg.sender,
+      traders[0],
+      getPartialValue(values[0], filledValueM, values[1])
+    ));
     if (feeRecipient != address(0)) {
-      if (fees[0] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, traders[0], feeRecipient, getPartialValue(values[0], filledValueM, fees[0])));
-      if (fees[1] > 0) assert(transferViaProxy(PROTOCOL_TOKEN, msg.sender, feeRecipient, getPartialValue(values[0], filledValueM, fees[1])));
+      if (fees[0] > 0) {
+        assert(transferViaProxy(
+          PROTOCOL_TOKEN,
+          traders[0],
+          feeRecipient,
+          getPartialValue(values[0], filledValueM, fees[0])
+        ));
+      }
+      if (fees[1] > 0) {
+        assert(transferViaProxy(
+          PROTOCOL_TOKEN,
+          msg.sender,
+          feeRecipient,
+          getPartialValue(values[0], filledValueM, fees[1])
+        ));
+      }
     }
     assert(fills[orderHash] <= values[0]);
-    return fillSuccess([traders[0], msg.sender], tokens, feeRecipient, values, fees, expiration, filledValueM, orderHash);
+    return fillSuccess(
+      [traders[0], msg.sender],
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      expiration,
+      filledValueM,
+      orderHash
+    );
   }
 
   /// @dev Cancels provided amount of an order with given parameters.
@@ -116,11 +170,27 @@ contract Exchange is SafeMath {
   {
     assert(traders[0] == msg.sender);
     if (block.timestamp >= expiration) return 0;
-    bytes32 orderHash = getOrderHash(traders, tokens, feeRecipient, values, fees, expiration);
+    bytes32 orderHash = getOrderHash(
+      traders,
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      expiration
+    );
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
-    return cancelSuccess(traders[0], tokens, feeRecipient, values, fees, expiration, cancelledValueM, orderHash);
+    return cancelSuccess(
+      traders[0],
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      expiration,
+      cancelledValueM,
+      orderHash
+    );
   }
 
   /*
@@ -377,7 +447,12 @@ contract Exchange is SafeMath {
     constant
     returns (bool isValid)
   {
-    return pubKey == ecrecover(sha3("\x19Ethereum Signed Message:\n32", hash), v, r, s);
+    return pubKey == ecrecover(
+      sha3("\x19Ethereum Signed Message:\n32", hash),
+      v,
+      r,
+      s
+    );
   }
 
   /// @dev Calculates minimum of two values.
@@ -460,7 +535,21 @@ contract Exchange is SafeMath {
     constant
     returns (uint)
   {
-    LogFill(traders[0], traders[1], feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, filledValueM, sha3(tokens[0], tokens[1]), orderHash);
+    LogFill(
+      traders[0],
+      traders[1],
+      feeRecipient,
+      tokens[0],
+      tokens[1],
+      values[0],
+      values[1],
+      fees[0],
+      fees[1],
+      expiration,
+      filledValueM,
+      sha3(tokens[0], tokens[1]),
+      orderHash
+    );
     return filledValueM;
   }
 
@@ -487,7 +576,19 @@ contract Exchange is SafeMath {
     constant
     returns (uint)
   {
-    LogCancel(maker, feeRecipient, tokens[0], tokens[1], values[0], values[1], fees[0], fees[1], expiration, cancelledValueM, sha3(tokens[0], tokens[1]), orderHash);
+    LogCancel(
+      maker,
+      feeRecipient,
+      tokens[0],
+      tokens[1],
+      values[0],
+      values[1],
+      fees[0],
+      fees[1],
+      expiration,
+      cancelledValueM,
+      sha3(tokens[0], tokens[1]), orderHash
+    );
     return cancelledValueM;
   }
 
