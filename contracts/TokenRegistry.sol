@@ -1,7 +1,7 @@
 pragma solidity ^0.4.8;
 
-import "./tokens/Token.sol";
-import "./Ownable.sol";
+import "./base/Token.sol";
+import "./base/Ownable.sol";
 
 contract TokenRegistry is Ownable {
 
