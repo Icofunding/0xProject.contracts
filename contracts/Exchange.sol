@@ -1,8 +1,8 @@
 pragma solidity ^0.4.8;
 
 import "./Proxy.sol";
-import "./tokens/Token.sol";
-import "./util/SafeMath.sol";
+import "./base/Token.sol";
+import "./base/SafeMath.sol";
 
 contract Exchange is SafeMath {
 

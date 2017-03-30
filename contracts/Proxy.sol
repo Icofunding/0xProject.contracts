@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-import "./tokens/Token.sol";
+import "./base/Token.sol";
 import "./db/AuthDB.sol";
 
 contract Proxy is AuthDB {

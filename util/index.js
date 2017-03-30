@@ -3,7 +3,7 @@ const { getOrderHash, isValidSignature } = require('./crypto.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
 const multiSigUtil = require('./multiSigUtil.js');
-const testUtil = require('./testUtil.js');
+const factory = require('./factory.js');
 
 module.exports = web3 => {
   const index = {
@@ -37,8 +37,8 @@ module.exports = web3 => {
       });
       return order;
     },
-    createOrderFactory: testUtil.createOrderFactory,
-    getBalancesFactory: testUtil.getBalancesFactory,
+    createOrderFactory: factory.createOrderFactory,
+    getBalancesFactory: factory.getBalancesFactory,
     sha3: ethUtil.sha3,
     isValidSignature,
     getOrderHash,
