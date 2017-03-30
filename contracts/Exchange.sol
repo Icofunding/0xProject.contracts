@@ -90,14 +90,13 @@ contract Exchange is SafeMath {
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
     if (shouldCheckTransfer && !isTransferable(
-        [traders[0], msg.sender],
-        tokens,
-        feeRecipient,
-        values,
-        fees,
-        filledValueM
-      )
-    ) return 0;
+      [traders[0], msg.sender],
+      tokens,
+      feeRecipient,
+      values,
+      fees,
+      filledValueM
+    )) return 0;
     assert(isValidSignature(
       traders[0],
       orderHash,
@@ -476,7 +475,7 @@ contract Exchange is SafeMath {
     constant
     returns (bool isError)
   {
-    return (target < 10**3 && safeMul(target, numerator) % denominator != 0);
+    return (target < 10**3 && mulmod(target, numerator, denominator) != 0);
   }
 
   /// @dev Calculates partial value given fillValueM and order valueM.
@@ -612,8 +611,7 @@ contract Exchange is SafeMath {
     returns (bool isTransferable)
   {
     uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
-    if (
-      getBalance(tokens[0], traders[0]) < fillValueM ||
+    if (getBalance(tokens[0], traders[0]) < fillValueM ||
       getAllowance(tokens[0], traders[0]) < fillValueM ||
       getBalance(tokens[1], traders[1]) < fillValueT ||
       getAllowance(tokens[1], traders[1]) < fillValueT
@@ -621,8 +619,7 @@ contract Exchange is SafeMath {
     if (feeRecipient != address(0)) {
       uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
       uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
-      if (
-        getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
+      if (getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
         getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
         getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
         getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
