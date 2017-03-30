@@ -78,6 +78,7 @@ contract Exchange is SafeMath {
   {
     assert(traders[1] == address(0) || traders[1] == msg.sender);
     if (block.timestamp >= expiration) return 0;
+
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -89,6 +90,7 @@ contract Exchange is SafeMath {
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) return 0;
     if (isRoundingError(values[0], filledValueM, values[1])) return 0;
+
     if (shouldCheckTransfer && !isTransferable(
       [traders[0], msg.sender],
       tokens,
@@ -104,6 +106,7 @@ contract Exchange is SafeMath {
       rs[0],
       rs[1]
     ));
+
     fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
     assert(transferViaProxy(
       tokens[0],
@@ -117,6 +120,7 @@ contract Exchange is SafeMath {
       traders[0],
       getPartialValue(values[0], filledValueM, values[1])
     ));
+
     if (feeRecipient != address(0)) {
       if (fees[0] > 0) {
         assert(transferViaProxy(
@@ -136,6 +140,7 @@ contract Exchange is SafeMath {
       }
     }
     assert(fills[orderHash] <= values[0]);
+
     return fillSuccess(
       [traders[0], msg.sender],
       tokens,
@@ -169,6 +174,7 @@ contract Exchange is SafeMath {
   {
     assert(traders[0] == msg.sender);
     if (block.timestamp >= expiration) return 0;
+
     bytes32 orderHash = getOrderHash(
       traders,
       tokens,
@@ -180,6 +186,7 @@ contract Exchange is SafeMath {
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) return 0;
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
+
     return cancelSuccess(
       traders[0],
       tokens,
