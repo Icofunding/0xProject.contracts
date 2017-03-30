@@ -7,8 +7,8 @@ contract AuthDB is Ownable {
   mapping (address => bool) public addresses;
   address[] authorities;
 
-  event LogAddressAuthorized(address indexed target, address indexed caller);
-  event LogAddressDeauthorized(address indexed target, address indexed caller);
+  event LogAuthorizedAddressAdded(address indexed target, address indexed caller);
+  event LogAuthorizedAddressRemoved(address indexed target, address indexed caller);
 
   function addAuthorizedAddress(address target)
     onlyOwner
@@ -16,7 +16,7 @@ contract AuthDB is Ownable {
   {
     addresses[target] = true;
     authorities.push(target);
-    LogAddressAuthorized(target, msg.sender);
+    LogAuthorizedAddressAdded(target, msg.sender);
     return true;
   }
 
@@ -32,7 +32,7 @@ contract AuthDB is Ownable {
         break;
       }
     }
-    LogAddressDeauthorized(target, msg.sender);
+    LogAuthorizedAddressRemoved(target, msg.sender);
     return true;
   }
 

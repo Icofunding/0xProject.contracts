@@ -1,4 +1,5 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
+const AuthDB = artifacts.require('./db/AuthDB.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const Exchange = artifacts.require('./Exchange.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
@@ -10,17 +11,14 @@ module.exports = (deployer, network) => {
     const accounts = web3.eth.accounts;
     deployer.deploy([
       [MultiSigWallet, [accounts[0], accounts[1]], 2],
-      Proxy,
+      AuthDB,
       [DummyProtocolToken, 0],
       TokenRegistry,
     ])
+    .then(() => deployer.deploy(Proxy, AuthDB.address))
     .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
-    .then(() => Proxy.deployed())
-    .then(instance => {
-      const proxy = instance;
-      proxy.setAuthorization(Exchange.address, true, { from: accounts[0] })
-      .then(() => proxy.transferOwnership(MultiSigWallet.address, { from: accounts[0] }));
-    });
+    .then(() => AuthDB.deployed())
+    .then(authDB => authDB.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
   } else {
     deployer.deploy(Proxy)
     .then(() => deployer.deploy(ProtocolToken))
