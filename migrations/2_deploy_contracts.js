@@ -12,13 +12,13 @@ module.exports = (deployer, network) => {
     deployer.deploy([
       [MultiSigWallet, [accounts[0], accounts[1]], 2],
       AuthDB,
+      Proxy,
       [DummyProtocolToken, 0],
       TokenRegistry,
     ])
-    .then(() => deployer.deploy(Proxy, AuthDB.address))
     .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
-    .then(() => AuthDB.deployed())
-    .then(authDB => authDB.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
+    .then(() => Proxy.deployed())
+    .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
   } else {
     deployer.deploy(Proxy)
     .then(() => deployer.deploy(ProtocolToken))
