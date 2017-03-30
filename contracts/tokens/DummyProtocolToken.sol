@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-import "./StandardToken.sol";
+import "./../base/StandardToken.sol";
 
 contract DummyProtocolToken is StandardToken {
   string public name = "Protocol Token";
