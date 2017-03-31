@@ -5,6 +5,7 @@ const exchangeUtil = require('./exchangeUtil.js');
 const multiSigUtil = require('./multiSigUtil.js');
 const tokenRegUtil = require('./tokenRegUtil.js');
 const factory = require('./factory.js');
+const rpc = require('./rpc.js');
 
 module.exports = web3 => {
   const index = {
@@ -47,6 +48,7 @@ module.exports = web3 => {
     exchangeUtil,
     multiSigUtil,
     tokenRegUtil,
+    rpc,
   };
   return index;
 };

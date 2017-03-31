@@ -1,6 +1,5 @@
 const ethUtil = require('ethereumjs-util');
 const ABI = require('ethereumjs-abi');
-const BNutil = require('./BNutil.js');
 
 module.exports = multiSig => {
   const encodeFnArgs = ({ name, abi, args = [] }) => {

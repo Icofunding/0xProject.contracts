@@ -80,5 +80,45 @@ contract('MultiSigWallet', accounts => {
         });
       });
     });
+
+    const newThreshold = 0;
+    it('should not execute if it has enough confirmations but is not past the activation threshold', done => {
+      multiSigUtil.submitTransaction({
+        destination: MultiSigWallet.address,
+        from: owners[0],
+        dataParams: {
+          name: 'changeActivationThreshold',
+          abi: MULTI_SIG_ABI,
+          args: [newThreshold],
+        },
+      }).then(subRes => {
+        txId = subRes.logs[0].args.transactionId.toString();
+        multiSig.confirmTransaction(txId, { from: owners[1] }).then(confRes => {
+          assert(confRes.logs.length === 2);
+          multiSig.executeTransaction(txId).then(execRes => {
+            assert(execRes.logs.length === 0);
+            multiSig.transactions.call(txId).then(tx => {
+              const executed = tx[4];
+              assert(!executed);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('should execute if it has enough confirmations and is past the activation threshold', done => {
+      util.rpc.increaseTime(THRESHOLD).then(() => {
+        multiSig.executeTransaction(txId).then(() => {
+          multiSig.activationThreshold.call().then(threshold => {
+            assert(threshold.toNumber() === newThreshold);
+            done();
+          });
+        });
+      }).catch(e => {
+        assert(!e);
+        done();
+      });
+    });
   });
 });
