@@ -618,18 +618,18 @@ contract Exchange is SafeMath {
     returns (bool isTransferable)
   {
     uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
-    if (getBalance(tokens[0], traders[0]) < fillValueM ||
-      getAllowance(tokens[0], traders[0]) < fillValueM ||
-      getBalance(tokens[1], traders[1]) < fillValueT ||
-      getAllowance(tokens[1], traders[1]) < fillValueT
+    if ( getBalance(tokens[0], traders[0]) < fillValueM
+      || getAllowance(tokens[0], traders[0]) < fillValueM
+      || getBalance(tokens[1], traders[1]) < fillValueT
+      || getAllowance(tokens[1], traders[1]) < fillValueT
     ) return false;
     if (feeRecipient != address(0)) {
       uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
       uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
-      if (getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
-        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+      if ( getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM
+        || getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM
+        || getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+        || getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
       ) return false;
     }
     return true;

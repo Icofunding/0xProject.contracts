@@ -8,7 +8,7 @@ const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 module.exports = (deployer, network, accounts) => {
   if (network !== 'live') {
     deployer.deploy([
-      [MultiSigWallet, [accounts[0], accounts[1]], 2],
+      [MultiSigWallet, [accounts[0], accounts[1]], 2, 0],
       Proxy,
       [DummyProtocolToken, 0],
       TokenRegistry,
