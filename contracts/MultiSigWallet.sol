@@ -101,7 +101,7 @@ contract MultiSigWallet {
   /// @dev Contract constructor sets initial owners and required number of confirmations.
   /// @param _owners List of initial owners.
   /// @param _required Number of required confirmations.
-  /// @param _activationThreshold Duration of time needed after a transaction is confirmed and before it becomes executable, in seconds.
+  /// @param _activationThreshold Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
   function MultiSigWallet(address[] _owners, uint _required, uint _activationThreshold)
     public
     validRequirement(_owners.length, _required)
@@ -181,7 +181,7 @@ contract MultiSigWallet {
   }
 
   /// @dev Changes the activation threshold between when a transaction gets confirmed and becomes executable.
-  /// @param _activationThreshold Duration of time needed after a transaction is confirmed and before it becomes executable, in seconds.
+  /// @param _activationThreshold Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
   function changeActivationThreshold(uint _activationThreshold)
     public
     onlyWallet
@@ -239,6 +239,7 @@ contract MultiSigWallet {
     public
     notExecuted(transactionId)
   {
+    // TODO: isConfirmed redundant
     if (isPastActivationThreshold(transactionId) && isConfirmed(transactionId)) {
       Transaction tx = transactions[transactionId];
       tx.executed = true;
@@ -286,7 +287,7 @@ contract MultiSigWallet {
     returns (bool)
   {
     uint confirmationTime = transactions[transactionId].confirmationTime;
-    return confirmationTime != 0 && block.timestamp > confirmationTime + activationThreshold;
+    return confirmationTime != 0 && block.timestamp >= confirmationTime + activationThreshold;
   }
 
   /*
@@ -407,8 +408,8 @@ contract MultiSigWallet {
     uint count = 0;
     uint i;
     for (i = 0; i < transactionCount; i++) {
-      if (   pending && !transactions[i].executed
-          || executed && transactions[i].executed
+      if ( pending && !transactions[i].executed
+        || executed && transactions[i].executed
       ) {
         transactionIdsTemp[count] = i;
         count += 1;

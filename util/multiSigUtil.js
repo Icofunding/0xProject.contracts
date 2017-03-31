@@ -1,20 +1,20 @@
 const ethUtil = require('ethereumjs-util');
 const ABI = require('ethereumjs-abi');
+const BNutil = require('./BNutil.js');
 
 module.exports = multiSig => {
   const encodeFnArgs = ({ name, abi, args = [] }) => {
     let types;
     let funcSig;
     let argsData;
-    for (let i = 0; i < abi.length; i++) {
+    for (let i = 0; i < abi.length; i += 1) {
       if (abi[i].name === name) {
         types = abi[i].inputs.map(input => input.type);
         funcSig = ethUtil.bufferToHex(ABI.methodID(name, types));
         argsData = args.map(arg => {
-          if (typeof arg === 'boolean') {
-            arg = +arg;
-          }
-          return ethUtil.setLengthLeft(ethUtil.toBuffer(arg), 32).toString('hex');
+          const target = typeof arg === 'boolean' ? +arg : arg;
+          const targetBuff = ethUtil.toBuffer(target);
+          return ethUtil.setLengthLeft(targetBuff, 32).toString('hex');
         });
         break;
       }
@@ -23,15 +23,12 @@ module.exports = multiSig => {
   };
 
   const submitTransaction = ({ destination, value = 0, data, from, dataParams }) => {
-    data = data || encodeFnArgs(dataParams);
-    return multiSig.submitTransaction(destination, value, data, { from });
+    const encoded = data || encodeFnArgs(dataParams);
+    return multiSig.submitTransaction(destination, value, encoded, { from });
   };
-
-  const confirmTransaction = ({ transactionId, from }) => multiSig.confirmTransaction(transactionId, { from });
 
   return {
     encodeFnArgs,
     submitTransaction,
-    confirmTransaction,
   };
 };
