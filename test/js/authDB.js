@@ -87,22 +87,4 @@ contract('AuthDB', accounts => {
       });
     });
   });
-
-  describe('addAuthorizedAddresses', () => {
-    it('should throw if not called by owner', done => {
-      authDB.addAuthorizedAddresses([notOwner, notAuthorized], { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
-    });
-  });
-
-  describe('removeAuthorizedAddresses', () => {
-    it('should throw if not called by owner', done => {
-      authDB.removeAuthorizedAddresses([notOwner, notAuthorized], { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
-    });
-  });
 });

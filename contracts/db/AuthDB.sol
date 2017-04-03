@@ -46,32 +46,6 @@ contract AuthDB is Ownable {
     return true;
   }
 
-  /// @dev Authorizes multiple address.
-  /// @param targets Array of addresses to authorize.
-  /// @return Success of authorization.
-  function addAuthorizedAddresses(address[] targets)
-    onlyOwner
-    returns (bool success)
-  {
-    for (uint i = 0; i < targets.length; i++) {
-      addAuthorizedAddress(targets[i]);
-    }
-    return true;
-  }
-
-  /// @dev Removes authorizion of multiple addresses.
-  /// @param targets Array of addresses to remove authorization from.
-  /// @return Success of deauthorization.
-  function removeAuthorizedAddresses(address[] targets)
-    onlyOwner
-    returns (bool success)
-  {
-    for (uint i = 0; i < targets.length; i++) {
-      removeAuthorizedAddress(targets[i]);
-    }
-    return true;
-  }
-
   /*
    * Public constant functions
    */
