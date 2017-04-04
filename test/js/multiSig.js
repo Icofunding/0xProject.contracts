@@ -16,16 +16,16 @@ contract('MultiSigWallet', accounts => {
     MultiSigWallet.deployed().then(instance => {
       multiSig = instance;
       multiSigUtil = util.multiSigUtil(instance);
-      multiSig.activationThreshold.call().then(threshold => {
+      multiSig.secondsRequired.call().then(threshold => {
         initialThreshold = threshold.toNumber();
         done();
       });
     });
   });
 
-  describe('changeActivationThreshold', () => {
+  describe('changeRequiredSeconds', () => {
     it('should throw when not called by wallet', done => {
-      multiSig.changeActivationThreshold(THRESHOLD, { from: owners[0] }).catch(e => {
+      multiSig.changeRequiredSeconds(THRESHOLD, { from: owners[0] }).catch(e => {
         assert(e);
         done();
       });
@@ -36,7 +36,7 @@ contract('MultiSigWallet', accounts => {
         destination: MultiSigWallet.address,
         from: owners[0],
         dataParams: {
-          name: 'changeActivationThreshold',
+          name: 'changeRequiredSeconds',
           abi: MULTI_SIG_ABI,
           args: [THRESHOLD],
         },
@@ -69,11 +69,11 @@ contract('MultiSigWallet', accounts => {
       });
     });
 
-    it('should be executable with enough confirmations and activationThreshold of 0', done => {
+    it('should be executable with enough confirmations and secondsRequired of 0', done => {
       assert(initialThreshold === 0);
       multiSig.executeTransaction(txId).then(res => {
         assert(res.logs.length === 2);
-        multiSig.activationThreshold.call().then(threshold => {
+        multiSig.secondsRequired.call().then(threshold => {
           const newThreshold = threshold.toNumber();
           assert(newThreshold === THRESHOLD);
           done();
@@ -87,7 +87,7 @@ contract('MultiSigWallet', accounts => {
         destination: MultiSigWallet.address,
         from: owners[0],
         dataParams: {
-          name: 'changeActivationThreshold',
+          name: 'changeRequiredSeconds',
           abi: MULTI_SIG_ABI,
           args: [newThreshold],
         },
@@ -110,7 +110,7 @@ contract('MultiSigWallet', accounts => {
     it('should execute if it has enough confirmations and is past the activation threshold', done => {
       util.rpc.increaseTime(THRESHOLD).then(() => {
         multiSig.executeTransaction(txId).then(() => {
-          multiSig.activationThreshold.call().then(threshold => {
+          multiSig.secondsRequired.call().then(threshold => {
             assert(threshold.toNumber() === newThreshold);
             done();
           });

@@ -342,18 +342,18 @@ contract MultiSigWallet {
     }
   }
 
-  /// @dev Returns total number of transactions after filers are applied.
-  /// @param pending Include pending transactions.
-  /// @param executed Include executed transactions.
+  /// @dev Returns total number of transactions after filters are applied.
+  /// @param isPending Include pending transactions.
+  /// @param isExecuted Include executed transactions.
   /// @return Total number of transactions after filters are applied.
-  function getTransactionCount(bool pending, bool executed)
+  function getTransactionCount(bool isPending, bool isExecuted)
     public
     constant
     returns (uint count)
   {
     for (uint i = 0; i < transactionCount; i++)
-      if ( pending && !transactions[i].executed
-        || executed && transactions[i].executed
+      if ( isPending && !transactions[i].executed
+        || isExecuted && transactions[i].executed
       ) count += 1;
   }
 
@@ -367,7 +367,7 @@ contract MultiSigWallet {
     return owners;
   }
 
-  /// @dev Returns array with owner addresses, which confirmed transaction.
+  /// @dev Returns array with owner addresses that have confirmed a particular transaction.
   /// @param transactionId Transaction ID.
   /// @return Returns array of owner addresses.
   function getConfirmations(uint transactionId)
