@@ -12,8 +12,7 @@ contract MultiSigWallet {
   event Confirmation(address indexed sender, uint indexed transactionId);
   event Revocation(address indexed sender, uint indexed transactionId);
   event Submission(uint indexed transactionId);
-  event RequiredConfirmationsReached(uint indexed transactionId, uint confirmationTime);
-  event Unconfirmed(uint indexed transactionId);
+  event ConfirmationTimeSet(uint indexed transactionId, uint confirmationTime);
   event Execution(uint indexed transactionId);
   event ExecutionFailure(uint indexed transactionId);
   event Deposit(address indexed sender, uint value);
@@ -84,6 +83,11 @@ contract MultiSigWallet {
       || _required == 0
       || ownerCount == 0)
       throw;
+    _;
+  }
+
+  modifier timeNotSet(uint transactionId) {
+    if (transactions[transactionId].confirmationTime != 0) throw;
     _;
   }
 
@@ -225,12 +229,10 @@ contract MultiSigWallet {
     ownerExists(msg.sender)
     confirmed(transactionId, msg.sender)
     notExecuted(transactionId)
+    timeNotSet(transactionId)
   {
     confirmations[transactionId][msg.sender] = false;
     Revocation(msg.sender, transactionId);
-    if (isConfirmationTimeSet(transactionId) && !isConfirmed(transactionId)) {
-      setConfirmationTime(transactionId, 0);
-    }
   }
 
   /// @dev Allows anyone to execute a confirmed transaction.
@@ -320,11 +322,7 @@ contract MultiSigWallet {
     internal
   {
     transactions[transactionId].confirmationTime = confirmationTime;
-    if (confirmationTime == 0) {
-      Unconfirmed(transactionId);
-    } else {
-      RequiredConfirmationsReached(transactionId, confirmationTime);
-    }
+    ConfirmationTimeSet(transactionId, confirmationTime);
   }
 
   /*
