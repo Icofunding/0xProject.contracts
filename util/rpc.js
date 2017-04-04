@@ -22,7 +22,8 @@ exports.increaseTime = time => {
     };
     request(opts, (err, body, res) => {
       if (err) {
-        reject(new Error('Your node is not compatible with the evm_increaseTime method'));
+        reject(err);
+        console.warn('The evm_increaseTime method is only compatible with testrpc');
       }
       resolve(res);
     });

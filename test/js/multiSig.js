@@ -5,7 +5,7 @@ const assert = require('assert');
 
 contract('MultiSigWallet', accounts => {
   const owners = [accounts[0], accounts[1]];
-  const THRESHOLD = 10000000;
+  const SECONDS_REQUIRED = 10000000;
 
   let multiSig;
   let multiSigUtil;
@@ -25,7 +25,7 @@ contract('MultiSigWallet', accounts => {
 
   describe('changeRequiredSeconds', () => {
     it('should throw when not called by wallet', done => {
-      multiSig.changeRequiredSeconds(THRESHOLD, { from: owners[0] }).catch(e => {
+      multiSig.changeRequiredSeconds(SECONDS_REQUIRED, { from: owners[0] }).catch(e => {
         assert(e);
         done();
       });
@@ -38,7 +38,7 @@ contract('MultiSigWallet', accounts => {
         dataParams: {
           name: 'changeRequiredSeconds',
           abi: MULTI_SIG_ABI,
-          args: [THRESHOLD],
+          args: [SECONDS_REQUIRED],
         },
       }).then(subRes => {
         txId = subRes.logs[0].args.transactionId.toString();
@@ -75,7 +75,7 @@ contract('MultiSigWallet', accounts => {
         assert(res.logs.length === 2);
         multiSig.secondsRequired.call().then(threshold => {
           const newThreshold = threshold.toNumber();
-          assert(newThreshold === THRESHOLD);
+          assert(newThreshold === SECONDS_REQUIRED);
           done();
         });
       });
@@ -108,7 +108,7 @@ contract('MultiSigWallet', accounts => {
     });
 
     it('should execute if it has enough confirmations and is past the activation threshold', done => {
-      util.rpc.increaseTime(THRESHOLD).then(() => {
+      util.rpc.increaseTime(SECONDS_REQUIRED).then(() => {
         multiSig.executeTransaction(txId).then(() => {
           multiSig.secondsRequired.call().then(threshold => {
             assert(threshold.toNumber() === newThreshold);
