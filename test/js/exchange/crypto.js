@@ -3,7 +3,7 @@ const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 
 const assert = require('assert');
-const util = require('../../util/index.js')(web3);
+const util = require('../../../util/index.js')(web3);
 
 const { toSmallestUnits } = util.BNutil;
 

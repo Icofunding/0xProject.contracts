@@ -6,7 +6,7 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
 const assert = require('assert');
 const expect = require('chai').expect;
-const util = require('../../util/index.js')(web3);
+const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
 
