@@ -1,17 +1,14 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
-const AuthDB = artifacts.require('./db/AuthDB.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const Exchange = artifacts.require('./Exchange.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
-module.exports = (deployer, network) => {
+module.exports = (deployer, network, accounts) => {
   if (network !== 'live') {
-    const accounts = web3.eth.accounts;
     deployer.deploy([
       [MultiSigWallet, [accounts[0], accounts[1]], 2],
-      AuthDB,
       Proxy,
       [DummyProtocolToken, 0],
       TokenRegistry,

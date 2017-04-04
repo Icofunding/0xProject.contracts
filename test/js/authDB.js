@@ -1,24 +1,24 @@
-const AuthDB = artifacts.require('./db/AuthDB.sol');
+const Proxy = artifacts.require('./db/Proxy.sol');
 const assert = require('assert');
 
-contract('AuthDB', accounts => {
+contract('Proxy', accounts => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  let authDB;
+  let proxy;
   let authorized;
   let notAuthorized = owner;
 
   before(done => {
-    AuthDB.deployed().then(instance => {
-      authDB = instance;
+    Proxy.deployed().then(instance => {
+      proxy = instance;
       done();
     });
   });
 
   describe('isAddressAuthorized', () => {
     it('should return false if address is not authorized', done => {
-      authDB.isAddressAuthorized(owner).then(isAuthorized => {
+      proxy.isAddressAuthorized(owner).then(isAuthorized => {
         assert(!isAuthorized);
         done();
       });
@@ -27,17 +27,17 @@ contract('AuthDB', accounts => {
 
   describe('addAuthorizedAddress', () => {
     it('should throw if not called by owner', done => {
-      authDB.addAuthorizedAddress(notOwner, { from: notOwner }).catch(e => {
+      proxy.addAuthorizedAddress(notOwner, { from: notOwner }).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should allow owner to add an authorized address', done => {
-      authDB.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
+      proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
         authorized = notAuthorized;
         notAuthorized = null;
-        authDB.isAddressAuthorized(authorized).then(isAuthorized => {
+        proxy.isAddressAuthorized(authorized).then(isAuthorized => {
           assert(isAuthorized);
           done();
         });
@@ -47,16 +47,16 @@ contract('AuthDB', accounts => {
 
   describe('removeAuthorizedAddress', () => {
     it('should throw if not called by owner', done => {
-      authDB.removeAuthorizedAddress(authorized, { from: notOwner }).catch(e => {
+      proxy.removeAuthorizedAddress(authorized, { from: notOwner }).catch(e => {
         assert(e);
         done();
       });
     });
     it('should allow owner to remove an authorized address', done => {
-      authDB.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
+      proxy.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
         notAuthorized = authorized;
         authorized = null;
-        authDB.isAddressAuthorized(notAuthorized).then(isAuthorized => {
+        proxy.isAddressAuthorized(notAuthorized).then(isAuthorized => {
           assert(!isAuthorized);
           done();
         });
@@ -66,19 +66,19 @@ contract('AuthDB', accounts => {
 
   describe('getAuthorizedAddresses', () => {
     it('should return all authorized addresses', done => {
-      authDB.getAuthorizedAddresses().then(initial => {
-        assert(initial.length === 0);
-        authDB.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
+      proxy.getAuthorizedAddresses().then(initial => {
+        assert(initial.length === 1);
+        proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
           authorized = notAuthorized;
           notAuthorized = null;
-          authDB.getAuthorizedAddresses().then(afterAdd => {
-            assert(afterAdd.length === 1);
+          proxy.getAuthorizedAddresses().then(afterAdd => {
+            assert(afterAdd.length === 2);
             assert(afterAdd.indexOf(authorized !== -1));
-            authDB.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
+            proxy.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
               notAuthorized = authorized;
               authorized = null;
-              authDB.getAuthorizedAddresses().then(afterRemove => {
-                assert(afterRemove.length === 0);
+              proxy.getAuthorizedAddresses().then(afterRemove => {
+                assert(afterRemove.length === 1);
                 done();
               });
             });
