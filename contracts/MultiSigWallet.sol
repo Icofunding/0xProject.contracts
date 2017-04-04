@@ -12,22 +12,22 @@ contract MultiSigWallet {
   event Confirmation(address indexed sender, uint indexed transactionId);
   event Revocation(address indexed sender, uint indexed transactionId);
   event Submission(uint indexed transactionId);
-  event Confirmed(uint indexed transactionId, uint confirmationTime);
+  event RequiredConfirmationsReached(uint indexed transactionId, uint confirmationTime);
   event Unconfirmed(uint indexed transactionId);
   event Execution(uint indexed transactionId);
   event ExecutionFailure(uint indexed transactionId);
   event Deposit(address indexed sender, uint value);
   event OwnerAddition(address indexed owner);
   event OwnerRemoval(address indexed owner);
-  event RequirementChange(uint required);
-  event ActivationThresholdChange(uint activationThreshold);
+  event RequiredConfirmationsChange(uint confirmationsRequired);
+  event RequiredSecondsChange(uint secondsRequired);
 
   mapping (uint => Transaction) public transactions;
   mapping (uint => mapping (address => bool)) public confirmations;
   mapping (address => bool) public isOwner;
   address[] public owners;
-  uint public required;
-  uint public activationThreshold;
+  uint public confirmationsRequired;
+  uint public secondsRequired;
   uint public transactionCount;
 
   struct Transaction {
@@ -100,19 +100,19 @@ contract MultiSigWallet {
 
   /// @dev Contract constructor sets initial owners and required number of confirmations.
   /// @param _owners List of initial owners.
-  /// @param _required Number of required confirmations.
-  /// @param _activationThreshold Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
-  function MultiSigWallet(address[] _owners, uint _required, uint _activationThreshold)
+  /// @param _confirmationsRequired Number of required confirmations.
+  /// @param _secondsRequired Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
+  function MultiSigWallet(address[] _owners, uint _confirmationsRequired, uint _secondsRequired)
     public
-    validRequirement(_owners.length, _required)
+    validRequirement(_owners.length, _confirmationsRequired)
   {
     for (uint i = 0; i < _owners.length; i++) {
       if (isOwner[_owners[i]] || _owners[i] == 0) throw;
       isOwner[_owners[i]] = true;
     }
     owners = _owners;
-    required = _required;
-    activationThreshold = _activationThreshold;
+    confirmationsRequired = _confirmationsRequired;
+    secondsRequired = _secondsRequired;
   }
 
   /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
@@ -122,7 +122,7 @@ contract MultiSigWallet {
     onlyWallet
     ownerDoesNotExist(owner)
     notNull(owner)
-    validRequirement(owners.length + 1, required)
+    validRequirement(owners.length + 1, confirmationsRequired)
   {
     isOwner[owner] = true;
     owners.push(owner);
@@ -144,7 +144,7 @@ contract MultiSigWallet {
         break;
       }
     }
-    if (required > owners.length) changeRequirement(owners.length);
+    if (confirmationsRequired > owners.length) changeRequiredConfirmations(owners.length);
     OwnerRemoval(owner);
   }
 
@@ -170,24 +170,24 @@ contract MultiSigWallet {
   }
 
   /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
-  /// @param _required Number of required confirmations.
-  function changeRequirement(uint _required)
+  /// @param _confirmationsRequired Number of required confirmations.
+  function changeRequiredConfirmations(uint _confirmationsRequired)
     public
     onlyWallet
-    validRequirement(owners.length, _required)
+    validRequirement(owners.length, _confirmationsRequired)
   {
-    required = _required;
-    RequirementChange(_required);
+    confirmationsRequired = _confirmationsRequired;
+    RequiredConfirmationsChange(_confirmationsRequired);
   }
 
   /// @dev Changes the activation threshold between when a transaction gets confirmed and becomes executable.
-  /// @param _activationThreshold Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
-  function changeActivationThreshold(uint _activationThreshold)
+  /// @param _secondsRequired Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
+  function changeRequiredSeconds(uint _secondsRequired)
     public
     onlyWallet
   {
-    activationThreshold = _activationThreshold;
-    ActivationThresholdChange(_activationThreshold);
+    secondsRequired = _secondsRequired;
+    RequiredSecondsChange(_secondsRequired);
   }
 
   /// @dev Allows an owner to submit and confirm a transaction.
@@ -239,8 +239,7 @@ contract MultiSigWallet {
     public
     notExecuted(transactionId)
   {
-    // TODO: isConfirmed redundant
-    if (isPastActivationThreshold(transactionId) && isConfirmed(transactionId)) {
+    if (isPastRequiredSeconds(transactionId)) {
       Transaction tx = transactions[transactionId];
       tx.executed = true;
       if (tx.destination.call.value(tx.value)(tx.data))
@@ -263,7 +262,7 @@ contract MultiSigWallet {
     uint count = 0;
     for (uint i = 0; i < owners.length; i++) {
       if (confirmations[transactionId][owners[i]]) count += 1;
-      if (count >= required) return true;
+      if (count >= confirmationsRequired) return true;
     }
   }
 
@@ -281,13 +280,13 @@ contract MultiSigWallet {
   /// @dev Checks if a confirmed submission is executable.
   /// @param transactionId Transaction ID.
   /// @return Status of transaction executability.
-  function isPastActivationThreshold(uint transactionId)
+  function isPastRequiredSeconds(uint transactionId)
     public
     constant
     returns (bool)
   {
     uint confirmationTime = transactions[transactionId].confirmationTime;
-    return confirmationTime != 0 && block.timestamp >= confirmationTime + activationThreshold;
+    return confirmationTime != 0 && block.timestamp >= confirmationTime + secondsRequired;
   }
 
   /*
@@ -324,7 +323,7 @@ contract MultiSigWallet {
     if (confirmationTime == 0) {
       Unconfirmed(transactionId);
     } else {
-      Confirmed(transactionId, confirmationTime);
+      RequiredConfirmationsReached(transactionId, confirmationTime);
     }
   }
 
