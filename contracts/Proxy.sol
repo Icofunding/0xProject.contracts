@@ -7,12 +7,12 @@ contract Proxy is Ownable {
 
   /// @dev Only authorized addresses can invoke functions with this modifier.
   modifier onlyAuthorized {
-    if (!isAddressAuthorized(msg.sender)) throw;
+    if (!authorized[msg.sender]) throw;
     _;
   }
 
-  mapping (address => bool) public addresses;
-  address[] authorities;
+  mapping (address => bool) public authorized;
+  address[] public authorities;
 
   event LogAuthorizedAddressAdded(address indexed target, address indexed caller);
   event LogAuthorizedAddressRemoved(address indexed target, address indexed caller);
@@ -28,7 +28,7 @@ contract Proxy is Ownable {
     onlyOwner
     returns (bool success)
   {
-    addresses[target] = true;
+    authorized[target] = true;
     authorities.push(target);
     LogAuthorizedAddressAdded(target, msg.sender);
     return true;
@@ -41,7 +41,7 @@ contract Proxy is Ownable {
     onlyOwner
     returns (bool success)
   {
-    delete addresses[target];
+    delete authorized[target];
     for (uint i = 0; i < authorities.length; i++) {
       if (authorities[i] == target) {
         authorities[i] = authorities[authorities.length - 1];
@@ -74,16 +74,6 @@ contract Proxy is Ownable {
   /*
    * Public constant functions
    */
-
-  /// @dev Checks if an address is authorized.
-  /// @dev target Address to check authorization of.
-  /// @return Authorization of checked address.
-  function isAddressAuthorized(address target)
-    constant
-    returns (bool isAuthorized)
-  {
-    return addresses[target];
-  }
 
   /// @dev Gets all authorized addresses.
   /// @return Array of authorized addresses.

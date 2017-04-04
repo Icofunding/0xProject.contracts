@@ -16,15 +16,6 @@ contract('Proxy', accounts => {
     });
   });
 
-  describe('isAddressAuthorized', () => {
-    it('should return false if address is not authorized', done => {
-      proxy.isAddressAuthorized(owner).then(isAuthorized => {
-        assert(!isAuthorized);
-        done();
-      });
-    });
-  });
-
   describe('addAuthorizedAddress', () => {
     it('should throw if not called by owner', done => {
       proxy.addAuthorizedAddress(notOwner, { from: notOwner }).catch(e => {
@@ -37,7 +28,7 @@ contract('Proxy', accounts => {
       proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
         authorized = notAuthorized;
         notAuthorized = null;
-        proxy.isAddressAuthorized(authorized).then(isAuthorized => {
+        proxy.authorized.call(authorized).then(isAuthorized => {
           assert(isAuthorized);
           done();
         });
@@ -56,7 +47,7 @@ contract('Proxy', accounts => {
       proxy.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
         notAuthorized = authorized;
         authorized = null;
-        proxy.isAddressAuthorized(notAuthorized).then(isAuthorized => {
+        proxy.authorized.call(notAuthorized).then(isAuthorized => {
           assert(!isAuthorized);
           done();
         });
