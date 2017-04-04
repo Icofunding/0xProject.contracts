@@ -6,7 +6,7 @@ dependencies:
   pre:
     - npm install -g npm@3.10.10
     - npm install ethereumjs-testrpc
-    - npm install -g truffle@3.1.9
+    - npm install -g truffle@3.2.1
 
 test:
   override:
