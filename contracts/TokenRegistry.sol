@@ -1,113 +1,277 @@
 pragma solidity ^0.4.8;
 
-import "./base/Token.sol";
 import "./base/Ownable.sol";
 
+/// @title Token Registry - Stores metadata associated with ERC20 tokens. See ERC22 https://github.com/ethereum/EIPs/issues/22
+/// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract TokenRegistry is Ownable {
 
-    address[] public tokenContracts;
-    mapping (address => uint) public tokenIndex;
-    mapping (address => TokenInfo) public tokens;
+  event LogAddToken(
+    address token,
+    string name,
+    string symbol,
+    string url,
+    uint8 decimals,
+    bytes32 ipfsHash,
+    bytes32 swarmHash
+  );
+  event LogRemoveToken(
+    address token,
+    string name,
+    string symbol,
+    string url,
+    uint8 decimals,
+    bytes32 ipfsHash,
+    bytes32 swarmHash
+  );
 
+  mapping (address => TokenMetadata) public tokens;
+  mapping (string => address) tokenBySymbol;
+  mapping (string => address) tokenByName;
 
-    struct TokenInfo {
-        address addr;
-        bytes32 symbol;
-        bytes32 name;
-        uint8 decimals;
+  address[] public tokenAddresses;
+
+  struct TokenMetadata {
+    address token;
+    string name;
+    string symbol;
+    string url;
+    uint8 decimals;
+    bytes32 ipfsHash;
+    bytes32 swarmHash;
+  }
+
+  modifier tokenExists(address _token) {
+    if (tokens[_token].token != address(0)) {
+      _;
     }
+  }
 
-    function addToken(
-      address _addr,
-      bytes32 _symbol,
-      bytes32 _name,
-      uint8 _decimals)
-      onlyOwner
-      returns (bool success) {
-        tokenContracts.push(_addr);
-        tokenIndex[_addr] = tokenContracts.length;
-        tokens[_addr] = TokenInfo({
-            addr: _addr,
-            symbol: _symbol,
-            name: _name,
-            decimals: _decimals
-        });
-        return true;
+  modifier tokenDoesNotExist(address _token) {
+    if (tokens[_token].token == address(0)) {
+      _;
     }
+  }
 
-    function removeToken(address _addr) onlyOwner returns (bool success) {
-        tokenContracts[tokenIndex[_addr]] = 0x0;
-        tokenIndex[_addr] = 0;
-        delete tokens[_addr];
-        return true;
-    }
+  /// @dev Allows owner to add a new token to the registry.
+  /// @param _token Address of new token.
+  /// @param _name Name of new token.
+  /// @param _symbol Symbol for new token.
+  /// @param _url Token's project URL.
+  /// @param _decimals Number of decimals, divisibility of new token.
+  /// @param _ipfsHash IPFS hash of token icon.
+  /// @param _swarmHash Swarm hash of token icon.
+  function addToken(
+    address _token,
+    string _name,
+    string _symbol,
+    string _url,
+    uint8 _decimals,
+    bytes32 _ipfsHash,
+    bytes32 _swarmHash)
+    public
+    onlyOwner
+    tokenDoesNotExist(_token)
+  {
+    tokens[_token] = TokenMetadata({
+      token: _token,
+      name: _name,
+      symbol: _symbol,
+      url: _url,
+      decimals: _decimals,
+      ipfsHash: _ipfsHash,
+      swarmHash: _swarmHash
+    });
+    tokenAddresses.push(_token);
+    tokenBySymbol[_symbol] = _token;
+    tokenByName[_name] = _token;
+    LogAddToken(
+      _token,
+      _name,
+      _symbol,
+      _url,
+      _decimals,
+      _ipfsHash,
+      _swarmHash
+    );
+  }
 
-    //////////////////////////////////////////////////////////////////////////////
-
-    // Accessors
-
-    function getBalance(address token, address owner) constant returns(uint balance) {
-      return Token(token).balanceOf(owner);
-    }
-
-    function getAllowance(address token, address owner, address spender) constant returns(uint remaining) {
-      return Token(token).allowance(owner, spender);
-    }
-
-    function getBalances(address owner) constant returns(address[], uint[]) {
-      uint length = tokenContracts.length;
-      address[] memory addr = new address[](length);
-      uint[] memory balances = new uint[](length);
-
-      for (uint i = 0; i < length; i++) {
-        addr[i] = tokenContracts[i];
-        balances[i] = getBalance(tokenContracts[i], owner);
+  /// @dev Allows owner to remove an existing token from the registry.
+  /// @param _token Address of existing token.
+  function removeToken(address _token)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    for (uint i = 0; i < tokenAddresses.length; i++) {
+      if (tokenAddresses[i] == _token) {
+        tokenAddresses[i] = tokenAddresses[tokenAddresses.length - 1];
+        tokenAddresses.length -= 1;
+        break;
       }
-
-      return (addr, balances);
     }
+    TokenMetadata memory token = tokens[_token];
+    delete tokenBySymbol[token.symbol];
+    delete tokenByName[token.name];
+    delete tokens[_token];
+    LogRemoveToken(
+      token.token,
+      token.name,
+      token.symbol,
+      token.url,
+      token.decimals,
+      token.ipfsHash,
+      token.swarmHash
+    );
+  }
 
-    function getAllowances(address owner, address spender) constant returns(address[], uint[]) {
-      uint length = tokenContracts.length;
-      address[] memory addr = new address[](length);
-      uint[] memory allowances = new uint[](length);
+  /// @dev Allows owner to modify an existing token's name.
+  /// @param _token Address of existing token.
+  /// @param _name New name.
+  function setTokenName(address _token, string _name)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    TokenMetadata token = tokens[_token];
+    delete tokenByName[token.name];
+    tokenByName[_name] = _token;
+    token.name = _name;
+  }
 
-      for (uint i = 0; i < length; i++) {
-        addr[i] = tokenContracts[i];
-        allowances[i] = getAllowance(tokenContracts[i], owner, spender);
-      }
+  /// @dev Allows owner to modify an existing token's symbol.
+  /// @param _token Address of existing token.
+  /// @param _symbol New symbol.
+  function setTokenSymbol(address _token, string _symbol)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    TokenMetadata token = tokens[_token];
+    delete tokenBySymbol[token.symbol];
+    tokenBySymbol[_symbol] = _token;
+    token.symbol = _symbol;
+  }
 
-      return (addr, allowances);
-    }
+  /// @dev Allows owner to modify an existing token's IPFS hash.
+  /// @param _token Address of existing token.
+  /// @param _ipfsHash New IPFS hash.
+  function setTokenIpfsHash(address _token, bytes32 _ipfsHash)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    tokens[_token].ipfsHash = _ipfsHash;
+  }
 
-    function getTokens() constant returns (address[], bytes32[], bytes32[], uint8[]) {
-      uint length = tokenContracts.length;
-      address[] memory addr = new address[](length);
-      bytes32[] memory symbol = new bytes32[](length);
-      bytes32[] memory name = new bytes32[](length);
-      uint8[] memory decimals = new uint8[](length);
+  /// @dev Allows owner to modify an existing token's Swarm hash.
+  /// @param _token Address of existing token.
+  /// @param _swarmHash New Swarm hash.
+  function setTokenSwarmHash(address _token, bytes32 _swarmHash)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    tokens[_token].swarmHash = _swarmHash;
+  }
 
-      for (uint i = 0; i < length; i++) {
-        addr[i] = tokenContracts[i];
-        symbol[i] = tokens[tokenContracts[i]].symbol;
-        name[i] = tokens[tokenContracts[i]].name;
-        decimals[i] = tokens[tokenContracts[i]].decimals;
-      }
-      return (addr, symbol, name, decimals);
-    }
+  /// @dev Allows owner to modify an existing token's URL.
+  /// @param _token Address of existing token.
+  /// @param _url New URL.
+  function setTokenUrl(address _token, string _url)
+    public
+    onlyOwner
+    tokenExists(_token)
+  {
+    tokens[_token].url = _url;
+  }
 
-    function getTokenAddresses() constant returns (address[]) {
-      return tokenContracts;
-    }
+  /*
+   * Web3 call functions
+   */
 
-    function getToken(address _addr) constant returns (address addr, bytes32 symbol, bytes32 name, uint decimals) {
-      TokenInfo memory token;
-      token = tokens[_addr];
-      return (token.addr, token.symbol, token.name, token.decimals);
-    }
+  /// @dev Provides a registered token's address when given the token symbol.
+  /// @param _symbol Symbol of registered token.
+  /// @return Token's address.
+  function getTokenAddressBySymbol(string _symbol) constant returns (address tokenAddress) {
+    return tokenBySymbol[_symbol];
+  }
 
-    function getDecimals(address _addr) constant returns (uint8 decimals) {
-      return tokens[_addr].decimals;
-    }
+  /// @dev Provides a registered token's address when given the token name.
+  /// @param _name Name of registered token.
+  /// @return Token's address.
+  function getTokenAddressByName(string _name) constant returns (address tokenAddress) {
+    return tokenByName[_name];
+  }
 
+  /// @dev Provides a registered token's metadata, looked up by address.
+  /// @param _token Address of registered token.
+  /// @return Token metadata.
+  function getTokenMetaData(address _token)
+    constant
+    returns (
+      address tokenAddress,
+      string name,
+      string symbol,
+      string url,
+      uint8 decimals,
+      bytes32 ipfsHash,
+      bytes32 swarmHash
+    )
+  {
+    TokenMetadata memory token = tokens[_token];
+    return (
+      token.token,
+      token.name,
+      token.symbol,
+      token.url,
+      token.decimals,
+      token.ipfsHash,
+      token.swarmHash
+    );
+  }
+
+  /// @dev Provides a registered token's metadata, looked up by name.
+  /// @param _name Name of registered token.
+  /// @return Token metadata.
+  function getTokenByName(string _name)
+    constant
+    returns (
+      address tokenAddress,
+      string name,
+      string symbol,
+      string url,
+      uint8 decimals,
+      bytes32 ipfsHash,
+      bytes32 swarmHash
+    )
+  {
+    address _token = tokenByName[_name];
+    return getTokenMetaData(_token);
+  }
+
+  /// @dev Provides a registered token's metadata, looked up by symbol.
+  /// @param _symbol Symbol of registered token.
+  /// @return Token metadata.
+  function getTokenBySymbol(string _symbol)
+    constant
+    returns (
+      address tokenAddress,
+      string name,
+      string symbol,
+      string url,
+      uint8 decimals,
+      bytes32 ipfsHash,
+      bytes32 swarmHash
+    )
+  {
+    address _token = tokenBySymbol[_symbol];
+    return getTokenMetaData(_token);
+  }
+
+  /// @dev Returns an array containing all token addresses.
+  /// @return Array of token addresses.
+  function getTokenAddresses() constant returns (address[]) {
+    return tokenAddresses;
+  }
 }
