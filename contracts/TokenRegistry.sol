@@ -24,6 +24,11 @@ contract TokenRegistry is Ownable {
     bytes32 ipfsHash,
     bytes32 swarmHash
   );
+  event LogTokenNameChange(address token, string oldName, string newName);
+  event LogTokenSymbolChange(address token, string oldSymbol, string newSymbol);
+  event LogTokenUrlChange(address token, string oldUrl, string newUrl);
+  event LogTokenIpfsHashChange(address token, bytes32 oldIpfsHash, bytes32 newIpfsHash);
+  event LogTokenSwarmHashChange(address token, bytes32 oldSwarmHash, bytes32 newSwarmHash);
 
   mapping (address => TokenMetadata) public tokens;
   mapping (string => address) tokenBySymbol;
@@ -110,10 +115,7 @@ contract TokenRegistry is Ownable {
         break;
       }
     }
-    TokenMetadata memory token = tokens[_token];
-    delete tokenBySymbol[token.symbol];
-    delete tokenByName[token.name];
-    delete tokens[_token];
+    TokenMetadata token = tokens[_token];
     LogRemoveToken(
       token.token,
       token.name,
@@ -123,6 +125,9 @@ contract TokenRegistry is Ownable {
       token.ipfsHash,
       token.swarmHash
     );
+    delete tokenBySymbol[token.symbol];
+    delete tokenByName[token.name];
+    delete tokens[_token];
   }
 
   /// @dev Allows owner to modify an existing token's name.
@@ -134,6 +139,7 @@ contract TokenRegistry is Ownable {
     tokenExists(_token)
   {
     TokenMetadata token = tokens[_token];
+    LogTokenNameChange(_token, token.name, _name);
     delete tokenByName[token.name];
     tokenByName[_name] = _token;
     token.name = _name;
@@ -148,6 +154,7 @@ contract TokenRegistry is Ownable {
     tokenExists(_token)
   {
     TokenMetadata token = tokens[_token];
+    LogTokenSymbolChange(_token, token.symbol, _symbol);
     delete tokenBySymbol[token.symbol];
     tokenBySymbol[_symbol] = _token;
     token.symbol = _symbol;
@@ -161,7 +168,9 @@ contract TokenRegistry is Ownable {
     onlyOwner
     tokenExists(_token)
   {
-    tokens[_token].ipfsHash = _ipfsHash;
+    TokenMetadata token = tokens[_token];
+    LogTokenIpfsHashChange(_token, token.ipfsHash, _ipfsHash);
+    token.ipfsHash = _ipfsHash;
   }
 
   /// @dev Allows owner to modify an existing token's Swarm hash.
@@ -172,7 +181,9 @@ contract TokenRegistry is Ownable {
     onlyOwner
     tokenExists(_token)
   {
-    tokens[_token].swarmHash = _swarmHash;
+    TokenMetadata token = tokens[_token];
+    LogTokenSwarmHashChange(_token, token.swarmHash, _swarmHash);
+    token.swarmHash = _swarmHash;
   }
 
   /// @dev Allows owner to modify an existing token's URL.
@@ -183,7 +194,9 @@ contract TokenRegistry is Ownable {
     onlyOwner
     tokenExists(_token)
   {
-    tokens[_token].url = _url;
+    TokenMetadata token = tokens[_token];
+    LogTokenUrlChange(_token, token.url, _url);
+    token.url = _url;
   }
 
   /*

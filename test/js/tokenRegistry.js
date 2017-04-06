@@ -85,12 +85,13 @@ contract('TokenRegistry', accounts => {
     });
 
     it('should change the token name when called by owner', done => {
-      tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner }).then(() => {
+      tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner }).then(res => {
+        assert(res.logs.length === 1);
         Promise.all([
           tokenRegUtil.getTokenByName(newNameToken.name),
           tokenRegUtil.getTokenByName(token.name),
-        ]).then(res => {
-          [newData, oldData] = res;
+        ]).then(data => {
+          [newData, oldData] = data;
           expect(newData).to.deep.equal(newNameToken);
           expect(oldData).to.deep.equal(nullToken);
           done();
@@ -109,12 +110,13 @@ contract('TokenRegistry', accounts => {
     });
 
     it('should change the token symbol when called by owner', done => {
-      tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner }).then(() => {
+      tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner }).then(res => {
+        assert(res.logs.length === 1);
         Promise.all([
           tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
           tokenRegUtil.getTokenBySymbol(token.symbol),
-        ]).then(res => {
-          [newData, oldData] = res;
+        ]).then(data => {
+          [newData, oldData] = data;
           expect(newData).to.deep.equal(newSymbolToken);
           expect(oldData).to.deep.equal(nullToken);
           done();
