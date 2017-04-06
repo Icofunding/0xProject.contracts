@@ -5,7 +5,7 @@ const assert = require('assert');
 
 contract('MultiSigWallet', accounts => {
   const owners = [accounts[0], accounts[1]];
-  const SECONDS_REQUIRED = 10000000;
+  const SECONDS_REQUIRED = 10000;
 
   let multiSig;
   let multiSigUtil;
@@ -56,8 +56,8 @@ contract('MultiSigWallet', accounts => {
     it('should set confirmation time with enough confirmations', done => {
       multiSig.confirmTransaction(txId, { from: owners[1] }).then(res => {
         assert(res.logs.length === 2);
-        web3.eth.getBlockNumber((err1, block) => {
-          web3.eth.getBlock(block, (err2, blockInfo) => {
+        web3.eth.getBlockNumber((err1, blockNum) => {
+          web3.eth.getBlock(blockNum, (err2, blockInfo) => {
             const timestamp = blockInfo.timestamp.toString();
             multiSig.transactions(txId).then(tx => {
               const confirmationTime = tx[2].toString();
