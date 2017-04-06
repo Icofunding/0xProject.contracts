@@ -57,6 +57,72 @@ contract('TokenRegistry', accounts => {
     });
   });
 
+  describe('getTokenByName', () => {
+    it('should return token metadata when given the token name', done => {
+      tokenRegUtil.getTokenByName(token.name).then(tokenData => {
+        expect(tokenData).to.deep.equal(token);
+        done();
+      });
+    });
+  });
+
+  describe('getTokenBySymbol', () => {
+    it('should return token metadata when given the token symbol', done => {
+      tokenRegUtil.getTokenBySymbol(token.symbol).then(tokenData => {
+        expect(tokenData).to.deep.equal(token);
+        done();
+      });
+    });
+  });
+
+  const newNameToken = Object.assign({}, token, { name: 'newName' });
+  describe('setTokenName', () => {
+    it('should throw when not called by owner', done => {
+      tokenReg.setTokenName(token.tokenAddress, newNameToken.name, { from: notOwner }).catch(e => {
+        assert(e);
+        done();
+      });
+    });
+
+    it('should change the token name when called by owner', done => {
+      tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner }).then(() => {
+        Promise.all([
+          tokenRegUtil.getTokenByName(newNameToken.name),
+          tokenRegUtil.getTokenByName(token.name),
+        ]).then(res => {
+          [newData, oldData] = res;
+          expect(newData).to.deep.equal(newNameToken);
+          expect(oldData).to.deep.equal(nullToken);
+          done();
+        });
+      });
+    });
+  });
+
+  const newSymbolToken = Object.assign({}, newNameToken, { symbol: 'newSymbol' });
+  describe('setTokenSymbol', () => {
+    it('should throw when not called by owner', done => {
+      tokenReg.setTokenSymbol(token.tokenAddress, newSymbolToken.symbol, { from: notOwner }).catch(e => {
+        assert(e);
+        done();
+      });
+    });
+
+    it('should change the token symbol when called by owner', done => {
+      tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner }).then(() => {
+        Promise.all([
+          tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
+          tokenRegUtil.getTokenBySymbol(token.symbol),
+        ]).then(res => {
+          [newData, oldData] = res;
+          expect(newData).to.deep.equal(newSymbolToken);
+          expect(oldData).to.deep.equal(nullToken);
+          done();
+        });
+      });
+    });
+  });
+
   describe('removeToken', () => {
     it('should throw if not called by owner', done => {
       tokenReg.removeToken(token.tokenAddress, { from: notOwner }).catch(e => {
@@ -74,21 +140,5 @@ contract('TokenRegistry', accounts => {
         });
       });
     });
-  });
-
-  describe('setTokenName', () => {
-
-  });
-
-  describe('setTokenSymbol', () => {
-
-  });
-
-  describe('getTokenMetaData', () => {
-
-  });
-
-  describe('getTokenBySymbol', () => {
-
   });
 });
