@@ -28,10 +28,12 @@ contract('TokenRegistry', accounts => {
     swarmHash: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 32).toString('hex')}`,
   };
 
+  let tokenReg;
   let tokenRegUtil;
 
   before(done => {
     TokenRegistry.deployed().then(instance => {
+      tokenReg = instance;
       tokenRegUtil = util.tokenRegUtil(instance);
       done();
     });
@@ -57,14 +59,14 @@ contract('TokenRegistry', accounts => {
 
   describe('removeToken', () => {
     it('should throw if not called by owner', done => {
-      tokenRegUtil.removeToken(token.tokenAddress, { from: notOwner }).catch(e => {
+      tokenReg.removeToken(token.tokenAddress, { from: notOwner }).catch(e => {
         assert(e);
         done();
       });
     });
 
     it('should remove token metadata when called by owner', done => {
-      tokenRegUtil.removeToken(token.tokenAddress, { from: owner }).then(res => {
+      tokenReg.removeToken(token.tokenAddress, { from: owner }).then(res => {
         assert(res.logs.length === 1);
         tokenRegUtil.getTokenMetaData(token.tokenAddress).then(tokenData => {
           expect(tokenData).to.deep.equal(nullToken);

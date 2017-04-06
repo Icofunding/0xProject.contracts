@@ -41,12 +41,36 @@ module.exports = (deployer, network) => {
         dummyEtherTokenName,
         dummyEtherTokenDecimals,
       ] = tokenInfo;
-      const numDecimals = 0;
-
+      const numDecimals = 18;
+      const ipfsHash = '0x0';
+      const swarmHash = '0x0';
+      const url = '';
       Promise.all([
-        tokenRegistry.addToken(DummyTokenA.address, dummyTokenASymbol, dummyTokenAName, numDecimals),
-        tokenRegistry.addToken(DummyTokenB.address, dummyTokenBSymbol, dummyTokenBName, numDecimals),
-        tokenRegistry.addToken(DummyEtherToken.address, dummyEtherTokenSymbol, dummyEtherTokenName, dummyEtherTokenDecimals),
+        tokenRegistry.addToken(
+          DummyTokenA.address,
+          dummyTokenAName,
+          dummyTokenASymbol,
+          url,
+          numDecimals,
+          ipfsHash,
+          swarmHash),
+        tokenRegistry.addToken(
+          DummyTokenB.address,
+          dummyTokenBName,
+          dummyTokenBSymbol,
+          url,
+          numDecimals,
+          ipfsHash,
+          swarmHash),
+        tokenRegistry.addToken(
+          DummyEtherToken.address,
+          dummyEtherTokenName,
+          dummyEtherTokenSymbol,
+          url,
+          dummyEtherTokenDecimals,
+          ipfsHash,
+          swarmHash
+        ),
       ]);
     });
   }

@@ -1,16 +1,25 @@
 module.exports = tokenReg => {
-  const addToken = (token, { from }) => tokenReg.addToken(
-    token.tokenAddress,
-    token.name,
-    token.symbol,
-    token.url,
-    token.decimals,
-    token.ipfsHash,
-    token.swarmHash,
-    { from }
-  );
-
-  const removeToken = (tokenAddress, { from }) => tokenReg.removeToken(tokenAddress, { from });
+  const addToken = ({
+    tokenAddress,
+    name,
+    symbol,
+    url = '',
+    decimals,
+    ipfsHash = '0x0',
+    swarmHash = '0x0',
+  }, { from }) => {
+    const tx = tokenReg.addToken(
+      tokenAddress,
+      name,
+      symbol,
+      url,
+      decimals,
+      ipfsHash,
+      swarmHash,
+      { from }
+    );
+    return tx;
+  };
 
   const getTokenMetaData = tokenAddress => {
     const token = new Promise((resolve, reject) => {
@@ -38,7 +47,7 @@ module.exports = tokenReg => {
           name: data[1],
           symbol: data[2],
           url: data[3],
-          decimals: data[4],
+          decimals: data[4].toNumber(),
           ipfsHash: data[5],
           swarmHash: data[6],
         };
@@ -56,7 +65,7 @@ module.exports = tokenReg => {
           name: data[1],
           symbol: data[2],
           url: data[3],
-          decimals: data[4],
+          decimals: data[4].toNumber(),
           ipfsHash: data[5],
           swarmHash: data[6],
         };
@@ -68,7 +77,6 @@ module.exports = tokenReg => {
 
   return {
     addToken,
-    removeToken,
     getTokenMetaData,
     getTokenByName,
     getTokenBySymbol,
