@@ -3,6 +3,7 @@ const { getOrderHash, isValidSignature } = require('./crypto.js');
 const BNutil = require('./BNutil.js');
 const exchangeUtil = require('./exchangeUtil.js');
 const multiSigUtil = require('./multiSigUtil.js');
+const tokenRegUtil = require('./tokenRegUtil.js');
 const factory = require('./factory.js');
 
 module.exports = web3 => {
@@ -45,6 +46,7 @@ module.exports = web3 => {
     BNutil,
     exchangeUtil,
     multiSigUtil,
+    tokenRegUtil,
   };
   return index;
 };

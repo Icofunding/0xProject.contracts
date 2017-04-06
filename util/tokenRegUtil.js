@@ -10,7 +10,7 @@ module.exports = tokenReg => {
     { from }
   );
 
-  const removeToken = (tokeAddress, { from }) => tokenReg.removeToken(tokenAddress, { from });
+  const removeToken = (tokenAddress, { from }) => tokenReg.removeToken(tokenAddress, { from });
 
   const getTokenMetaData = tokenAddress => {
     const token = new Promise((resolve, reject) => {
@@ -20,7 +20,7 @@ module.exports = tokenReg => {
           name: data[1],
           symbol: data[2],
           url: data[3],
-          decimals: data[4],
+          decimals: data[4].toNumber(),
           ipfsHash: data[5],
           swarmHash: data[6],
         };
