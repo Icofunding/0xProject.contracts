@@ -1,6 +1,7 @@
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./DummyTokenB.sol');
+const DummyTokenC = artifacts.require('./DummyTokenC.sol');
 const DummyEtherToken = artifacts.require('./DummyEtherToken.sol');
 
 let tokenRegistry;
@@ -9,6 +10,7 @@ module.exports = (deployer, network) => {
     deployer.deploy([
         [DummyTokenA, 10000000],
         [DummyTokenB, 10000000],
+        [DummyTokenC, 10000000],
         [DummyEtherToken],
     ])
     .then(() => (
