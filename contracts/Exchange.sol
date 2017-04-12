@@ -593,7 +593,8 @@ contract Exchange is SafeMath {
       fees[1],
       expiration,
       cancelledValueM,
-      sha3(tokens[0], tokens[1]), orderHash
+      sha3(tokens[0], tokens[1]),
+      orderHash
     );
     return cancelledValueM;
   }
