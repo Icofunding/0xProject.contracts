@@ -38,3 +38,21 @@ Run tests
 ```
 truffle test
 ```
+
+### Deploying to Ropsten
+
+Start `geth`:
+
+```
+geth --testnet --rpc --rpcport "8546" --rpcapi "db,eth,net,web3" --unlock {your_deploy_account} --rpccorsdomain "*" console
+```
+
+Unlock the deploy account with the password when prompted.
+
+Before proceeding any further, make sure your `geth` node is finished syncing with the network.
+
+Run migration:
+
+```
+truffle migrate --network ropsten
+```
