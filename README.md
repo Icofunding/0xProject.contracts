@@ -8,7 +8,7 @@
 
 ## Architecture
 
-Insert architecture image here...
+<img src="https://github.com/0xProject/contracts/blob/master/contract_architecture.svg" />
 
 ## Contracts
 
