@@ -91,7 +91,7 @@ contract('TokenRegistry', accounts => {
           tokenRegUtil.getTokenByName(newNameToken.name),
           tokenRegUtil.getTokenByName(token.name),
         ]).then(data => {
-          [newData, oldData] = data;
+          const [newData, oldData] = data;
           expect(newData).to.deep.equal(newNameToken);
           expect(oldData).to.deep.equal(nullToken);
           done();
@@ -116,7 +116,7 @@ contract('TokenRegistry', accounts => {
           tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
           tokenRegUtil.getTokenBySymbol(token.symbol),
         ]).then(data => {
-          [newData, oldData] = data;
+          const [newData, oldData] = data;
           expect(newData).to.deep.equal(newSymbolToken);
           expect(oldData).to.deep.equal(nullToken);
           done();
