@@ -1,4 +1,5 @@
 require('babel-polyfill');
+require('source-map-support/register');
 
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
