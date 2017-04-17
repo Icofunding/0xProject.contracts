@@ -1,3 +1,5 @@
+require('babel-polyfill');
+
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
