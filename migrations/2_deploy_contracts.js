@@ -5,13 +5,18 @@ const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
+const multiSigConfig = require('./multisig_config.js');
+
 module.exports = (deployer, network, accounts) => {
-  if (network !== 'live') {
-    const owners = [accounts[0], accounts[1]];
-    const confirmationsRequired = 2;
-    const secondsRequired = 0;
+  const defaultConfig = {
+    owners: [accounts[0], accounts[1]],
+    confirmationsRequired: 2,
+    secondsRequired: 0,
+  };
+  const config = multiSigConfig[network] || defaultConfig;
+  if (network === 'development') {
     deployer.deploy([
-      [MultiSigWallet, owners, confirmationsRequired, secondsRequired],
+      [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
       Proxy,
       [DummyProtocolToken, 0],
       TokenRegistry,
@@ -20,10 +25,14 @@ module.exports = (deployer, network, accounts) => {
     .then(() => Proxy.deployed())
     .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
   } else {
-    deployer.deploy(Proxy)
-    .then(() => deployer.deploy(ProtocolToken))
+    deployer.deploy([
+      [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
+      Proxy,
+      ProtocolToken,
+      TokenRegistry,
+    ])
     .then(() => deployer.deploy(Exchange, ProtocolToken.address, Proxy.address))
     .then(() => Proxy.deployed())
-    .then(proxy => proxy.setAuthorization(Exchange.address, true, { from: web3.eth.accounts[0] }));
+    .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
   }
 };
