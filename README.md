@@ -36,6 +36,12 @@ We follow the [Airbnb javascript style guide](https://github.com/airbnb/javascri
 
 ### Running tests
 
+Install dependencies
+
+```
+npm install
+```
+
 Start Testrpc
 
 ```
