@@ -1,10 +1,8 @@
 pragma solidity ^0.4.8;
 
-
 /// @title Multisignature wallet - Allows multiple parties to agree on transactions before execution.
 /// @author Stefan George - <stefan.george@consensys.net>
-/// @author Amir Bandeali - <amir@0xProject.com>
-
+//  Modified by Amir Bandeali - <amir@0xProject.com>
 contract MultiSigWallet {
 
   uint constant public MAX_OWNER_COUNT = 50;
