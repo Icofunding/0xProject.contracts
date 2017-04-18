@@ -37,7 +37,7 @@ contract('Exchange', accounts => {
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
       const orderHash = await exUtil.getOrderHash(order);
-      assert(`0x${order.orderHash.toString('hex')}` === orderHash);
+      assert.equal(`0x${order.orderHash.toString('hex')}`, orderHash);
     });
   });
 

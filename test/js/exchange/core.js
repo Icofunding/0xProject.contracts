@@ -72,27 +72,27 @@ contract('Exchange', accounts => {
 
   describe('private functions', () => {
     it('should include transferViaProxy', () => {
-      assert(exchange.transferViaProxy === undefined);
+      assert.equal(exchange.transferViaProxy, undefined);
     });
 
     it('should include fillSuccess', () => {
-      assert(exchange.fillSuccess === undefined);
+      assert.equal(exchange.fillSuccess, undefined);
     });
 
     it('should include cancelSuccess', () => {
-      assert(exchange.cancelSuccess === undefined);
+      assert.equal(exchange.cancelSuccess, undefined);
     });
 
     it('should include isTransferable', () => {
-      assert(exchange.isTransferable === undefined);
+      assert.equal(exchange.isTransferable, undefined);
     });
 
     it('should include getBalance', () => {
-      assert(exchange.getBalance === undefined);
+      assert.equal(exchange.getBalance, undefined);
     });
 
     it('should include getAllowance', () => {
-      assert(exchange.getAllowance === undefined);
+      assert.equal(exchange.getAllowance, undefined);
     });
   });
 
@@ -120,13 +120,13 @@ contract('Exchange', accounts => {
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when valueM > valueT', async () => {
@@ -140,13 +140,13 @@ contract('Exchange', accounts => {
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when valueM < valueT', async () => {
@@ -160,13 +160,13 @@ contract('Exchange', accounts => {
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when taker is specified and order is claimed by taker', async () => {
@@ -180,13 +180,13 @@ contract('Exchange', accounts => {
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should fill remaining value if fillValueM > remaining valueM', async () => {
@@ -195,21 +195,21 @@ contract('Exchange', accounts => {
 
       const res = await exUtil.fill(order, { fillValueM: order.valueM, from: taker });
 
-      assert(res.logs[0].args.filledValueM.toString() === sub(order.valueM, fillValueM));
+      assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.valueM, fillValueM));
       const newBalances = await getDmyBalances();
 
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], order.valueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], order.valueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], order.feeM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], order.valueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], order.valueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], order.feeT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(order.feeM, order.feeT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], order.valueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], order.valueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], order.feeM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], order.valueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], order.valueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], order.feeT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(order.feeM, order.feeT)));
     });
 
     it('should log 1 event', async () => {
       const res = await exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker });
-      assert(res.logs.length === 1);
+      assert.equal(res.logs.length, 1);
     });
 
     it('should throw when taker is specified and order is claimed by other', async () => {
@@ -286,14 +286,14 @@ contract('Exchange', accounts => {
       order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
 
       const res = await exUtil.fill(order, { from: taker });
-      assert(res.logs.length === 0);
+      assert.equal(res.logs.length, 0);
     });
 
     it('should not log events if no value is filled', async () => {
       await exUtil.fill(order, { from: taker });
 
       const res = await exUtil.fill(order, { from: taker });
-      assert(res.logs.length === 0);
+      assert.equal(res.logs.length, 0);
     });
   });
 
@@ -325,38 +325,38 @@ contract('Exchange', accounts => {
       await exUtil.cancel(order, { cancelValueM, from: maker });
 
       const res = await exUtil.fill(order, { fillValueM: order.valueM, from: taker });
-      assert(res.logs[0].args.filledValueM.toString() === sub(order.valueM, cancelValueM));
+      assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.valueM, cancelValueM));
 
       const newBalances = await getDmyBalances();
       const cancelValueT = div(mul(cancelValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, cancelValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, cancelValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], cancelValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], cancelValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], cancelValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], cancelValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], cancelValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], cancelValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], cancelValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], cancelValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should log 1 event', async () => {
       const res = await exUtil.cancel(order, { cancelValueM: div(order.valueM, 2), from: maker });
-      assert(res.logs.length === 1);
+      assert.equal(res.logs.length, 1);
     });
 
     it('should not log events if no value is cancelled', async () => {
       await exUtil.cancel(order, { from: maker });
 
       const res = await exUtil.cancel(order, { from: maker });
-      assert(res.logs.length === 0);
+      assert.equal(res.logs.length, 0);
     });
 
     it('should not log events if order is expired', async () => {
       order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
 
       const res = await exUtil.cancel(order, { from: maker });
-      assert(res.logs.length === 0);
+      assert.equal(res.logs.length, 0);
     });
   });
 });

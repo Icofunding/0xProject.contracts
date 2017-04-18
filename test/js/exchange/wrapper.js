@@ -80,13 +80,13 @@ contract('Exchange', accounts => {
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
       const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-      assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-      assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-      assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should throw if an order is expired', async () => {
@@ -171,13 +171,13 @@ contract('Exchange', accounts => {
       const fillValueT = add(orders[0].valueT, div(orders[1].valueT, 2));
       const feeValueM = add(orders[0].feeM, div(orders[1].feeM, 2));
       const feeValueT = add(orders[0].feeT, div(orders[1].feeT, 2));
-      assert(newBalances[maker][orders[0].tokenM] === sub(balances[maker][orders[0].tokenM], fillValueM));
-      assert(newBalances[maker][orders[0].tokenT] === add(balances[maker][orders[0].tokenT], fillValueT));
-      assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-      assert(newBalances[taker][orders[0].tokenT] === sub(balances[taker][orders[0].tokenT], fillValueT));
-      assert(newBalances[taker][orders[0].tokenM] === add(balances[taker][orders[0].tokenM], fillValueM));
-      assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-      assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][orders[0].tokenM], sub(balances[maker][orders[0].tokenM], fillValueM));
+      assert.equal(newBalances[maker][orders[0].tokenT], add(balances[maker][orders[0].tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][orders[0].tokenT], sub(balances[taker][orders[0].tokenT], fillValueT));
+      assert.equal(newBalances[taker][orders[0].tokenM], add(balances[taker][orders[0].tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should fill all orders if cannot fill entire fillValueM', async () => {
@@ -224,7 +224,7 @@ contract('Exchange', accounts => {
       await exUtil.batchCancel(orders, { cancelValuesM, from: maker });
 
       const res = await exUtil.batchFill(orders, { fillValuesM: cancelValuesM, from: taker });
-      assert(res.logs.length === 0);
+      assert.equal(res.logs.length, 0);
     });
   });
 });

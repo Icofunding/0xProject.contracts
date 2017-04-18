@@ -59,20 +59,20 @@ contract('Proxy', accounts => {
   describe('getAuthorizedAddresses', () => {
     it('should return all authorized addresses', async () => {
       const initial = await proxy.getAuthorizedAddresses();
-      assert(initial.length === 1);
+      assert.equal(initial.length, 1);
       await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
 
       authorized = notAuthorized;
       notAuthorized = null;
       const afterAdd = await proxy.getAuthorizedAddresses();
-      assert(afterAdd.length === 2);
+      assert.equal(afterAdd.length, 2);
       assert(afterAdd.indexOf(authorized !== -1));
 
       await proxy.removeAuthorizedAddress(authorized, { from: owner });
       notAuthorized = authorized;
       authorized = null;
       const afterRemove = await proxy.getAuthorizedAddresses();
-      assert(afterRemove.length === 1);
+      assert.equal(afterRemove.length, 1);
     });
   });
 });

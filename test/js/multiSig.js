@@ -47,7 +47,7 @@ contract('MultiSigWallet', accounts => {
 
       txId = subRes.logs[0].args.transactionId.toString();
       const execRes = await multiSig.executeTransaction(txId);
-      assert(execRes.logs.length === 0);
+      assert.equal(execRes.logs.length, 0);
 
       const tx = await multiSig.transactions.call(txId);
       const executed = tx[4];
@@ -56,25 +56,25 @@ contract('MultiSigWallet', accounts => {
 
     it('should set confirmation time with enough confirmations', async () => {
       const res = await multiSig.confirmTransaction(txId, { from: owners[1] });
-      assert(res.logs.length === 2);
+      assert.equal(res.logs.length, 2);
       const blockNum = await promisify(web3.eth.getBlockNumber)();
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
       const timestamp = blockInfo.timestamp.toString();
       const tx = await multiSig.transactions(txId);
 
       const confirmationTime = tx[2].toString();
-      assert(timestamp === confirmationTime);
+      assert.equal(timestamp, confirmationTime);
     });
 
     it('should be executable with enough confirmations and secondsRequired of 0', async () => {
-      assert(initialThreshold === 0);
+      assert.equal(initialThreshold, 0);
 
       const res = await multiSig.executeTransaction(txId);
-      assert(res.logs.length === 2);
+      assert.equal(res.logs.length, 2);
 
       const threshold = await multiSig.secondsRequired.call();
       const newThreshold = threshold.toNumber();
-      assert(newThreshold === SECONDS_REQUIRED);
+      assert.equal(newThreshold, SECONDS_REQUIRED);
     });
 
     const newThreshold = 0;
@@ -91,10 +91,10 @@ contract('MultiSigWallet', accounts => {
 
       txId = subRes.logs[0].args.transactionId.toString();
       const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
-      assert(confRes.logs.length === 2);
+      assert.equal(confRes.logs.length, 2);
 
       const execRes = await multiSig.executeTransaction(txId);
-      assert(execRes.logs.length === 0);
+      assert.equal(execRes.logs.length, 0);
 
       const tx = await multiSig.transactions.call(txId);
       const executed = tx[4];

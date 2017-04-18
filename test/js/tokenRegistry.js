@@ -80,7 +80,7 @@ contract('TokenRegistry', accounts => {
 
     it('should change the token name when called by owner', async () => {
       const res = await tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner });
-      assert(res.logs.length === 1);
+      assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
         tokenRegUtil.getTokenByName(newNameToken.name),
         tokenRegUtil.getTokenByName(token.name),
@@ -103,7 +103,7 @@ contract('TokenRegistry', accounts => {
 
     it('should change the token symbol when called by owner', async () => {
       const res = await tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner });
-      assert(res.logs.length === 1);
+      assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
         tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
         tokenRegUtil.getTokenBySymbol(token.symbol),
@@ -125,7 +125,7 @@ contract('TokenRegistry', accounts => {
 
     it('should remove token metadata when called by owner', async () => {
       const res = await tokenReg.removeToken(token.tokenAddress, { from: owner });
-      assert(res.logs.length === 1);
+      assert.equal(res.logs.length, 1);
       const tokenData = await tokenRegUtil.getTokenMetaData(token.tokenAddress);
       expect(tokenData).to.deep.equal(nullToken);
     });

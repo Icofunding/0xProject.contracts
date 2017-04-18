@@ -49,8 +49,8 @@ contract('Proxy', accounts => {
       await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
 
       const newBalances = await getDmyBalances();
-      assert(newBalances[accounts[0]][dmyA.address] === sub(balances[accounts[0]][dmyA.address], transferAmt));
-      assert(newBalances[accounts[1]][dmyA.address] === add(balances[accounts[1]][dmyA.address], transferAmt));
+      assert.equal(newBalances[accounts[0]][dmyA.address], sub(balances[accounts[0]][dmyA.address], transferAmt));
+      assert.equal(newBalances[accounts[1]][dmyA.address], add(balances[accounts[1]][dmyA.address], transferAmt));
     });
   });
 });
