@@ -1,40 +1,52 @@
 0x Smart Contracts
 ------------------
 
-### Dev setup
+### Setup
 
-Install an eslinter for your text editor. e.g Atom's [linter-eslint](https://atom.io/packages/linter-eslint).
+Install [Node v6.9.1](https://nodejs.org/en/download/releases/)
 
-Install truffle ^3.2.1
+Install truffle
 
-Install node ^6.9.1
+```
+npm i -g truffle@^3.2.1
+```
 
-Install ethereumjs-testrpc ^3.0.2
+Install ethereumjs-testrpc
 
-### Style guide
+```
+npm i -g ethereumjs-testrpc@^3.0.2
+```
 
-We follow the [Airbnb javascript style guide](https://github.com/airbnb/javascript).
+Install project dependencies:
+
+```
+npm install
+```
 
 ### Running tests
 
-Start Testrpc
+Start testrpc
 
 ```
 testrpc --networkId 42
 ```
 
-Compile/migrate contracts
+Compile contracts
 
 ```
 truffle compile
 ```
 
-```
-truffle migrate
-```
-
 Run tests
 
 ```
-truffle test
+npm run test
 ```
+
+### Contributing
+
+#### Style guide
+
+We adhere to the [Airbnb javascript style guide](https://github.com/airbnb/javascript).
+
+In order to see style violation errors, install an eslinter for your text editor. e.g Atom's [linter-eslint](https://atom.io/packages/linter-eslint).
