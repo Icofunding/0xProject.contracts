@@ -5,7 +5,12 @@ const ProtocolToken = artifacts.require('./ProtocolToken.sol');
 const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
-const multiSigConfig = require('./multisig_config.js');
+let multiSigConfig;
+try {
+  multiSigConfig = require('./multisig_config.js'); // eslint-disable-line global-require
+} catch (e) {
+  multiSigConfig = {};
+}
 
 module.exports = (deployer, network, accounts) => {
   const defaultConfig = {
