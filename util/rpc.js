@@ -1,4 +1,4 @@
-const request = require('request');
+const request = require('request-promise-native');
 const truffleConf = require('../truffle.js');
 
 const host = truffleConf.networks.development.host;
@@ -16,21 +16,14 @@ const toPayload = ({ method, params = [] }) => {
   return payload;
 };
 
-const send = payload => {
-  const ret = new Promise((resolve, reject) => {
-    const opts = {
-      method: 'POST',
-      uri: `http://${host}:${port}`,
-      body: payload,
-    };
-    request(opts, (err, body, res) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(JSON.parse(res).result);
-    });
-  });
-  return ret;
+const send = async payload => {
+  const opts = {
+    method: 'POST',
+    uri: `http://${host}:${port}`,
+    body: payload,
+  };
+  const body = await request(opts);
+  return body.result;
 };
 
 exports.snapshot = () => {

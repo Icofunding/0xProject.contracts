@@ -21,57 +21,45 @@ module.exports = tokenReg => {
     return tx;
   };
 
-  const getTokenMetaData = tokenAddress => {
-    const token = new Promise((resolve, reject) => {
-      tokenReg.getTokenMetaData(tokenAddress).then(data => {
-        const ret = {
-          tokenAddress: data[0],
-          name: data[1],
-          symbol: data[2],
-          url: data[3],
-          decimals: data[4].toNumber(),
-          ipfsHash: data[5],
-          swarmHash: data[6],
-        };
-        resolve(ret);
-      }).catch(e => reject(e));
-    });
+  const getTokenMetaData = async tokenAddress => {
+    const data = await tokenReg.getTokenMetaData(tokenAddress);
+    const token = {
+      tokenAddress: data[0],
+      name: data[1],
+      symbol: data[2],
+      url: data[3],
+      decimals: data[4].toNumber(),
+      ipfsHash: data[5],
+      swarmHash: data[6],
+    };
     return token;
   };
 
-  const getTokenByName = tokenName => {
-    const token = new Promise((resolve, reject) => {
-      tokenReg.getTokenByName(tokenName).then(data => {
-        const ret = {
-          tokenAddress: data[0],
-          name: data[1],
-          symbol: data[2],
-          url: data[3],
-          decimals: data[4].toNumber(),
-          ipfsHash: data[5],
-          swarmHash: data[6],
-        };
-        resolve(ret);
-      }).catch(e => reject(e));
-    });
+  const getTokenByName = async tokenName => {
+    const data = await tokenReg.getTokenByName(tokenName);
+    const token = {
+      tokenAddress: data[0],
+      name: data[1],
+      symbol: data[2],
+      url: data[3],
+      decimals: data[4].toNumber(),
+      ipfsHash: data[5],
+      swarmHash: data[6],
+    };
     return token;
   };
 
-  const getTokenBySymbol = tokenSymbol => {
-    const token = new Promise((resolve, reject) => {
-      tokenReg.getTokenBySymbol(tokenSymbol).then(data => {
-        const ret = {
-          tokenAddress: data[0],
-          name: data[1],
-          symbol: data[2],
-          url: data[3],
-          decimals: data[4].toNumber(),
-          ipfsHash: data[5],
-          swarmHash: data[6],
-        };
-        resolve(ret);
-      }).catch(e => reject(e));
-    });
+  const getTokenBySymbol = async tokenSymbol => {
+    const data = await tokenReg.getTokenBySymbol(tokenSymbol);
+    const token = {
+      tokenAddress: data[0],
+      name: data[1],
+      symbol: data[2],
+      url: data[3],
+      decimals: data[4].toNumber(),
+      ipfsHash: data[5],
+      swarmHash: data[6],
+    };
     return token;
   };
 
