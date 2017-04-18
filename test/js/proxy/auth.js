@@ -66,7 +66,7 @@ contract('Proxy', accounts => {
       notAuthorized = null;
       const afterAdd = await proxy.getAuthorizedAddresses();
       assert.equal(afterAdd.length, 2);
-      assert(afterAdd.indexOf(authorized !== -1));
+      assert(afterAdd.indexOf(authorized) !== -1);
 
       await proxy.removeAuthorizedAddress(authorized, { from: owner });
       notAuthorized = authorized;
