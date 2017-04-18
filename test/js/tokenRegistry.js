@@ -31,116 +31,103 @@ contract('TokenRegistry', accounts => {
   let tokenReg;
   let tokenRegUtil;
 
-  before(done => {
-    TokenRegistry.deployed().then(instance => {
-      tokenReg = instance;
-      tokenRegUtil = util.tokenRegUtil(instance);
-      done();
-    });
+  before(async () => {
+    tokenReg = await TokenRegistry.deployed();
+    tokenRegUtil = util.tokenRegUtil(tokenReg);
   });
 
   describe('addToken', () => {
-    it('should throw when not called by owner', done => {
-      tokenRegUtil.addToken(token, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw when not called by owner', async () => {
+      try {
+        await tokenRegUtil.addToken(token, { from: notOwner });
+        throw new Error('addToken succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should add token metadata when called by owner', done => {
-      tokenRegUtil.addToken(token, { from: owner }).then(() => {
-        tokenRegUtil.getTokenMetaData(token.tokenAddress).then(tokenData => {
-          expect(tokenData).to.deep.equal(token);
-          done();
-        });
-      });
+    it('should add token metadata when called by owner', async () => {
+      await tokenRegUtil.addToken(token, { from: owner });
+      const tokenData = await tokenRegUtil.getTokenMetaData(token.tokenAddress);
+      expect(tokenData).to.deep.equal(token);
     });
   });
 
   describe('getTokenByName', () => {
-    it('should return token metadata when given the token name', done => {
-      tokenRegUtil.getTokenByName(token.name).then(tokenData => {
-        expect(tokenData).to.deep.equal(token);
-        done();
-      });
+    it('should return token metadata when given the token name', async () => {
+      const tokenData = await tokenRegUtil.getTokenByName(token.name);
+      expect(tokenData).to.deep.equal(token);
     });
   });
 
   describe('getTokenBySymbol', () => {
-    it('should return token metadata when given the token symbol', done => {
-      tokenRegUtil.getTokenBySymbol(token.symbol).then(tokenData => {
-        expect(tokenData).to.deep.equal(token);
-        done();
-      });
+    it('should return token metadata when given the token symbol', async () => {
+      const tokenData = await tokenRegUtil.getTokenBySymbol(token.symbol);
+      expect(tokenData).to.deep.equal(token);
     });
   });
 
   const newNameToken = Object.assign({}, token, { name: 'newName' });
   describe('setTokenName', () => {
-    it('should throw when not called by owner', done => {
-      tokenReg.setTokenName(token.tokenAddress, newNameToken.name, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw when not called by owner', async () => {
+      try {
+        await tokenReg.setTokenName(token.tokenAddress, newNameToken.name, { from: notOwner });
+        throw new Error('setTokenName succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should change the token name when called by owner', done => {
-      tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner }).then(res => {
-        assert(res.logs.length === 1);
-        Promise.all([
-          tokenRegUtil.getTokenByName(newNameToken.name),
-          tokenRegUtil.getTokenByName(token.name),
-        ]).then(data => {
-          const [newData, oldData] = data;
-          expect(newData).to.deep.equal(newNameToken);
-          expect(oldData).to.deep.equal(nullToken);
-          done();
-        });
-      });
+    it('should change the token name when called by owner', async () => {
+      const res = await tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner });
+      assert(res.logs.length === 1);
+      const [newData, oldData] = await Promise.all([
+        tokenRegUtil.getTokenByName(newNameToken.name),
+        tokenRegUtil.getTokenByName(token.name),
+      ]);
+      expect(newData).to.deep.equal(newNameToken);
+      expect(oldData).to.deep.equal(nullToken);
     });
   });
 
   const newSymbolToken = Object.assign({}, newNameToken, { symbol: 'newSymbol' });
   describe('setTokenSymbol', () => {
-    it('should throw when not called by owner', done => {
-      tokenReg.setTokenSymbol(token.tokenAddress, newSymbolToken.symbol, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw when not called by owner', async () => {
+      try {
+        await tokenReg.setTokenSymbol(token.tokenAddress, newSymbolToken.symbol, { from: notOwner });
+        throw new Error('setTokenSymbol succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should change the token symbol when called by owner', done => {
-      tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner }).then(res => {
-        assert(res.logs.length === 1);
-        Promise.all([
-          tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
-          tokenRegUtil.getTokenBySymbol(token.symbol),
-        ]).then(data => {
-          const [newData, oldData] = data;
-          expect(newData).to.deep.equal(newSymbolToken);
-          expect(oldData).to.deep.equal(nullToken);
-          done();
-        });
-      });
+    it('should change the token symbol when called by owner', async () => {
+      const res = await tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner });
+      assert(res.logs.length === 1);
+      const [newData, oldData] = await Promise.all([
+        tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
+        tokenRegUtil.getTokenBySymbol(token.symbol),
+      ]);
+      expect(newData).to.deep.equal(newSymbolToken);
+      expect(oldData).to.deep.equal(nullToken);
     });
   });
 
   describe('removeToken', () => {
-    it('should throw if not called by owner', done => {
-      tokenReg.removeToken(token.tokenAddress, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw if not called by owner', async () => {
+      try {
+        await tokenReg.removeToken(token.tokenAddress, { from: notOwner });
+        throw new Error('removeToken succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should remove token metadata when called by owner', done => {
-      tokenReg.removeToken(token.tokenAddress, { from: owner }).then(res => {
-        assert(res.logs.length === 1);
-        tokenRegUtil.getTokenMetaData(token.tokenAddress).then(tokenData => {
-          expect(tokenData).to.deep.equal(nullToken);
-          done();
-        });
-      });
+    it('should remove token metadata when called by owner', async () => {
+      const res = await tokenReg.removeToken(token.tokenAddress, { from: owner });
+      assert(res.logs.length === 1);
+      const tokenData = await tokenRegUtil.getTokenMetaData(token.tokenAddress);
+      expect(tokenData).to.deep.equal(nullToken);
     });
   });
 });

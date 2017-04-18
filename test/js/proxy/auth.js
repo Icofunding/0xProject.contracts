@@ -1,5 +1,9 @@
+require('babel-polyfill');
+require('source-map-support/register');
+
 const Proxy = artifacts.require('./db/Proxy.sol');
 const assert = require('assert');
+const util = require('../../../util/index.js')(web3);
 
 contract('Proxy', accounts => {
   const owner = accounts[0];
@@ -9,73 +13,66 @@ contract('Proxy', accounts => {
   let authorized;
   let notAuthorized = owner;
 
-  before(done => {
-    Proxy.deployed().then(instance => {
-      proxy = instance;
-      done();
-    });
+  before(async () => {
+    proxy = await Proxy.deployed();
   });
 
   describe('addAuthorizedAddress', () => {
-    it('should throw if not called by owner', done => {
-      proxy.addAuthorizedAddress(notOwner, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw if not called by owner', async () => {
+      try {
+        await proxy.addAuthorizedAddress(notOwner, { from: notOwner });
+        throw new Error('addAuthorizedAddress succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should allow owner to add an authorized address', done => {
-      proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
-        authorized = notAuthorized;
-        notAuthorized = null;
-        proxy.authorized.call(authorized).then(isAuthorized => {
-          assert(isAuthorized);
-          done();
-        });
-      });
+    it('should allow owner to add an authorized address', async () => {
+      await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
+      authorized = notAuthorized;
+      notAuthorized = null;
+      const isAuthorized = await proxy.authorized.call(authorized);
+      assert(isAuthorized);
     });
   });
 
   describe('removeAuthorizedAddress', () => {
-    it('should throw if not called by owner', done => {
-      proxy.removeAuthorizedAddress(authorized, { from: notOwner }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw if not called by owner', async () => {
+      try {
+        await proxy.removeAuthorizedAddress(authorized, { from: notOwner });
+        throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
-    it('should allow owner to remove an authorized address', done => {
-      proxy.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
-        notAuthorized = authorized;
-        authorized = null;
-        proxy.authorized.call(notAuthorized).then(isAuthorized => {
-          assert(!isAuthorized);
-          done();
-        });
-      });
+
+    it('should allow owner to remove an authorized address', async () => {
+      await proxy.removeAuthorizedAddress(authorized, { from: owner });
+      notAuthorized = authorized;
+      authorized = null;
+
+      const isAuthorized = await proxy.authorized.call(notAuthorized);
+      assert(!isAuthorized);
     });
   });
 
   describe('getAuthorizedAddresses', () => {
-    it('should return all authorized addresses', done => {
-      proxy.getAuthorizedAddresses().then(initial => {
-        assert(initial.length === 1);
-        proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
-          authorized = notAuthorized;
-          notAuthorized = null;
-          proxy.getAuthorizedAddresses().then(afterAdd => {
-            assert(afterAdd.length === 2);
-            assert(afterAdd.indexOf(authorized !== -1));
-            proxy.removeAuthorizedAddress(authorized, { from: owner }).then(() => {
-              notAuthorized = authorized;
-              authorized = null;
-              proxy.getAuthorizedAddresses().then(afterRemove => {
-                assert(afterRemove.length === 1);
-                done();
-              });
-            });
-          });
-        });
-      });
+    it('should return all authorized addresses', async () => {
+      const initial = await proxy.getAuthorizedAddresses();
+      assert(initial.length === 1);
+      await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
+
+      authorized = notAuthorized;
+      notAuthorized = null;
+      const afterAdd = await proxy.getAuthorizedAddresses();
+      assert(afterAdd.length === 2);
+      assert(afterAdd.indexOf(authorized !== -1));
+
+      await proxy.removeAuthorizedAddress(authorized, { from: owner });
+      notAuthorized = authorized;
+      authorized = null;
+      const afterRemove = await proxy.getAuthorizedAddresses();
+      assert(afterRemove.length === 1);
     });
   });
 });

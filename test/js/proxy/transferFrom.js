@@ -16,43 +16,41 @@ contract('Proxy', accounts => {
 
   let getDmyBalances;
 
-  before(done => {
-    Promise.all([
+  before(async () => {
+    [proxy, dmyA] = await Promise.all([
       Proxy.deployed(),
       DummyTokenA.deployed(),
-    ]).then(instances => {
-      [proxy, dmyA] = instances;
-      getDmyBalances = util.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
-      Promise.all([
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
-        dmyA.setBalance(INIT_BAL, { from: accounts[0] }),
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[1] }),
-        dmyA.setBalance(INIT_BAL, { from: accounts[1] }),
-      ]).then(() => done());
-    });
+    ]);
+
+    getDmyBalances = util.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
+    await Promise.all([
+      dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
+      dmyA.setBalance(INIT_BAL, { from: accounts[0] }),
+      dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[1] }),
+      dmyA.setBalance(INIT_BAL, { from: accounts[1] }),
+    ]);
   });
 
   describe('transferFrom', () => {
-    it('should throw when called by an unauthorized address', done => {
-      proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: notAuthorized }).catch(e => {
-        assert(e);
-        done();
-      });
+    it('should throw when called by an unauthorized address', async () => {
+      try {
+        await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: notAuthorized });
+        throw new Error('proxy.transferFrom succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should allow an authorized address to transfer', done => {
-      getDmyBalances().then(balances => {
-        proxy.addAuthorizedAddress(notAuthorized, { from: owner }).then(() => {
-          const transferAmt = 10000;
-          proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized }).then(() => {
-            getDmyBalances().then(newBalances => {
-              assert(newBalances[accounts[0]][dmyA.address] === sub(balances[accounts[0]][dmyA.address], transferAmt));
-              assert(newBalances[accounts[1]][dmyA.address] === add(balances[accounts[1]][dmyA.address], transferAmt));
-              done();
-            });
-          });
-        });
-      });
+    it('should allow an authorized address to transfer', async () => {
+      const balances = await getDmyBalances();
+
+      await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
+      const transferAmt = 10000;
+      await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
+
+      const newBalances = await getDmyBalances();
+      assert(newBalances[accounts[0]][dmyA.address] === sub(balances[accounts[0]][dmyA.address], transferAmt));
+      assert(newBalances[accounts[1]][dmyA.address] === add(balances[accounts[1]][dmyA.address], transferAmt));
     });
   });
 });

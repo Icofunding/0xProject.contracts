@@ -25,53 +25,39 @@ contract('Exchange', accounts => {
 
   let order;
   let exUtil;
-  before(done => {
-    Exchange.deployed().then(exchange => {
-      exUtil = util.exchangeUtil(exchange);
-      done();
-    });
+  before(async () => {
+    const exchange = await Exchange.deployed();
+    exUtil = util.exchangeUtil(exchange);
   });
 
-  beforeEach(done => {
-    util.createOrder(orderFactory()).then(newOrder => {
-      order = newOrder;
-      done();
-    });
+  beforeEach(async () => {
+    order = await util.createOrder(orderFactory());
   });
 
   describe('getOrderHash', () => {
-    it('should output the correct orderHash', done => {
-      exUtil.getOrderHash(order).then(orderHash => {
-        assert(`0x${order.orderHash.toString('hex')}` === orderHash);
-        done();
-      });
+    it('should output the correct orderHash', async () => {
+      const orderHash = await exUtil.getOrderHash(order);
+      assert(`0x${order.orderHash.toString('hex')}` === orderHash);
     });
   });
 
   describe('isValidSignature', () => {
-    beforeEach(done => {
-      util.createOrder(orderFactory()).then(newOrder => {
-        order = newOrder;
-        done();
-      });
+    beforeEach(async () => {
+      order = await util.createOrder(orderFactory());
     });
 
-    it('should return true with a valid signature', done => {
-      exUtil.isValidSignature(order).then(success => {
-        assert(util.isValidSignature(order));
-        assert(success);
-        done();
-      });
+    it('should return true with a valid signature', async () => {
+      const success = await exUtil.isValidSignature(order);
+      assert(util.isValidSignature(order));
+      assert(success);
     });
 
-    it('should return false with an invalid signature', done => {
+    it('should return false with an invalid signature', async () => {
       order.r = util.sha3('invalidR');
       order.s = util.sha3('invalidS');
-      exUtil.isValidSignature(order).then(success => {
-        assert(!util.isValidSignature(order));
-        assert(!success);
-        done();
-      });
+      const success = await exUtil.isValidSignature(order);
+      assert(!util.isValidSignature(order));
+      assert(!success);
     });
   });
 });
