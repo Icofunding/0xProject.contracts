@@ -8,7 +8,8 @@
   },
   "scripts": {
     "transpile": "rm -rf transpiled; node node_modules/babel-cli/bin/babel.js . --out-dir transpiled --ignore 'node_modules,migrations,transpiled' --copy-files --source-maps inline",
-    "test": "npm run transpile; truffle test"
+    "test": "npm run transpile; truffle test",
+    "compile": "rm -rf build/contracts; truffle compile"
   },
   "repository": {
     "type": "git",
