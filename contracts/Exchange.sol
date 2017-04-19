@@ -61,6 +61,8 @@ contract Exchange is SafeMath {
     bytes32 orderHash
   );
 
+  event LogError(string indexed error, bytes32 orderHash);
+
   function Exchange(address _protocolToken, address _proxy) {
     PROTOCOL_TOKEN = _protocolToken;
     PROXY = _proxy;
@@ -96,7 +98,6 @@ contract Exchange is SafeMath {
     returns (uint filledValueM)
   {
     assert(traders[1] == address(0) || traders[1] == msg.sender);
-    if (block.timestamp >= expiration) return 0;
 
     bytes32 orderHash = getOrderHash(
       traders,
@@ -106,9 +107,22 @@ contract Exchange is SafeMath {
       fees,
       expiration
     );
+
+    if (block.timestamp >= expiration) {
+      LogError('Order is expired.', orderHash);
+      return 0;
+    }
+
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
-    if (filledValueM == 0) return 0;
-    if (isRoundingError(values[0], filledValueM, values[1])) return 0;
+    if (filledValueM == 0) {
+      LogError('Order already filled.', orderHash);
+      return 0;
+    }
+
+    if (isRoundingError(values[0], filledValueM, values[1])) {
+      LogError('Rounding error too large.', orderHash);
+      return 0;
+    }
 
     if (shouldCheckTransfer && !isTransferable(
       [traders[0], msg.sender],
@@ -117,7 +131,11 @@ contract Exchange is SafeMath {
       values,
       fees,
       filledValueM
-    )) return 0;
+    )) {
+      LogError('Insufficient balance or allowance.', orderHash);
+      return 0;
+    }
+
     assert(isValidSignature(
       traders[0],
       orderHash,
@@ -192,7 +210,6 @@ contract Exchange is SafeMath {
     returns (uint cancelledValueM)
   {
     assert(traders[0] == msg.sender);
-    if (block.timestamp >= expiration) return 0;
 
     bytes32 orderHash = getOrderHash(
       traders,
@@ -202,8 +219,18 @@ contract Exchange is SafeMath {
       fees,
       expiration
     );
+
+    if (block.timestamp >= expiration) {
+      LogError('Order is expired.', orderHash);
+      return 0;
+    }
+
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
-    if (cancelledValueM == 0) return 0;
+    if (cancelledValueM == 0) {
+      LogError('Order already cancelled.', orderHash);
+      return 0;
+    }
+
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
 
     return cancelSuccess(
