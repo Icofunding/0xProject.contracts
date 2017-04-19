@@ -1,9 +1,28 @@
+/*
+
+  Copyright 2017 ZeroEx Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+*/
 pragma solidity ^0.4.8;
 
 import "./Proxy.sol";
 import "./base/Token.sol";
 import "./base/SafeMath.sol";
 
+/// @title Exchange - Facilitates exchange of ERC20 tokens.
+/// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract Exchange is SafeMath {
 
   address public PROTOCOL_TOKEN;
@@ -51,15 +70,15 @@ contract Exchange is SafeMath {
   * Core exchange functions
   */
 
-  /// @dev Fills an order with specified parameters and ECDSA signature.
-  /// @param traders Array of order maker and taker addresses.
-  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @dev Fills the input order.
+  /// @param traders Array of order maker and taker (optional) addresses.
+  /// @param tokens Array of ERC20 token addresses [tokenM, tokenT].
   /// @param feeRecipient Address that receives order fees.
   /// @param shouldCheckTransfer Test if transfer will fail before attempting.
-  /// @param values Array of order valueM and valueT.
+  /// @param values Token values to be traded [valueM, valueT].
   /// @param fees Array of order feeM and feeT.
-  /// @param expiration Time order expires in seconds.
-  /// @param fillValueM Desired amount of tokenM to fill in order.
+  /// @param expiration Time order expires (seconds since unix epoch).
+  /// @param fillValueM Desired amount of tokenM to fill (fillValueM <= valueM).
   /// @param v ECDSA signature parameter v.
   /// @param rs Array of ECDSA signature parameters r and s.
   /// @return Total amount of tokenM filled in trade.
@@ -153,9 +172,9 @@ contract Exchange is SafeMath {
     );
   }
 
-  /// @dev Cancels provided amount of an order with given parameters.
+  /// @dev Cancels the input order.
   /// @param traders Array of order maker and taker addresses.
-  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param tokens Array of ERC20 token addresses [tokenM, tokenT].
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
@@ -593,7 +612,8 @@ contract Exchange is SafeMath {
       fees[1],
       expiration,
       cancelledValueM,
-      sha3(tokens[0], tokens[1]), orderHash
+      sha3(tokens[0], tokens[1]),
+      orderHash
     );
     return cancelledValueM;
   }
@@ -618,18 +638,18 @@ contract Exchange is SafeMath {
     returns (bool isTransferable)
   {
     uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
-    if (getBalance(tokens[0], traders[0]) < fillValueM ||
-      getAllowance(tokens[0], traders[0]) < fillValueM ||
-      getBalance(tokens[1], traders[1]) < fillValueT ||
-      getAllowance(tokens[1], traders[1]) < fillValueT
+    if ( getBalance(tokens[0], traders[0]) < fillValueM
+      || getAllowance(tokens[0], traders[0]) < fillValueM
+      || getBalance(tokens[1], traders[1]) < fillValueT
+      || getAllowance(tokens[1], traders[1]) < fillValueT
     ) return false;
     if (feeRecipient != address(0)) {
       uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
       uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
-      if (getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM ||
-        getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT ||
-        getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+      if ( getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM
+        || getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM
+        || getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+        || getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
       ) return false;
     }
     return true;

@@ -1,41 +1,38 @@
 const ethUtil = require('ethereumjs-util');
-const { getOrderHash, isValidSignature } = require('./crypto.js');
-const BNutil = require('./BNutil.js');
-const exchangeUtil = require('./exchangeUtil.js');
-const multiSigUtil = require('./multiSigUtil.js');
-const tokenRegUtil = require('./tokenRegUtil.js');
-const factory = require('./factory.js');
+const promisify = require('es6-promisify');
+const { getOrderHash, isValidSignature } = require('./crypto');
+const BNutil = require('./BNutil');
+const exchangeUtil = require('./exchangeUtil');
+const multiSigUtil = require('./multiSigUtil');
+const testUtil = require('./testUtil');
+const tokenRegUtil = require('./tokenRegUtil');
+const factory = require('./factory');
+const rpc = require('./rpc');
 
 module.exports = web3 => {
   const index = {
-    createOrder: (params, { hashPersonal = true } = {}) => {
-      const order = new Promise((resolve, reject) => {
-        const orderHash = getOrderHash(params);
-        const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
-        web3.eth.sign(params.maker, ethUtil.bufferToHex(toSign), (err, sig) => {
-          if (err) {
-            reject(err);
-          }
-          const { v, r, s } = ethUtil.fromRpcSig(sig);
-          const { maker, taker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration } = params;
-          resolve({
-            maker,
-            taker,
-            feeRecipient,
-            tokenM,
-            tokenT,
-            valueM,
-            valueT,
-            feeM,
-            feeT,
-            orderHash,
-            expiration,
-            v,
-            r: ethUtil.bufferToHex(r),
-            s: ethUtil.bufferToHex(s),
-          });
-        });
-      });
+    createOrder: async (params, { hashPersonal = true } = {}) => {
+      const orderHash = getOrderHash(params);
+      const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
+      const sig = await promisify(web3.eth.sign)(params.maker, ethUtil.bufferToHex(toSign));
+      const { v, r, s } = ethUtil.fromRpcSig(sig);
+      const { maker, taker, feeRecipient, tokenM, tokenT, valueM, valueT, feeM, feeT, expiration } = params;
+      const order = {
+        maker,
+        taker,
+        feeRecipient,
+        tokenM,
+        tokenT,
+        valueM,
+        valueT,
+        feeM,
+        feeT,
+        orderHash,
+        expiration,
+        v,
+        r: ethUtil.bufferToHex(r),
+        s: ethUtil.bufferToHex(s),
+      };
       return order;
     },
     createOrderFactory: factory.createOrderFactory,
@@ -46,7 +43,9 @@ module.exports = web3 => {
     BNutil,
     exchangeUtil,
     multiSigUtil,
+    test: testUtil,
     tokenRegUtil,
+    rpc,
   };
   return index;
 };

@@ -40,103 +40,92 @@ contract('Exchange', accounts => {
     feeT: toSmallestUnits(1),
   });
 
-  before(done => {
-    Promise.all([
+  before(async () => {
+    [exchange, dmyA, dmyB, dmyPT] = await Promise.all([
       Exchange.deployed(),
       DummyTokenA.deployed(),
       DummyTokenB.deployed(),
       DummyProtocolToken.deployed(),
-    ]).then(instances => {
-      [exchange, dmyA, dmyB, dmyPT] = instances;
-      exUtil = util.exchangeUtil(exchange);
-      getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
-      return Promise.all([
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-        dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyA.setBalance(INIT_BAL, { from: maker }),
-        dmyA.setBalance(INIT_BAL, { from: taker }),
-        dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-        dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyB.setBalance(INIT_BAL, { from: maker }),
-        dmyB.setBalance(INIT_BAL, { from: taker }),
-        dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-        dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-        dmyPT.setBalance(INIT_BAL, { from: maker }),
-        dmyPT.setBalance(INIT_BAL, { from: taker }),
-      ]).then(() => done()).catch(e => done(e));
-    });
+    ]);
+
+    exUtil = util.exchangeUtil(exchange);
+    getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
+    await Promise.all([
+      dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      dmyA.setBalance(INIT_BAL, { from: maker }),
+      dmyA.setBalance(INIT_BAL, { from: taker }),
+      dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      dmyB.setBalance(INIT_BAL, { from: maker }),
+      dmyB.setBalance(INIT_BAL, { from: taker }),
+      dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      dmyPT.setBalance(INIT_BAL, { from: maker }),
+      dmyPT.setBalance(INIT_BAL, { from: taker }),
+    ]);
   });
 
   describe('fillOrKill', () => {
-    beforeEach(done => {
-      getDmyBalances().then(newBalances => {
-        balances = newBalances;
-        done();
-      });
+    beforeEach(async () => {
+      balances = await getDmyBalances();
     });
 
-    it('should transfer the correct amounts', done => {
-      util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) })).then(order => {
-        const fillValueM = div(order.valueM, 2);
-        exUtil.fillOrKill(order, { fillValueM, from: taker }).then(() => {
-          getDmyBalances().then(newBalances => {
-            const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
-            const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
-            const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
-            assert(newBalances[maker][order.tokenM] === sub(balances[maker][order.tokenM], fillValueM));
-            assert(newBalances[maker][order.tokenT] === add(balances[maker][order.tokenT], fillValueT));
-            assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-            assert(newBalances[taker][order.tokenT] === sub(balances[taker][order.tokenT], fillValueT));
-            assert(newBalances[taker][order.tokenM] === add(balances[taker][order.tokenM], fillValueM));
-            assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-            assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
-            done();
-          });
-        }).catch(e => {
-          assert(!e);
-          done();
-        });
-      });
+    it('should transfer the correct amounts', async () => {
+      const order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) }));
+      const fillValueM = div(order.valueM, 2);
+      await exUtil.fillOrKill(order, { fillValueM, from: taker });
+
+      const newBalances = await getDmyBalances();
+      const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
+      const feeValueM = div(mul(order.feeM, fillValueM), order.valueM);
+      const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
+      assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
+      assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
+      assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
-    it('should throw if an order is expired', done => {
-      util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) })).then(order => {
-        exUtil.fillOrKill(order, { from: taker }).catch(e => {
-          assert(e);
-          done();
-        });
-      });
+    it('should throw if an order is expired', async () => {
+      const order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
+
+      try {
+        await exUtil.fillOrKill(order, { from: taker });
+        throw new Error('FillOrKill succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
 
-    it('should throw if entire fillValueM not filled', done => {
-      util.createOrder(orderFactory()).then(order => {
-        exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker }).then(() => {
-          exUtil.fillOrKill(order, { from: taker }).catch(e => {
-            assert(e);
-            done();
-          });
-        });
-      });
+    it('should throw if entire fillValueM not filled', async () => {
+      const order = await util.createOrder(orderFactory());
+
+      await exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker });
+
+      try {
+        await exUtil.fillOrKill(order, { from: taker });
+        throw new Error('FillOrKill succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
   });
 
   describe('batchFill', () => {
     let orders;
-    beforeEach(done => {
-      Promise.all([
+    beforeEach(async () => {
+      orders = await Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
-      ]).then(newOrders => {
-        orders = newOrders;
-        getDmyBalances().then(newBalances => {
-          balances = newBalances;
-          done();
-        });
-      });
+      ]);
+      balances = await getDmyBalances();
     });
 
-    it('should transfer the correct amounts', done => {
+    it('should transfer the correct amounts', async () => {
       const fillValuesM = [];
       const tokenM = dmyA.address;
       const tokenT = dmyB.address;
@@ -154,54 +143,44 @@ contract('Exchange', accounts => {
         balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
         balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
       });
-      exUtil.batchFill(orders, { fillValuesM, from: taker }).then(() => {
-        getDmyBalances().then(newBalances => {
-          expect(newBalances).to.deep.equal(balances);
-          done();
-        });
-      }).catch(e => {
-        assert(!e);
-        done();
-      });
+
+      await exUtil.batchFill(orders, { fillValuesM, from: taker });
+
+      const newBalances = await getDmyBalances();
+      expect(newBalances).to.deep.equal(balances);
     });
   });
 
   describe('fillUpTo', () => {
     let orders;
-    beforeEach(done => {
-      Promise.all([
+    beforeEach(async () => {
+      orders = await Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
-      ]).then(newOrders => {
-        orders = newOrders;
-        getDmyBalances().then(newBalances => {
-          balances = newBalances;
-          done();
-        });
-      });
+      ]);
+      balances = await getDmyBalances();
     });
 
-    it('should stop when the entire fillValueM is filled', done => {
+    it('should stop when the entire fillValueM is filled', async () => {
       const fillValueM = add(orders[0].valueM, div(orders[1].valueM, 2));
-      exUtil.fillUpTo(orders, { fillValueM, from: taker }).then(() => {
-        getDmyBalances().then(newBalances => {
-          const fillValueT = add(orders[0].valueT, div(orders[1].valueT, 2));
-          const feeValueM = add(orders[0].feeM, div(orders[1].feeM, 2));
-          const feeValueT = add(orders[0].feeT, div(orders[1].feeT, 2));
-          assert(newBalances[maker][orders[0].tokenM] === sub(balances[maker][orders[0].tokenM], fillValueM));
-          assert(newBalances[maker][orders[0].tokenT] === add(balances[maker][orders[0].tokenT], fillValueT));
-          assert(newBalances[maker][dmyPT.address] === sub(balances[maker][dmyPT.address], feeValueM));
-          assert(newBalances[taker][orders[0].tokenT] === sub(balances[taker][orders[0].tokenT], fillValueT));
-          assert(newBalances[taker][orders[0].tokenM] === add(balances[taker][orders[0].tokenM], fillValueM));
-          assert(newBalances[taker][dmyPT.address] === sub(balances[taker][dmyPT.address], feeValueT));
-          assert(newBalances[feeRecipient][dmyPT.address] === add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
-          done();
-        });
-      });
+      await exUtil.fillUpTo(orders, { fillValueM, from: taker });
+
+      const newBalances = await getDmyBalances();
+
+      const fillValueT = add(orders[0].valueT, div(orders[1].valueT, 2));
+      const feeValueM = add(orders[0].feeM, div(orders[1].feeM, 2));
+      const feeValueT = add(orders[0].feeT, div(orders[1].feeT, 2));
+      assert.equal(newBalances[maker][orders[0].tokenM], sub(balances[maker][orders[0].tokenM], fillValueM));
+      assert.equal(newBalances[maker][orders[0].tokenT], add(balances[maker][orders[0].tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][orders[0].tokenT], sub(balances[taker][orders[0].tokenT], fillValueT));
+      assert.equal(newBalances[taker][orders[0].tokenM], add(balances[taker][orders[0].tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
-    it('should fill all orders if cannot fill entire fillValueM', done => {
+    it('should fill all orders if cannot fill entire fillValueM', async () => {
       const fillValueM = toSmallestUnits(100000);
       orders.forEach(order => {
         balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], order.valueM);
@@ -212,44 +191,40 @@ contract('Exchange', accounts => {
         balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], order.feeT);
         balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(order.feeM, order.feeT));
       });
-      exUtil.fillUpTo(orders, { fillValueM, from: taker }).then(() => {
-        getDmyBalances().then(newBalances => {
-          expect(newBalances).to.deep.equal(balances);
-          done();
-        });
-      });
+      await exUtil.fillUpTo(orders, { fillValueM, from: taker });
+
+      const newBalances = await getDmyBalances();
+      expect(newBalances).to.deep.equal(balances);
     });
 
-    it('should throw when an order does not use the same tokenM', done => {
-      Promise.all([
+    it('should throw when an order does not use the same tokenM', async () => {
+      orders = await Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory({ tokenM: dmyPT.address })),
         util.createOrder(orderFactory()),
-      ]).then(newOrders => {
-        orders = newOrders;
-        exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker }).catch(e => {
-          assert(e);
-          done();
-        });
-      });
+      ]);
+
+      try {
+        await exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker });
+        throw new Error('FillUpTo succeeded when it should have thrown');
+      } catch (err) {
+        util.test.assertThrow(err);
+      }
     });
   });
 
   describe('batchCancel', () => {
-    it('should be able to cancel multiple orders', done => {
-      Promise.all([
+    it('should be able to cancel multiple orders', async () => {
+      const orders = await Promise.all([
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
         util.createOrder(orderFactory()),
-      ]).then(orders => {
-        const cancelValuesM = orders.map(order => order.valueM);
-        exUtil.batchCancel(orders, { cancelValuesM, from: maker }).then(() => {
-          exUtil.batchFill(orders, { fillValuesM: cancelValuesM, from: taker }).then(res => {
-            assert(res.logs.length === 0);
-            done();
-          });
-        });
-      });
+      ]);
+      const cancelValuesM = orders.map(order => order.valueM);
+      await exUtil.batchCancel(orders, { cancelValuesM, from: maker });
+
+      const res = await exUtil.batchFill(orders, { fillValuesM: cancelValuesM, from: taker });
+      assert.equal(res.logs.length, 0);
     });
   });
 });
