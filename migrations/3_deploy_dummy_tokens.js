@@ -8,9 +8,9 @@ let tokenRegistry;
 module.exports = (deployer, network) => {
   if (network !== 'live') {
     deployer.deploy([
-        [DummyTokenA, 10000000],
-        [DummyTokenB, 10000000],
-        [DummyTokenC, 10000000],
+        [DummyTokenA, 1000000000000000000000],
+        [DummyTokenB, 1000000000000000000000],
+        [DummyTokenC, 1000000000000000000000],
         [DummyEtherToken],
     ])
     .then(() => (

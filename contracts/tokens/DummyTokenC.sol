@@ -4,8 +4,9 @@ import "./../base/StandardToken.sol";
 
 // DummyTokenC is not mintable and is also not included in the TokenRegistry
 contract DummyTokenC is StandardToken {
-  string public name = "TokenC";
-  string public symbol = "TC";
+  uint8 constant public decimals = 18;
+  string constant public name = "TokenC";
+  string constant public symbol = "TC";
 
   function DummyTokenC(uint _value) {
     balances[msg.sender] = _value;

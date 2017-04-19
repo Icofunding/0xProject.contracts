@@ -1,16 +1,17 @@
 pragma solidity ^0.4.8;
 
 import "./../base/StandardToken.sol";
+import "./../base/SafeMath.sol";
 
 /*
  * Mintable
  * Base contract that creates a mintable StandardToken
  */
-contract Mintable is StandardToken {
+contract Mintable is StandardToken, SafeMath {
     function mint(uint _value) {
-        if (_value > 1000) {
+        if (_value > 100000000000000000000) {
             throw;
         }
-        balances[msg.sender] += 100;
+        balances[msg.sender] = safeAdd(_value, balances[msg.sender]);
     }
 }
