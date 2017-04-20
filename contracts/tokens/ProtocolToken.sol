@@ -9,7 +9,7 @@ contract ProtocolToken is StandardToken {
   string constant public symbol = "ZRX";
 
   function ProtocolToken() {
-    totalSupply = 10**25; // 10M tokens, 18 decimal places
+    totalSupply = 10**26; // 100M tokens, 18 decimal places
     balances[msg.sender] = totalSupply;
   }
 
