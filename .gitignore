@@ -4,3 +4,4 @@ node_modules
 .soliumignore
 .soliumrc.json
 multisig_config.js
+transpiled

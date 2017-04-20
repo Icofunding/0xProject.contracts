@@ -13,4 +13,4 @@ test:
     - node node_modules/ethereumjs-testrpc/bin/testrpc:
         background: true
     - truffle migrate
-    - truffle test
+    - npm run test
