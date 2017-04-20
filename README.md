@@ -98,4 +98,3 @@ npm run test
 We adhere to the [Airbnb javascript style guide](https://github.com/airbnb/javascript).
 
 In order to see style violation errors, install an eslinter for your text editor. e.g Atom's [linter-eslint](https://atom.io/packages/linter-eslint).
->>>>>>> master
