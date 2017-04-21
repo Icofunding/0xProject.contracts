@@ -13,6 +13,7 @@ const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
 
 contract('Exchange', accounts => {
   const maker = accounts[0];
+  const tokenOwner = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
 
@@ -58,22 +59,21 @@ contract('Exchange', accounts => {
       DummyToken.at(dgdAddress),
       DummyToken.at(zrxAddress),
     ]);
-
     exUtil = util.exchangeUtil(exchange);
     getDmyBalances = util.getBalancesFactory([rep, dgd, zrx], [maker, taker, feeRecipient]);
     await Promise.all([
       rep.approve(Proxy.address, INIT_ALLOW, { from: maker }),
       rep.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      rep.setBalance(INIT_BAL, { from: maker }),
-      rep.setBalance(INIT_BAL, { from: taker }),
+      rep.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      rep.setBalance(taker, INIT_BAL, { from: tokenOwner }),
       dgd.approve(Proxy.address, INIT_ALLOW, { from: maker }),
       dgd.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      dgd.setBalance(INIT_BAL, { from: maker }),
-      dgd.setBalance(INIT_BAL, { from: taker }),
+      dgd.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      dgd.setBalance(taker, INIT_BAL, { from: tokenOwner }),
       zrx.approve(Proxy.address, INIT_ALLOW, { from: maker }),
       zrx.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      zrx.setBalance(INIT_BAL, { from: maker }),
-      zrx.setBalance(INIT_BAL, { from: taker }),
+      zrx.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      zrx.setBalance(taker, INIT_BAL, { from: tokenOwner }),
     ]);
   });
 
@@ -248,7 +248,7 @@ contract('Exchange', accounts => {
 
       await exUtil.fill(order, { shouldCheckTransfer: true, from: taker });
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
 
 
@@ -268,7 +268,7 @@ contract('Exchange', accounts => {
       await exUtil.fill(order, { shouldCheckTransfer: true, from: taker });
 
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
 
     it('should throw if allowances are too low to fill order and shouldCheckTransfer = false', async () => {
@@ -286,7 +286,7 @@ contract('Exchange', accounts => {
       await exUtil.fill(order, { from: taker });
 
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
 
     it('should not log events if an order is expired', async () => {
@@ -324,7 +324,7 @@ contract('Exchange', accounts => {
       await exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker });
 
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
 
     it('should be able to cancel part of an order', async () => {
