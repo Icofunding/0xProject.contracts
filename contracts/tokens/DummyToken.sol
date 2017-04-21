@@ -8,7 +8,12 @@ contract DummyToken is Mintable, Ownable {
   string public symbol;
   uint public decimals;
 
-  function DummyToken(string _name, string _symbol, uint _decimals, uint _totalSupply) {
+  function DummyToken(
+    string _name,
+    string _symbol,
+    uint _decimals,
+    uint _totalSupply) 
+  {
     name = _name;
     symbol = _symbol;
     decimals = _decimals;
