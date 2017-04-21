@@ -2,7 +2,6 @@ const ethUtil = require('ethereumjs-util');
 const promisify = require('es6-promisify');
 const crypto = require('./crypto');
 const factory = require('./factory');
-const rpc = require('./rpc');
 
 module.exports = web3 => {
   const index = {
@@ -32,7 +31,6 @@ module.exports = web3 => {
     },
     createOrderFactory: factory.createOrderFactory,
     getBalancesFactory: factory.getBalancesFactory,
-    rpc,
   };
   return index;
 };

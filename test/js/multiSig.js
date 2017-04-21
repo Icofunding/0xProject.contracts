@@ -5,6 +5,7 @@ const promisify = require('es6-promisify');
 const MULTI_SIG_ABI = require('../../build/contracts/MultiSigWallet.json').abi;
 const multiSigUtil = require('../../util/multiSigUtil');
 const testUtil = require('../../util/testUtil');
+const rpc = require('../../util/rpc');
 const util = require('../../util/index.js')(web3);
 
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
@@ -104,7 +105,7 @@ contract('MultiSigWallet', accounts => {
     });
 
     it('should execute if it has enough confirmations and is past the activation threshold', async () => {
-      await util.rpc.increaseTime(SECONDS_REQUIRED);
+      await rpc.increaseTime(SECONDS_REQUIRED);
       await multiSig.executeTransaction(txId);
 
       const threshold = await multiSig.secondsRequired.call();
