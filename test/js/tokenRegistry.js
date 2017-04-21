@@ -1,8 +1,8 @@
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
-const util = require('../../util/index.js')(web3);
 const ethUtil = require('ethereumjs-util');
+const util = require('../../util/index.js')(web3);
 
 contract('TokenRegistry', accounts => {
   const owner = accounts[0];
@@ -14,8 +14,8 @@ contract('TokenRegistry', accounts => {
     symbol: 'TT',
     url: 'www.test.com',
     decimals: 18,
-    ipfsHash: `0x${util.sha3('test1').toString('hex')}`,
-    swarmHash: `0x${util.sha3('test2').toString('hex')}`,
+    ipfsHash: `0x${ethUtil.sha3('test1').toString('hex')}`,
+    swarmHash: `0x${ethUtil.sha3('test2').toString('hex')}`,
   };
 
   const nullToken = {

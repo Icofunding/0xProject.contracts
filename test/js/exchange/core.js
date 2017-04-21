@@ -9,6 +9,7 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
 const assert = require('assert');
 const expect = require('chai').expect;
+const ethUtil = require('ethereumjs-util');
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
@@ -226,8 +227,8 @@ contract('Exchange', accounts => {
     it('should throw if signature is invalid', async () => {
       order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(10) }));
 
-      order.r = util.sha3('invalidR');
-      order.s = util.sha3('invalidS');
+      order.r = ethUtil.sha3('invalidR');
+      order.s = ethUtil.sha3('invalidS');
       try {
         await exUtil.fill(order, { from: taker });
         throw new Error('Fill succeeded when it should have thrown');

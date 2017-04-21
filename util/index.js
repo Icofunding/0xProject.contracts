@@ -37,7 +37,6 @@ module.exports = web3 => {
     },
     createOrderFactory: factory.createOrderFactory,
     getBalancesFactory: factory.getBalancesFactory,
-    sha3: ethUtil.sha3,
     isValidSignature,
     getOrderHash,
     BNutil,
