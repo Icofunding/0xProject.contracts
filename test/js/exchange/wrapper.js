@@ -7,6 +7,8 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
 const BNUtil = require('../../../util/BNUtil');
+const exchangeUtil = require('../../../util/exchangeUtil');
+const testUtil = require('../../../util/testUtil');
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
@@ -49,7 +51,7 @@ contract('Exchange', accounts => {
       DummyProtocolToken.deployed(),
     ]);
 
-    exUtil = util.exchangeUtil(exchange);
+    exUtil = exchangeUtil(exchange);
     getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
@@ -97,7 +99,7 @@ contract('Exchange', accounts => {
         await exUtil.fillOrKill(order, { from: taker });
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -110,7 +112,7 @@ contract('Exchange', accounts => {
         await exUtil.fillOrKill(order, { from: taker });
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
   });
@@ -209,7 +211,7 @@ contract('Exchange', accounts => {
         await exUtil.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker });
         throw new Error('FillUpTo succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
   });

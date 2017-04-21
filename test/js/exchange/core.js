@@ -12,6 +12,8 @@ const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
 const crypto = require('../../../util/crypto');
+const exchangeUtil = require('../../../util/exchangeUtil');
+const testUtil = require('../../../util/testUtil');
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
@@ -55,7 +57,7 @@ contract('Exchange', accounts => {
       DummyProtocolToken.deployed(),
     ]);
 
-    exUtil = util.exchangeUtil(exchange);
+    exUtil = exchangeUtil(exchange);
     getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
@@ -222,7 +224,7 @@ contract('Exchange', accounts => {
         await exUtil.fill(order, { from: taker });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -235,7 +237,7 @@ contract('Exchange', accounts => {
         await exUtil.fill(order, { from: taker });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -255,7 +257,7 @@ contract('Exchange', accounts => {
         await exUtil.fill(order, { from: taker });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -272,7 +274,7 @@ contract('Exchange', accounts => {
         await exUtil.fill(order, { from: taker });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
         await dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker });
       }
     });
@@ -311,7 +313,7 @@ contract('Exchange', accounts => {
         await exUtil.cancel(order, { from: taker });
         throw new Error('Cancel succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 

@@ -1,6 +1,7 @@
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
 const BNUtil = require('../../../util/BNUtil');
+const testUtil = require('../../../util/testUtil');
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub } = BNUtil;
@@ -38,7 +39,7 @@ contract('Proxy', accounts => {
         await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: notAuthorized });
         throw new Error('proxy.transferFrom succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 

@@ -2,6 +2,7 @@ const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
+const testUtil = require('../../util/testUtil');
 const util = require('../../util/index.js')(web3);
 
 contract('TokenRegistry', accounts => {
@@ -42,7 +43,7 @@ contract('TokenRegistry', accounts => {
         await tokenRegUtil.addToken(token, { from: notOwner });
         throw new Error('addToken succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -74,7 +75,7 @@ contract('TokenRegistry', accounts => {
         await tokenReg.setTokenName(token.tokenAddress, newNameToken.name, { from: notOwner });
         throw new Error('setTokenName succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -97,7 +98,7 @@ contract('TokenRegistry', accounts => {
         await tokenReg.setTokenSymbol(token.tokenAddress, newSymbolToken.symbol, { from: notOwner });
         throw new Error('setTokenSymbol succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -119,7 +120,7 @@ contract('TokenRegistry', accounts => {
         await tokenReg.removeToken(token.tokenAddress, { from: notOwner });
         throw new Error('removeToken succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 

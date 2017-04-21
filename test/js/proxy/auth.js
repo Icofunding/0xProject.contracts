@@ -3,7 +3,7 @@ require('source-map-support/register');
 
 const Proxy = artifacts.require('./db/Proxy.sol');
 const assert = require('assert');
-const util = require('../../../util/index.js')(web3);
+const testUtil = require('../../../util/testUtil');
 
 contract('Proxy', accounts => {
   const owner = accounts[0];
@@ -23,7 +23,7 @@ contract('Proxy', accounts => {
         await proxy.addAuthorizedAddress(notOwner, { from: notOwner });
         throw new Error('addAuthorizedAddress succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -42,7 +42,7 @@ contract('Proxy', accounts => {
         await proxy.removeAuthorizedAddress(authorized, { from: notOwner });
         throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 

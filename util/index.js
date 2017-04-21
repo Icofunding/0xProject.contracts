@@ -1,9 +1,6 @@
 const ethUtil = require('ethereumjs-util');
 const promisify = require('es6-promisify');
 const crypto = require('./crypto');
-const exchangeUtil = require('./exchangeUtil');
-const multiSigUtil = require('./multiSigUtil');
-const testUtil = require('./testUtil');
 const tokenRegUtil = require('./tokenRegUtil');
 const factory = require('./factory');
 const rpc = require('./rpc');
@@ -36,9 +33,6 @@ module.exports = web3 => {
     },
     createOrderFactory: factory.createOrderFactory,
     getBalancesFactory: factory.getBalancesFactory,
-    exchangeUtil,
-    multiSigUtil,
-    test: testUtil,
     tokenRegUtil,
     rpc,
   };

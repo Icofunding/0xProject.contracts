@@ -6,6 +6,7 @@ const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
 const crypto = require('../../../util/crypto');
+const exchangeUtil = require('../../../util/exchangeUtil');
 const util = require('../../../util/index.js')(web3);
 
 const { toSmallestUnits } = BNUtil;
@@ -30,7 +31,7 @@ contract('Exchange', accounts => {
   let exUtil;
   before(async () => {
     const exchange = await Exchange.deployed();
-    exUtil = util.exchangeUtil(exchange);
+    exUtil = exchangeUtil(exchange);
   });
 
   beforeEach(async () => {
