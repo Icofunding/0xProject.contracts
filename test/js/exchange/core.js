@@ -11,6 +11,7 @@ const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
+const crypto = require('../../../util/crypto');
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
@@ -108,7 +109,7 @@ contract('Exchange', accounts => {
       const orderParams = orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(100) });
       order = await util.createOrder(orderParams);
 
-      const orderHash = util.getOrderHash(orderParams, { hex: true });
+      const orderHash = crypto.getOrderHash(orderParams, { hex: true });
       const fillAmountMBefore = await exchange.fills.call(orderHash);
       assert.equal(fillAmountMBefore, 0, 'fillAmountMBefore should be 0');
 

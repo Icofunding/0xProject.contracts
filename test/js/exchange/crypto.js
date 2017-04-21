@@ -5,6 +5,7 @@ const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
+const crypto = require('../../../util/crypto');
 const util = require('../../../util/index.js')(web3);
 
 const { toSmallestUnits } = BNUtil;
@@ -50,7 +51,7 @@ contract('Exchange', accounts => {
 
     it('should return true with a valid signature', async () => {
       const success = await exUtil.isValidSignature(order);
-      assert(util.isValidSignature(order));
+      assert(crypto.isValidSignature(order));
       assert(success);
     });
 
@@ -58,7 +59,7 @@ contract('Exchange', accounts => {
       order.r = ethUtil.sha3('invalidR');
       order.s = ethUtil.sha3('invalidS');
       const success = await exUtil.isValidSignature(order);
-      assert(!util.isValidSignature(order));
+      assert(!crypto.isValidSignature(order));
       assert(!success);
     });
   });

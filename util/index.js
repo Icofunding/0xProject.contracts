@@ -1,6 +1,6 @@
 const ethUtil = require('ethereumjs-util');
 const promisify = require('es6-promisify');
-const { getOrderHash, isValidSignature } = require('./crypto');
+const crypto = require('./crypto');
 const exchangeUtil = require('./exchangeUtil');
 const multiSigUtil = require('./multiSigUtil');
 const testUtil = require('./testUtil');
@@ -11,7 +11,7 @@ const rpc = require('./rpc');
 module.exports = web3 => {
   const index = {
     createOrder: async (params, { hashPersonal = true } = {}) => {
-      const orderHash = getOrderHash(params);
+      const orderHash = crypto.getOrderHash(params);
       const toSign = hashPersonal ? ethUtil.hashPersonalMessage(orderHash) : orderHash;
       const sig = await promisify(web3.eth.sign)(params.maker, ethUtil.bufferToHex(toSign));
       const { v, r, s } = ethUtil.fromRpcSig(sig);
@@ -36,8 +36,6 @@ module.exports = web3 => {
     },
     createOrderFactory: factory.createOrderFactory,
     getBalancesFactory: factory.getBalancesFactory,
-    isValidSignature,
-    getOrderHash,
     exchangeUtil,
     multiSigUtil,
     test: testUtil,
