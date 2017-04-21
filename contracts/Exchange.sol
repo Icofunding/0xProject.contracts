@@ -25,6 +25,12 @@ import "./base/SafeMath.sol";
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract Exchange is SafeMath {
 
+  // Error Codes
+  uint8 constant ERROR_EXPIRED = 1;           // Order has already expired
+  uint8 constant ERROR_FILLED_CANCELLED = 2;  // Order has already been filled or cancelled
+  uint8 constant ERROR_TRUNCATION = 3;        // Rounding error too large
+  uint8 constant ERROR_BALANCE_ALLOWANCE = 4; // Insufficient balance or allowance
+
   address public PROTOCOL_TOKEN;
   address public PROXY;
 
@@ -61,7 +67,7 @@ contract Exchange is SafeMath {
     bytes32 orderHash
   );
 
-  event LogError(string indexed error, bytes32 orderHash);
+  event LogError(uint8 indexed errorId, bytes32 orderHash);
 
   function Exchange(address _protocolToken, address _proxy) {
     PROTOCOL_TOKEN = _protocolToken;
@@ -109,18 +115,18 @@ contract Exchange is SafeMath {
     );
 
     if (block.timestamp >= expiration) {
-      LogError('Order is expired.', orderHash);
+      LogError(ERROR_EXPIRED, orderHash);
       return 0;
     }
 
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) {
-      LogError('Order already filled.', orderHash);
+      LogError(ERROR_FILLED_CANCELLED, orderHash);
       return 0;
     }
 
     if (isRoundingError(values[0], filledValueM, values[1])) {
-      LogError('Rounding error too large.', orderHash);
+      LogError(ERROR_TRUNCATION, orderHash);
       return 0;
     }
 
@@ -132,7 +138,7 @@ contract Exchange is SafeMath {
       fees,
       filledValueM
     )) {
-      LogError('Insufficient balance or allowance.', orderHash);
+      LogError(ERROR_BALANCE_ALLOWANCE, orderHash);
       return 0;
     }
 
@@ -221,13 +227,13 @@ contract Exchange is SafeMath {
     );
 
     if (block.timestamp >= expiration) {
-      LogError('Order is expired.', orderHash);
+      LogError(ERROR_EXPIRED, orderHash);
       return 0;
     }
 
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) {
-      LogError('Order already cancelled.', orderHash);
+      LogError(ERROR_FILLED_CANCELLED, orderHash);
       return 0;
     }
 
@@ -646,8 +652,8 @@ contract Exchange is SafeMath {
   }
 
   /// @dev Checks if any order transfers will fail.
-  /// @param traders Array of maker and caller addresses.
-  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param traders Array of maker and taker addresses.
+  /// @param tokens Array of tokenM and tokenT addresses.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
