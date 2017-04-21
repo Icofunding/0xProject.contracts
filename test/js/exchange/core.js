@@ -10,9 +10,10 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
+const BNutil = require('../../../util/BNutil');
 const util = require('../../../util/index.js')(web3);
 
-const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
+const { add, sub, mul, div, toSmallestUnits } = BNutil;
 
 contract('Exchange', accounts => {
   const maker = accounts[0];
