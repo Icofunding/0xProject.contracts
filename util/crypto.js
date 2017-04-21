@@ -1,10 +1,10 @@
 const ethUtil = require('ethereumjs-util');
-const BNutils = require('./BNutil.js');
+const BNUtils = require('./BNUtil.js');
 
 exports.solSHA3 = (...args) => {
   const solSha3 = ethUtil.sha3(Buffer.concat(args.map(arg => {
     if (!ethUtil.isHexString(arg) && !isNaN(+arg)) {
-      return BNutils.toBuffer(arg);
+      return BNUtils.toBuffer(arg);
     }
     if (arg === '0x0') { // TODO: create isEmptyAddress func
       return ethUtil.setLength(ethUtil.toBuffer(arg), 20);

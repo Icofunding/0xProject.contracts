@@ -1,9 +1,9 @@
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const BNutil = require('../../../util/BNutil');
+const BNUtil = require('../../../util/BNUtil');
 const util = require('../../../util/index.js')(web3);
 
-const { add, sub } = BNutil;
+const { add, sub } = BNUtil;
 
 contract('Proxy', accounts => {
   const INIT_BAL = 100000000;
