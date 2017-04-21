@@ -3,7 +3,7 @@ const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
 const testUtil = require('../../util/testUtil');
-const util = require('../../util/index.js')(web3);
+const tokenRegUtil = require('../../util/tokenRegUtil');
 
 contract('TokenRegistry', accounts => {
   const owner = accounts[0];
@@ -30,17 +30,17 @@ contract('TokenRegistry', accounts => {
   };
 
   let tokenReg;
-  let tokenRegUtil;
+  let tokenRegUtilInstance;
 
   before(async () => {
     tokenReg = await TokenRegistry.deployed();
-    tokenRegUtil = util.tokenRegUtil(tokenReg);
+    tokenRegUtilInstance = tokenRegUtil(tokenReg);
   });
 
   describe('addToken', () => {
     it('should throw when not called by owner', async () => {
       try {
-        await tokenRegUtil.addToken(token, { from: notOwner });
+        await tokenRegUtilInstance.addToken(token, { from: notOwner });
         throw new Error('addToken succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -48,22 +48,22 @@ contract('TokenRegistry', accounts => {
     });
 
     it('should add token metadata when called by owner', async () => {
-      await tokenRegUtil.addToken(token, { from: owner });
-      const tokenData = await tokenRegUtil.getTokenMetaData(token.tokenAddress);
+      await tokenRegUtilInstance.addToken(token, { from: owner });
+      const tokenData = await tokenRegUtilInstance.getTokenMetaData(token.tokenAddress);
       expect(tokenData).to.deep.equal(token);
     });
   });
 
   describe('getTokenByName', () => {
     it('should return token metadata when given the token name', async () => {
-      const tokenData = await tokenRegUtil.getTokenByName(token.name);
+      const tokenData = await tokenRegUtilInstance.getTokenByName(token.name);
       expect(tokenData).to.deep.equal(token);
     });
   });
 
   describe('getTokenBySymbol', () => {
     it('should return token metadata when given the token symbol', async () => {
-      const tokenData = await tokenRegUtil.getTokenBySymbol(token.symbol);
+      const tokenData = await tokenRegUtilInstance.getTokenBySymbol(token.symbol);
       expect(tokenData).to.deep.equal(token);
     });
   });
@@ -83,8 +83,8 @@ contract('TokenRegistry', accounts => {
       const res = await tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner });
       assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
-        tokenRegUtil.getTokenByName(newNameToken.name),
-        tokenRegUtil.getTokenByName(token.name),
+        tokenRegUtilInstance.getTokenByName(newNameToken.name),
+        tokenRegUtilInstance.getTokenByName(token.name),
       ]);
       expect(newData).to.deep.equal(newNameToken);
       expect(oldData).to.deep.equal(nullToken);
@@ -106,8 +106,8 @@ contract('TokenRegistry', accounts => {
       const res = await tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner });
       assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
-        tokenRegUtil.getTokenBySymbol(newSymbolToken.symbol),
-        tokenRegUtil.getTokenBySymbol(token.symbol),
+        tokenRegUtilInstance.getTokenBySymbol(newSymbolToken.symbol),
+        tokenRegUtilInstance.getTokenBySymbol(token.symbol),
       ]);
       expect(newData).to.deep.equal(newSymbolToken);
       expect(oldData).to.deep.equal(nullToken);
@@ -127,7 +127,7 @@ contract('TokenRegistry', accounts => {
     it('should remove token metadata when called by owner', async () => {
       const res = await tokenReg.removeToken(token.tokenAddress, { from: owner });
       assert.equal(res.logs.length, 1);
-      const tokenData = await tokenRegUtil.getTokenMetaData(token.tokenAddress);
+      const tokenData = await tokenRegUtilInstance.getTokenMetaData(token.tokenAddress);
       expect(tokenData).to.deep.equal(nullToken);
     });
   });
