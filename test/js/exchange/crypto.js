@@ -7,7 +7,7 @@ const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
 const crypto = require('../../../util/crypto');
 const exchangeUtil = require('../../../util/exchangeUtil');
-const util = require('../../../util/index.js')(web3);
+const OrderFactory = require('../../../util/orderFactory');
 
 const { toSmallestUnits } = BNUtil;
 
@@ -15,7 +15,7 @@ contract('Exchange', accounts => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
-  const orderFactory = util.createOrderFactory({
+  const defaultOrderParams = {
     exchange: Exchange.address,
     maker,
     feeRecipient,
@@ -25,7 +25,9 @@ contract('Exchange', accounts => {
     valueT: toSmallestUnits(200),
     feeM: toSmallestUnits(1),
     feeT: toSmallestUnits(1),
-  });
+  };
+  const orderFactory = new OrderFactory(defaultOrderParams);
+
 
   let order;
   let exUtil;
@@ -35,19 +37,19 @@ contract('Exchange', accounts => {
   });
 
   beforeEach(async () => {
-    order = await util.createOrder(orderFactory());
+    order = await orderFactory.generateSignedOrderAsync();
   });
 
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
-      const orderHash = await exUtil.getOrderHash(order);
-      assert.equal(`0x${order.orderHash.toString('hex')}`, orderHash);
+      const orderHashHex = await exUtil.getOrderHash(order);
+      assert.equal(order.orderHashHex, orderHashHex);
     });
   });
 
   describe('isValidSignature', () => {
     beforeEach(async () => {
-      order = await util.createOrder(orderFactory());
+      order = await orderFactory.generateSignedOrderAsync();
     });
 
     it('should return true with a valid signature', async () => {

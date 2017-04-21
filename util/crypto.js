@@ -32,7 +32,7 @@ exports.getOrderHash = (params, { hex = false } = {}) => {
 };
 
 exports.isValidSignature = order => {
-  const orderHash = order.orderHash ? order.orderHash : getOrderHash(order);
+  const orderHash = order.orderHashHex ? ethUtil.toBuffer(order.orderHashHex) : getOrderHash(order);
   const prefixedHash = ethUtil.hashPersonalMessage(orderHash);
   const { v, r, s } = order;
   try {

@@ -2,7 +2,7 @@ const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
 const BNUtil = require('../../../util/BNUtil');
 const testUtil = require('../../../util/testUtil');
-const util = require('../../../util/index.js')(web3);
+const factory = require('../../../util/factory');
 
 const { add, sub } = BNUtil;
 
@@ -24,7 +24,7 @@ contract('Proxy', accounts => {
       DummyTokenA.deployed(),
     ]);
 
-    getDmyBalances = util.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
+    getDmyBalances = factory.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
       dmyA.setBalance(INIT_BAL, { from: accounts[0] }),

@@ -9,7 +9,8 @@ const expect = require('chai').expect;
 const BNUtil = require('../../../util/BNUtil');
 const exchangeUtil = require('../../../util/exchangeUtil');
 const testUtil = require('../../../util/testUtil');
-const util = require('../../../util/index.js')(web3);
+const OrderFactory = require('../../../util/orderFactory');
+const factory = require('../../../util/factory');
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 
@@ -31,7 +32,7 @@ contract('Exchange', accounts => {
   let exUtil;
   let getDmyBalances;
 
-  const orderFactory = util.createOrderFactory({
+  const defaultOrderParams = {
     exchange: Exchange.address,
     maker,
     feeRecipient,
@@ -41,7 +42,8 @@ contract('Exchange', accounts => {
     valueT: toSmallestUnits(200),
     feeM: toSmallestUnits(1),
     feeT: toSmallestUnits(1),
-  });
+  };
+  const orderFactory = new OrderFactory(defaultOrderParams);
 
   before(async () => {
     [exchange, dmyA, dmyB, dmyPT] = await Promise.all([
@@ -52,7 +54,7 @@ contract('Exchange', accounts => {
     ]);
 
     exUtil = exchangeUtil(exchange);
-    getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
+    getDmyBalances = factory.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
@@ -75,7 +77,10 @@ contract('Exchange', accounts => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) }));
+      const order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(100),
+        valueT: toSmallestUnits(200),
+      });
       const fillValueM = div(order.valueM, 2);
       await exUtil.fillOrKill(order, { fillValueM, from: taker });
 
@@ -93,7 +98,9 @@ contract('Exchange', accounts => {
     });
 
     it('should throw if an order is expired', async () => {
-      const order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
+      const order = await orderFactory.generateSignedOrderAsync({
+        expiration: Math.floor((Date.now() - 10000) / 1000),
+      });
 
       try {
         await exUtil.fillOrKill(order, { from: taker });
@@ -104,7 +111,7 @@ contract('Exchange', accounts => {
     });
 
     it('should throw if entire fillValueM not filled', async () => {
-      const order = await util.createOrder(orderFactory());
+      const order = await orderFactory.generateSignedOrderAsync();
 
       await exUtil.fill(order, { fillValueM: div(order.valueM, 2), from: taker });
 
@@ -121,9 +128,9 @@ contract('Exchange', accounts => {
     let orders;
     beforeEach(async () => {
       orders = await Promise.all([
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
       ]);
       balances = await getDmyBalances();
     });
@@ -158,9 +165,9 @@ contract('Exchange', accounts => {
     let orders;
     beforeEach(async () => {
       orders = await Promise.all([
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
       ]);
       balances = await getDmyBalances();
     });
@@ -202,9 +209,9 @@ contract('Exchange', accounts => {
 
     it('should throw when an order does not use the same tokenM', async () => {
       orders = await Promise.all([
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory({ tokenM: dmyPT.address })),
-        util.createOrder(orderFactory()),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync({ tokenM: dmyPT.address }),
+        orderFactory.generateSignedOrderAsync(),
       ]);
 
       try {
@@ -219,9 +226,9 @@ contract('Exchange', accounts => {
   describe('batchCancel', () => {
     it('should be able to cancel multiple orders', async () => {
       const orders = await Promise.all([
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
-        util.createOrder(orderFactory()),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
+        orderFactory.generateSignedOrderAsync(),
       ]);
       const cancelValuesM = orders.map(order => order.valueM);
       await exUtil.batchCancel(orders, { cancelValuesM, from: maker });

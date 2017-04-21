@@ -11,10 +11,10 @@ const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
-const crypto = require('../../../util/crypto');
 const exchangeUtil = require('../../../util/exchangeUtil');
+const OrderFactory = require('../../../util/orderFactory');
 const testUtil = require('../../../util/testUtil');
-const util = require('../../../util/index.js')(web3);
+const factory = require('../../../util/factory');
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 
@@ -37,7 +37,7 @@ contract('Exchange', accounts => {
   let exUtil;
   let getDmyBalances;
 
-  const orderFactory = util.createOrderFactory({
+  const defaultOrderParams = {
     exchange: Exchange.address,
     maker,
     feeRecipient,
@@ -47,7 +47,8 @@ contract('Exchange', accounts => {
     valueT: toSmallestUnits(200),
     feeM: toSmallestUnits(1),
     feeT: toSmallestUnits(1),
-  });
+  };
+  const orderFactory = new OrderFactory(defaultOrderParams);
 
   before(async () => {
     [exchange, dmyA, dmyB, dmyPT] = await Promise.all([
@@ -58,7 +59,7 @@ contract('Exchange', accounts => {
     ]);
 
     exUtil = exchangeUtil(exchange);
-    getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
+    getDmyBalances = factory.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
@@ -104,22 +105,23 @@ contract('Exchange', accounts => {
   describe('fill', () => {
     beforeEach(async () => {
       balances = await getDmyBalances();
-      order = await util.createOrder(orderFactory());
+      order = await orderFactory.generateSignedOrderAsync();
     });
 
     it('should transfer the correct amounts when valueM === valueT', async () => {
-      const orderParams = orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(100) });
-      order = await util.createOrder(orderParams);
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(100),
+        valueT: toSmallestUnits(100),
+      });
 
-      const orderHash = crypto.getOrderHash(orderParams, { hex: true });
-      const fillAmountMBefore = await exchange.fills.call(orderHash);
-      assert.equal(fillAmountMBefore, 0, 'fillAmountMBefore should be 0');
+      const filledAmountMBefore = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.valueM, 2);
       await exUtil.fill(order, { fillValueM, from: taker });
 
-      const fillAmountMAfter = await exchange.fills.call(orderHash);
-      assert.equal(fillAmountMAfter, fillValueM, 'fillAmountMAfter should be same as fillValueM');
+      const filledAmountMAfter = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
 
       const newBalances = await getDmyBalances();
       const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
@@ -135,10 +137,19 @@ contract('Exchange', accounts => {
     });
 
     it('should transfer the correct amounts when valueM > valueT', async () => {
-      order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(200), valueT: toSmallestUnits(100) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(200),
+        valueT: toSmallestUnits(100),
+      });
+
+      const filledAmountMBefore = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.valueM, 2);
       await exUtil.fill(order, { fillValueM, from: taker });
+
+      const filledAmountMAfter = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
 
       const newBalances = await getDmyBalances();
 
@@ -155,10 +166,19 @@ contract('Exchange', accounts => {
     });
 
     it('should transfer the correct amounts when valueM < valueT', async () => {
-      order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(100),
+        valueT: toSmallestUnits(200),
+      });
+
+      const filledAmountMBefore = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.valueM, 2);
       await exUtil.fill(order, { fillValueM, from: taker });
+
+      const filledAmountMAfter = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
 
       const newBalances = await getDmyBalances();
 
@@ -175,10 +195,21 @@ contract('Exchange', accounts => {
     });
 
     it('should transfer the correct amounts when taker is specified and order is claimed by taker', async () => {
-      order = await util.createOrder(orderFactory({ taker, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        taker,
+        valueM: toSmallestUnits(100),
+        valueT: toSmallestUnits(200),
+      });
+
+      const filledAmountMBefore = await exchange.fills.call(order.orderHashHex);
+      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.valueM, 2);
       await exUtil.fill(order, { fillValueM, from: taker });
+
+      const filledAmountMAfter = await exchange.fills.call(order.orderHashHex);
+      const expectedFillAmountMAfter = add(fillValueM, filledAmountMBefore);
+      assert.equal(filledAmountMAfter.toString(), expectedFillAmountMAfter, 'filledAmountMAfter should be same as fillValueM');
 
       const newBalances = await getDmyBalances();
 
@@ -218,7 +249,11 @@ contract('Exchange', accounts => {
     });
 
     it('should throw when taker is specified and order is claimed by other', async () => {
-      order = await util.createOrder(orderFactory({ taker: feeRecipient, valueM: toSmallestUnits(100), valueT: toSmallestUnits(200) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        taker: feeRecipient,
+        valueM: toSmallestUnits(100),
+        valueT: toSmallestUnits(200),
+      });
 
       try {
         await exUtil.fill(order, { from: taker });
@@ -229,7 +264,9 @@ contract('Exchange', accounts => {
     });
 
     it('should throw if signature is invalid', async () => {
-      order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(10) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(10),
+      });
 
       order.r = ethUtil.sha3('invalidR');
       order.s = ethUtil.sha3('invalidS');
@@ -242,7 +279,9 @@ contract('Exchange', accounts => {
     });
 
     it('should not change balances if balances are too low to fill order and shouldCheckTransfer = true', async () => {
-      order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(100000),
+      });
 
       await exUtil.fill(order, { shouldCheckTransfer: true, from: taker });
       const newBalances = await getDmyBalances();
@@ -251,7 +290,9 @@ contract('Exchange', accounts => {
 
 
     it('should throw if balances are too low to fill order and shouldCheckTransfer = false', async () => {
-      order = await util.createOrder(orderFactory({ valueM: toSmallestUnits(100000) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        valueM: toSmallestUnits(100000),
+      });
 
       try {
         await exUtil.fill(order, { from: taker });
@@ -280,7 +321,9 @@ contract('Exchange', accounts => {
     });
 
     it('should not change balances if an order is expired', async () => {
-      order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        expiration: Math.floor((Date.now() - 10000) / 1000),
+      });
       await exUtil.fill(order, { from: taker });
 
       const newBalances = await getDmyBalances();
@@ -288,7 +331,9 @@ contract('Exchange', accounts => {
     });
 
     it('should not log events if an order is expired', async () => {
-      order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        expiration: Math.floor((Date.now() - 10000) / 1000),
+      });
 
       const res = await exUtil.fill(order, { from: taker });
       assert.equal(res.logs.length, 0);
@@ -305,7 +350,7 @@ contract('Exchange', accounts => {
   describe('cancel', () => {
     beforeEach(async () => {
       balances = await getDmyBalances();
-      order = await util.createOrder(orderFactory());
+      order = await orderFactory.generateSignedOrderAsync();
     });
 
     it('should throw if not sent by maker', async () => {
@@ -358,7 +403,9 @@ contract('Exchange', accounts => {
     });
 
     it('should not log events if order is expired', async () => {
-      order = await util.createOrder(orderFactory({ expiration: Math.floor((Date.now() - 10000) / 1000) }));
+      order = await orderFactory.generateSignedOrderAsync({
+        expiration: Math.floor((Date.now() - 10000) / 1000),
+      });
 
       const res = await exUtil.cancel(order, { from: maker });
       assert.equal(res.logs.length, 0);
