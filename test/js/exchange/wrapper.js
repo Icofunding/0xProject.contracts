@@ -1,68 +1,75 @@
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
-const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
-const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
-const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
+const DummyToken = artifacts.require('./tokens/DummyToken.sol');
+const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
 const assert = require('assert');
-const expect = require('chai').expect;
 const util = require('../../../util/index.js')(web3);
 
 const { add, sub, mul, div, toSmallestUnits } = util.BNutil;
 
 contract('Exchange', accounts => {
   const maker = accounts[0];
+  const tokenOwner = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
 
   const INIT_BAL = toSmallestUnits(10000);
   const INIT_ALLOW = toSmallestUnits(10000);
 
-  let dmyA;
-  let dmyB;
-  let dmyPT;
+  let rep;
+  let dgd;
+  let zrx;
   let exchange;
+  let tokenRegistry;
 
   let balances;
 
   let exUtil;
   let getDmyBalances;
-
-  const orderFactory = util.createOrderFactory({
-    exchange: Exchange.address,
-    maker,
-    feeRecipient,
-    tokenM: DummyTokenA.address,
-    tokenT: DummyTokenB.address,
-    valueM: toSmallestUnits(100),
-    valueT: toSmallestUnits(200),
-    feeM: toSmallestUnits(1),
-    feeT: toSmallestUnits(1),
-  });
+  let orderFactory;
 
   before(async () => {
-    [exchange, dmyA, dmyB, dmyPT] = await Promise.all([
+    [tokenRegistry, exchange] = await Promise.all([
+      TokenRegistry.deployed(),
       Exchange.deployed(),
-      DummyTokenA.deployed(),
-      DummyTokenB.deployed(),
-      DummyProtocolToken.deployed(),
     ]);
-
+    const [repAddress, dgdAddress, zrxAddress] = await Promise.all([
+      tokenRegistry.getTokenAddressBySymbol('REP'),
+      tokenRegistry.getTokenAddressBySymbol('DGD'),
+      tokenRegistry.getTokenAddressBySymbol('ZRX'),
+    ]);
+    orderFactory = util.createOrderFactory({
+      exchange: Exchange.address,
+      maker,
+      feeRecipient,
+      tokenM: repAddress,
+      tokenT: dgdAddress,
+      valueM: toSmallestUnits(100),
+      valueT: toSmallestUnits(200),
+      feeM: toSmallestUnits(1),
+      feeT: toSmallestUnits(1),
+    });
+    [rep, dgd, zrx] = await Promise.all([
+      DummyToken.at(repAddress),
+      DummyToken.at(dgdAddress),
+      DummyToken.at(zrxAddress),
+    ]);
     exUtil = util.exchangeUtil(exchange);
-    getDmyBalances = util.getBalancesFactory([dmyA, dmyB, dmyPT], [maker, taker, feeRecipient]);
+    getDmyBalances = util.getBalancesFactory([rep, dgd, zrx], [maker, taker, feeRecipient]);
     await Promise.all([
-      dmyA.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      dmyA.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      dmyA.setBalance(INIT_BAL, { from: maker }),
-      dmyA.setBalance(INIT_BAL, { from: taker }),
-      dmyB.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      dmyB.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      dmyB.setBalance(INIT_BAL, { from: maker }),
-      dmyB.setBalance(INIT_BAL, { from: taker }),
-      dmyPT.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      dmyPT.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      dmyPT.setBalance(INIT_BAL, { from: maker }),
-      dmyPT.setBalance(INIT_BAL, { from: taker }),
+      rep.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      rep.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      rep.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      rep.setBalance(taker, INIT_BAL, { from: tokenOwner }),
+      dgd.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      dgd.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      dgd.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      dgd.setBalance(taker, INIT_BAL, { from: tokenOwner }),
+      zrx.approve(Proxy.address, INIT_ALLOW, { from: maker }),
+      zrx.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      zrx.setBalance(maker, INIT_BAL, { from: tokenOwner }),
+      zrx.setBalance(taker, INIT_BAL, { from: tokenOwner }),
     ]);
   });
 
@@ -82,11 +89,11 @@ contract('Exchange', accounts => {
       const feeValueT = div(mul(order.feeT, fillValueM), order.valueM);
       assert.equal(newBalances[maker][order.tokenM], sub(balances[maker][order.tokenM], fillValueM));
       assert.equal(newBalances[maker][order.tokenT], add(balances[maker][order.tokenT], fillValueT));
-      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[maker][zrx.address], sub(balances[maker][zrx.address], feeValueM));
       assert.equal(newBalances[taker][order.tokenT], sub(balances[taker][order.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.tokenM], add(balances[taker][order.tokenM], fillValueM));
-      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[taker][zrx.address], sub(balances[taker][zrx.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][zrx.address], add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
     it('should throw if an order is expired', async () => {
@@ -127,8 +134,8 @@ contract('Exchange', accounts => {
 
     it('should transfer the correct amounts', async () => {
       const fillValuesM = [];
-      const tokenM = dmyA.address;
-      const tokenT = dmyB.address;
+      const tokenM = rep.address;
+      const tokenT = dgd.address;
       orders.forEach(order => {
         const fillValueM = div(order.valueM, 2);
         const fillValueT = div(mul(fillValueM, order.valueT), order.valueM);
@@ -137,17 +144,17 @@ contract('Exchange', accounts => {
         fillValuesM.push(fillValueM);
         balances[maker][tokenM] = sub(balances[maker][tokenM], fillValueM);
         balances[maker][tokenT] = add(balances[maker][tokenT], fillValueT);
-        balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], feeValueM);
+        balances[maker][zrx.address] = sub(balances[maker][zrx.address], feeValueM);
         balances[taker][tokenM] = add(balances[taker][tokenM], fillValueM);
         balances[taker][tokenT] = sub(balances[taker][tokenT], fillValueT);
-        balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], feeValueT);
-        balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
+        balances[taker][zrx.address] = sub(balances[taker][zrx.address], feeValueT);
+        balances[feeRecipient][zrx.address] = add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT));
       });
 
       await exUtil.batchFill(orders, { fillValuesM, from: taker });
 
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
   });
 
@@ -173,11 +180,11 @@ contract('Exchange', accounts => {
       const feeValueT = add(orders[0].feeT, div(orders[1].feeT, 2));
       assert.equal(newBalances[maker][orders[0].tokenM], sub(balances[maker][orders[0].tokenM], fillValueM));
       assert.equal(newBalances[maker][orders[0].tokenT], add(balances[maker][orders[0].tokenT], fillValueT));
-      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[maker][zrx.address], sub(balances[maker][zrx.address], feeValueM));
       assert.equal(newBalances[taker][orders[0].tokenT], sub(balances[taker][orders[0].tokenT], fillValueT));
       assert.equal(newBalances[taker][orders[0].tokenM], add(balances[taker][orders[0].tokenM], fillValueM));
-      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[taker][zrx.address], sub(balances[taker][zrx.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][zrx.address], add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
     it('should fill all orders if cannot fill entire fillValueM', async () => {
@@ -185,22 +192,22 @@ contract('Exchange', accounts => {
       orders.forEach(order => {
         balances[maker][order.tokenM] = sub(balances[maker][order.tokenM], order.valueM);
         balances[maker][order.tokenT] = add(balances[maker][order.tokenT], order.valueT);
-        balances[maker][dmyPT.address] = sub(balances[maker][dmyPT.address], order.feeM);
+        balances[maker][zrx.address] = sub(balances[maker][zrx.address], order.feeM);
         balances[taker][order.tokenM] = add(balances[taker][order.tokenM], order.valueM);
         balances[taker][order.tokenT] = sub(balances[taker][order.tokenT], order.valueT);
-        balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], order.feeT);
-        balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(order.feeM, order.feeT));
+        balances[taker][zrx.address] = sub(balances[taker][zrx.address], order.feeT);
+        balances[feeRecipient][zrx.address] = add(balances[feeRecipient][zrx.address], add(order.feeM, order.feeT));
       });
       await exUtil.fillUpTo(orders, { fillValueM, from: taker });
 
       const newBalances = await getDmyBalances();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(newBalances, balances);
     });
 
     it('should throw when an order does not use the same tokenM', async () => {
       orders = await Promise.all([
         util.createOrder(orderFactory()),
-        util.createOrder(orderFactory({ tokenM: dmyPT.address })),
+        util.createOrder(orderFactory({ tokenM: zrx.address })),
         util.createOrder(orderFactory()),
       ]);
 
