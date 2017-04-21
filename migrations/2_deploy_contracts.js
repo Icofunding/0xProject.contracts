@@ -2,8 +2,9 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const Exchange = artifacts.require('./Exchange.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
-const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
+const DummyToken = artifact.require('./DummyToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
+const tokenData = require('./tokens.js');
 
 let multiSigConfig;
 try {
@@ -19,16 +20,39 @@ module.exports = (deployer, network, accounts) => {
     secondsRequired: 0,
   };
   const config = multiSigConfig[network] || defaultConfig;
-  if (network === 'development') {
+  if (network !== 'live') {
+    const { name, symbol, url, decimals, ipfsHash, swarmHash } = tokenData.development.ZRX;
+    const totalSupply = 100000000;
     deployer.deploy([
       [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
       Proxy,
-      [DummyProtocolToken, 0],
       TokenRegistry,
     ])
-    .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
-    .then(() => Proxy.deployed())
-    .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
+    .then(() => {
+      Promise.all([
+        DummyToken.new(name, symbol, decimals, totalSupply),
+        TokenRegistry.deployed(),
+        Proxy.deployed(),
+      ]).then(instances => {
+        const [protocolToken, tokenReg, proxy] = instances;
+        const ptAddress = protocolToken.address;
+        Promise.all([
+          deployer.deploy(Exchange, ptAddress, Proxy.address),
+          tokenReg.addToken(
+            ptAddress,
+            name,
+            symbol,
+            url,
+            decimals,
+            ipfsHash,
+            swarmHash
+          ),
+        ]).then(res => {
+          const exchangeAddress = res[0].address;
+          proxy.addAuthorizedAddress(exchangeAddress);
+        });
+      });
+    });
   } else {
     deployer.deploy([
       [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
