@@ -3,7 +3,7 @@ require('source-map-support/register');
 
 const _ = require('lodash');
 const assert = require('assert');
-const testUtil = require('../../../util/testUtil');
+const testUtil = require('./../../../util/testUtil');
 
 const Proxy = artifacts.require('./db/Proxy.sol');
 

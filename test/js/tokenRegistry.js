@@ -6,8 +6,8 @@ const assert = require('assert');
 const expect = require('chai').expect;
 const _ = require('lodash');
 const ethUtil = require('ethereumjs-util');
-const testUtil = require('../../util/testUtil');
-const TokenRegWrapper = require('../../util/tokenRegWrapper');
+const testUtil = require('./../../util/testUtil');
+const TokenRegWrapper = require('./../../util/tokenRegWrapper');
 
 contract('TokenRegistry', accounts => {
   const owner = accounts[0];

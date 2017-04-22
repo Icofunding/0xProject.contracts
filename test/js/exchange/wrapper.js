@@ -7,11 +7,11 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
 const _ = require('lodash');
-const BNUtil = require('../../../util/BNUtil');
-const ExchangeWrapper = require('../../../util/exchangeWrapper');
-const testUtil = require('../../../util/testUtil');
-const OrderFactory = require('../../../util/orderFactory');
-const Balances = require('../../../util/balances');
+const BNUtil = require('./../../../util/BNUtil');
+const ExchangeWrapper = require('./../../../util/exchangeWrapper');
+const testUtil = require('./../../../util/testUtil');
+const OrderFactory = require('./../../../util/orderFactory');
+const Balances = require('./../../../util/balances');
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 

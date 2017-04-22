@@ -2,10 +2,10 @@ require('babel-polyfill');
 require('source-map-support/register');
 const assert = require('assert');
 const promisify = require('es6-promisify');
-const MULTI_SIG_ABI = require('../../build/contracts/MultiSigWallet.json').abi;
-const MultiSigWrapper = require('../../util/multiSigWrapper');
-const testUtil = require('../../util/testUtil');
-const RPC = require('../../util/rpc');
+const MULTI_SIG_ABI = require('./../../build/contracts/MultiSigWallet.json').abi;
+const MultiSigWrapper = require('./../../util/multiSigWrapper');
+const testUtil = require('./../../util/testUtil');
+const RPC = require('./../../util/rpc');
 
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 

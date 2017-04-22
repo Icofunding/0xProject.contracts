@@ -1,5 +1,5 @@
 const request = require('request-promise-native');
-const truffleConf = require('../truffle.js');
+const truffleConf = require('./../truffle.js');
 
 class RPC {
   constructor() {
