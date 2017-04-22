@@ -8,10 +8,12 @@ class RPC {
     this._id = 0;
   }
   async increaseTimeAsync(time) {
-    const payload = this._toPayload({ method: 'evm_increaseTime', params: [time] });
+    const method = 'evm_increaseTime';
+    const params = [time];
+    const payload = this._toPayload(method, params);
     return this._sendAsync(payload);
   }
-  _toPayload({ method, params = [] }) {
+  _toPayload(method, params = []) {
     const payload = JSON.stringify({
       id: this._id,
       method,

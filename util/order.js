@@ -7,7 +7,7 @@ class Order {
   constructor(params) {
     this.params = params;
   }
-  getOrderHash({ hex = false } = {}) {
+  getOrderHash() {
     const orderHash = crypto.solSHA3(
         this.params.exchange,
         this.params.maker,
@@ -21,7 +21,7 @@ class Order {
         this.params.feeT,
         this.params.expiration
       );
-    return hex ? ethUtil.bufferToHex(orderHash) : orderHash;
+    return orderHash;
   }
   isValidSignature() {
     const { v, r, s } = this.params;
@@ -39,7 +39,7 @@ class Order {
     }
   }
   async signAsync() {
-    const orderHash = this.getOrderHash(this.params);
+    const orderHash = this.getOrderHash();
     const msgHash = ethUtil.hashPersonalMessage(orderHash);
     const signature = await promisify(web3.eth.sign)(this.params.maker, ethUtil.bufferToHex(msgHash));
     const { v, r, s } = ethUtil.fromRpcSig(signature);
