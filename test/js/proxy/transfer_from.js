@@ -1,7 +1,7 @@
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const BNUtil = require('../../../util/BNUtil');
-const testUtil = require('../../../util/testUtil');
+const BNUtil = require('../../../util/bn_util');
+const testUtil = require('../../../util/test_util');
 const Balances = require('../../../util/balances');
 
 const { add, sub } = BNUtil;

@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const ethUtil = require('ethereumjs-util');
-const BNUtil = require('./BNUtil.js');
+const BNUtil = require('./bn_util.js');
 
 const crypto = {
   solSHA3(...args) {

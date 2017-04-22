@@ -10,10 +10,10 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
 const ethUtil = require('ethereumjs-util');
-const BNUtil = require('../../../util/BNUtil');
-const ExchangeWrapper = require('../../../util/exchangeWrapper');
-const OrderFactory = require('../../../util/orderFactory');
-const testUtil = require('../../../util/testUtil');
+const BNUtil = require('../../../util/bn_util');
+const ExchangeWrapper = require('../../../util/exchange_wrapper');
+const OrderFactory = require('../../../util/order_factory');
+const testUtil = require('../../../util/test_util');
 const Balances = require('../../../util/balances');
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;

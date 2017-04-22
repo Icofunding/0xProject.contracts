@@ -4,9 +4,9 @@ const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 
 const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
-const BNUtil = require('../../../util/BNUtil');
-const ExchangeWrapper = require('../../../util/exchangeWrapper');
-const OrderFactory = require('../../../util/orderFactory');
+const BNUtil = require('../../../util/bn_util');
+const ExchangeWrapper = require('../../../util/exchange_wrapper');
+const OrderFactory = require('../../../util/order_factory');
 
 const { toSmallestUnits } = BNUtil;
 
