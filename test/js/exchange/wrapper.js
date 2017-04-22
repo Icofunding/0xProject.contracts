@@ -6,6 +6,7 @@ const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
 const assert = require('assert');
 const expect = require('chai').expect;
+const _ = require('lodash');
 const BNUtil = require('../../../util/BNUtil');
 const ExchangeWrapper = require('../../../util/exchangeWrapper');
 const testUtil = require('../../../util/testUtil');
@@ -230,7 +231,7 @@ contract('Exchange', accounts => {
         orderFactory.newSignedOrderAsync(),
         orderFactory.newSignedOrderAsync(),
       ]);
-      const cancelValuesM = orders.map(order => order.params.valueM);
+      const cancelValuesM = _.map(orders, order => order.params.valueM);
       await exWrapper.batchCancel(orders, { cancelValuesM, from: maker });
 
       const res = await exWrapper.batchFill(orders, { fillValuesM: cancelValuesM, from: taker });

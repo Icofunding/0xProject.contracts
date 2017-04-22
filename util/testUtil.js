@@ -1,11 +1,12 @@
+const _ = require('lodash');
 const assert = require('assert');
 
 const testUtil = {
   assertThrow(err) {
     const errMsg = `${err}`;
-    const didCalledContractThrow = errMsg.indexOf('invalid JUMP') > -1;
-    const didNestedContractThrow = errMsg.indexOf('out of gas') > -1;
-    const didGethContractThrow = errMsg.indexOf('please check your gas amount') > -1;
+    const didCalledContractThrow = _.includes(errMsg, 'invalid JUMP');
+    const didNestedContractThrow = _.includes(errMsg, 'out of gas');
+    const didGethContractThrow = _.includes(errMsg, 'please check your gas amount');
     assert(didCalledContractThrow || didNestedContractThrow ||
            didGethContractThrow, `Expected contract to throw, got: ${err}`);
   },

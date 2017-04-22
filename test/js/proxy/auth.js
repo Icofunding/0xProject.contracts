@@ -1,9 +1,11 @@
 require('babel-polyfill');
 require('source-map-support/register');
 
-const Proxy = artifacts.require('./db/Proxy.sol');
+const _ = require('lodash');
 const assert = require('assert');
 const testUtil = require('../../../util/testUtil');
+
+const Proxy = artifacts.require('./db/Proxy.sol');
 
 contract('Proxy', accounts => {
   const owner = accounts[0];
@@ -66,7 +68,7 @@ contract('Proxy', accounts => {
       notAuthorized = null;
       const afterAdd = await proxy.getAuthorizedAddresses();
       assert.equal(afterAdd.length, 2);
-      assert(afterAdd.indexOf(authorized) !== -1);
+      assert(_.includes(afterAdd, authorized));
 
       await proxy.removeAuthorizedAddress(authorized, { from: owner });
       notAuthorized = authorized;

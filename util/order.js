@@ -43,7 +43,7 @@ class Order {
     const msgHash = ethUtil.hashPersonalMessage(orderHash);
     const signature = await promisify(web3.eth.sign)(this.params.maker, ethUtil.bufferToHex(msgHash));
     const { v, r, s } = ethUtil.fromRpcSig(signature);
-    this.params = Object.assign(this.params, {
+    this.params = _.assign(this.params, {
       orderHashHex: ethUtil.bufferToHex(orderHash),
       v,
       r: ethUtil.bufferToHex(r),

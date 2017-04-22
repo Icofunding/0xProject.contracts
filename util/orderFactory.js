@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const Order = require('./order');
 
 class OrderFactory {
@@ -6,7 +7,7 @@ class OrderFactory {
   }
   async newSignedOrderAsync(customOrderParams = {}) {
     const randomExpiration = Math.floor((Date.now() + (Math.random() * 100000000000)) / 1000);
-    const orderParams = Object.assign({}, {
+    const orderParams = _.assign({}, {
       expiration: randomExpiration,
       taker: '0x0',
     }, this.defaultOrderParams, customOrderParams);

@@ -4,6 +4,7 @@ require('source-map-support/register');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 const assert = require('assert');
 const expect = require('chai').expect;
+const _ = require('lodash');
 const ethUtil = require('ethereumjs-util');
 const testUtil = require('../../util/testUtil');
 const TokenRegWrapper = require('../../util/tokenRegWrapper');
@@ -71,7 +72,7 @@ contract('TokenRegistry', accounts => {
     });
   });
 
-  const newNameToken = Object.assign({}, token, { name: 'newName' });
+  const newNameToken = _.assign({}, token, { name: 'newName' });
   describe('setTokenName', () => {
     it('should throw when not called by owner', async () => {
       try {
@@ -94,7 +95,7 @@ contract('TokenRegistry', accounts => {
     });
   });
 
-  const newSymbolToken = Object.assign({}, newNameToken, { symbol: 'newSymbol' });
+  const newSymbolToken = _.assign({}, newNameToken, { symbol: 'newSymbol' });
   describe('setTokenSymbol', () => {
     it('should throw when not called by owner', async () => {
       try {
