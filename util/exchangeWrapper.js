@@ -4,7 +4,7 @@ class ExchangeWrapper {
   constructor(exchangeContractInstance) {
     this._exchange = exchangeContractInstance;
   }
-  fill(order, { fillValueM, shouldCheckTransfer = false, from }) {
+  fillAsync(order, { fillValueM, shouldCheckTransfer = false, from }) {
     const params = order.createFill(shouldCheckTransfer, fillValueM);
     return this._exchange.fill(
       params.traders,
@@ -20,7 +20,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  cancel(order, { cancelValueM, from }) {
+  cancelAsync(order, { cancelValueM, from }) {
     const params = order.createCancel(cancelValueM);
     return this._exchange.cancel(
       params.traders,
@@ -33,7 +33,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  fillOrKill(order, { fillValueM, from }) {
+  fillOrKillAsync(order, { fillValueM, from }) {
     const params = order.createFill(null, fillValueM);
     return this._exchange.fillOrKill(
       params.traders,
@@ -48,7 +48,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  batchFill(orders, { fillValuesM, shouldCheckTransfer = false, from }) {
+  batchFillAsync(orders, { fillValuesM, shouldCheckTransfer = false, from }) {
     const params = createBatchFill(orders, shouldCheckTransfer, fillValuesM);
     return this._exchange.batchFill(
       params.traders,
@@ -64,22 +64,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  batchFillOrKill(orders, { fillValuesM, from }) {
-    const params = createBatchFill(orders, null, fillValuesM);
-    return this._exchange.batchFillOrKill(
-      params.traders,
-      params.tokens,
-      params.feeRecipients,
-      params.values,
-      params.fees,
-      params.expirations,
-      params.fillValuesM,
-      params.v,
-      params.rs,
-      { from }
-    );
-  }
-  fillUpTo(orders, { fillValueM, shouldCheckTransfer = false, from }) {
+  fillUpToAsync(orders, { fillValueM, shouldCheckTransfer = false, from }) {
     const params = createFillUpTo(orders, shouldCheckTransfer, fillValueM);
     return this._exchange.fillUpTo(
       params.traders,
@@ -95,7 +80,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  batchCancel(orders, { cancelValuesM, from }) {
+  batchCancelAsync(orders, { cancelValuesM, from }) {
     const params = createBatchCancel(orders, cancelValuesM);
     return this._exchange.batchCancel(
       params.traders,
@@ -108,7 +93,7 @@ class ExchangeWrapper {
       { from }
     );
   }
-  getOrderHash(order) {
+  getOrderHashAsync(order) {
     const params = order.createFill();
     return this._exchange.getOrderHash(
       params.traders,
@@ -119,7 +104,7 @@ class ExchangeWrapper {
       params.expiration
     );
   }
-  isValidSignature(order) {
+  isValidSignatureAsync(order) {
     const isValidSignature = this._exchange.isValidSignature(
       order.params.maker,
       order.params.orderHashHex,

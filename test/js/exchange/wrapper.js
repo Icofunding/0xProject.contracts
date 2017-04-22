@@ -83,7 +83,7 @@ contract('Exchange', accounts => {
         valueT: toSmallestUnits(200),
       });
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillOrKill(order, { fillValueM, from: taker });
+      await exWrapper.fillOrKillAsync(order, { fillValueM, from: taker });
 
       const newBalances = await dmyBalances.getAsync();
       const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
@@ -104,7 +104,7 @@ contract('Exchange', accounts => {
       });
 
       try {
-        await exWrapper.fillOrKill(order, { from: taker });
+        await exWrapper.fillOrKillAsync(order, { from: taker });
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -114,10 +114,10 @@ contract('Exchange', accounts => {
     it('should throw if entire fillValueM not filled', async () => {
       const order = await orderFactory.newSignedOrderAsync();
 
-      await exWrapper.fill(order, { fillValueM: div(order.params.valueM, 2), from: taker });
+      await exWrapper.fillAsync(order, { fillValueM: div(order.params.valueM, 2), from: taker });
 
       try {
-        await exWrapper.fillOrKill(order, { from: taker });
+        await exWrapper.fillOrKillAsync(order, { from: taker });
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -155,7 +155,7 @@ contract('Exchange', accounts => {
         balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
       });
 
-      await exWrapper.batchFill(orders, { fillValuesM, from: taker });
+      await exWrapper.batchFillAsync(orders, { fillValuesM, from: taker });
 
       const newBalances = await dmyBalances.getAsync();
       expect(newBalances).to.deep.equal(balances);
@@ -175,7 +175,7 @@ contract('Exchange', accounts => {
 
     it('should stop when the entire fillValueM is filled', async () => {
       const fillValueM = add(orders[0].params.valueM, div(orders[1].params.valueM, 2));
-      await exWrapper.fillUpTo(orders, { fillValueM, from: taker });
+      await exWrapper.fillUpToAsync(orders, { fillValueM, from: taker });
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -202,7 +202,7 @@ contract('Exchange', accounts => {
         balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], order.params.feeT);
         balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(order.params.feeM, order.params.feeT));
       });
-      await exWrapper.fillUpTo(orders, { fillValueM, from: taker });
+      await exWrapper.fillUpToAsync(orders, { fillValueM, from: taker });
 
       const newBalances = await dmyBalances.getAsync();
       expect(newBalances).to.deep.equal(balances);
@@ -216,7 +216,7 @@ contract('Exchange', accounts => {
       ]);
 
       try {
-        await exWrapper.fillUpTo(orders, { fillValueM: toSmallestUnits(1000), from: taker });
+        await exWrapper.fillUpToAsync(orders, { fillValueM: toSmallestUnits(1000), from: taker });
         throw new Error('FillUpTo succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -232,9 +232,9 @@ contract('Exchange', accounts => {
         orderFactory.newSignedOrderAsync(),
       ]);
       const cancelValuesM = _.map(orders, order => order.params.valueM);
-      await exWrapper.batchCancel(orders, { cancelValuesM, from: maker });
+      await exWrapper.batchCancelAsync(orders, { cancelValuesM, from: maker });
 
-      const res = await exWrapper.batchFill(orders, { fillValuesM: cancelValuesM, from: taker });
+      const res = await exWrapper.batchFillAsync(orders, { fillValuesM: cancelValuesM, from: taker });
       assert.equal(res.logs.length, 0);
     });
   });

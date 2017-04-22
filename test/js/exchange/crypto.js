@@ -41,7 +41,7 @@ contract('Exchange', accounts => {
 
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
-      const orderHashHex = await exWrapper.getOrderHash(order);
+      const orderHashHex = await exWrapper.getOrderHashAsync(order);
       assert.equal(order.params.orderHashHex, orderHashHex);
     });
   });
@@ -52,7 +52,7 @@ contract('Exchange', accounts => {
     });
 
     it('should return true with a valid signature', async () => {
-      const success = await exWrapper.isValidSignature(order);
+      const success = await exWrapper.isValidSignatureAsync(order);
       const isValidSignature = order.isValidSignature();
       assert(isValidSignature);
       assert(success);
@@ -61,7 +61,7 @@ contract('Exchange', accounts => {
     it('should return false with an invalid signature', async () => {
       order.params.r = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
       order.params.s = ethUtil.bufferToHex(ethUtil.sha3('invalidS'));
-      const success = await exWrapper.isValidSignature(order);
+      const success = await exWrapper.isValidSignatureAsync(order);
       assert(!order.isValidSignature());
       assert(!success);
     });

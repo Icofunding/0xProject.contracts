@@ -2,7 +2,7 @@ class TokenRegWrapper {
   constructor(tokenRegContractInstance) {
     this._tokenReg = tokenRegContractInstance;
   }
-  addToken({
+  addTokenAsync({
     tokenAddress,
     name,
     symbol,
@@ -23,7 +23,7 @@ class TokenRegWrapper {
     );
     return tx;
   }
-  async getTokenMetaData(tokenAddress) {
+  async getTokenMetaDataAsync(tokenAddress) {
     const data = await this._tokenReg.getTokenMetaData(tokenAddress);
     const token = {
       tokenAddress: data[0],
@@ -36,7 +36,7 @@ class TokenRegWrapper {
     };
     return token;
   }
-  async getTokenByName(tokenName) {
+  async getTokenByNameAsync(tokenName) {
     const data = await this._tokenReg.getTokenByName(tokenName);
     const token = {
       tokenAddress: data[0],
@@ -49,7 +49,7 @@ class TokenRegWrapper {
     };
     return token;
   }
-  async getTokenBySymbol(tokenSymbol) {
+  async getTokenBySymbolAsync(tokenSymbol) {
     const data = await this._tokenReg.getTokenBySymbol(tokenSymbol);
     const token = {
       tokenAddress: data[0],
