@@ -7,6 +7,8 @@
         no-undef: "off",
         arrow-body-style: ["error", "as-needed"],
         func-names: ["error", "as-needed"],
+        no-underscore-dangle: "off",
+        class-methods-use-this: "off",
         space-before-function-paren: ["error", "never"],
             comma-dangle: ["error", {
             arrays: "always-multiline",
