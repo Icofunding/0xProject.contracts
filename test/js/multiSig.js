@@ -3,10 +3,9 @@ require('source-map-support/register');
 const assert = require('assert');
 const promisify = require('es6-promisify');
 const MULTI_SIG_ABI = require('../../build/contracts/MultiSigWallet.json').abi;
-const multiSigUtil = require('../../util/multiSigUtil');
+const MultiSigWrapper = require('../../util/multiSigWrapper');
 const testUtil = require('../../util/testUtil');
-const rpc = require('../../util/rpc');
-const util = require('../../util/index.js')(web3);
+const RPC = require('../../util/rpc');
 
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 
@@ -15,16 +14,18 @@ contract('MultiSigWallet', accounts => {
   const SECONDS_REQUIRED = 10000;
 
   let multiSig;
-  let multiSigUtilInstance;
+  let multiSigWrapper;
   let txId;
   let initialThreshold;
+  let rpc;
 
   before(async () => {
     multiSig = await MultiSigWallet.deployed();
-    multiSigUtilInstance = multiSigUtil(multiSig);
+    multiSigWrapper = new MultiSigWrapper(multiSig);
 
     const threshold = await multiSig.secondsRequired.call();
     initialThreshold = threshold.toNumber();
+    rpc = new RPC();
   });
 
   describe('changeRequiredSeconds', () => {
@@ -38,7 +39,7 @@ contract('MultiSigWallet', accounts => {
     });
 
     it('should not execute without enough confirmations', async () => {
-      const subRes = await multiSigUtilInstance.submitTransaction({
+      const subRes = await multiSigWrapper.submitTransactionAsync({
         destination: MultiSigWallet.address,
         from: owners[0],
         dataParams: {
@@ -82,7 +83,7 @@ contract('MultiSigWallet', accounts => {
 
     const newThreshold = 0;
     it('should not execute if it has enough confirmations but is not past the activation threshold', async () => {
-      const subRes = await multiSigUtilInstance.submitTransaction({
+      const subRes = await multiSigWrapper.submitTransactionAsync({
         destination: MultiSigWallet.address,
         from: owners[0],
         dataParams: {
@@ -105,7 +106,7 @@ contract('MultiSigWallet', accounts => {
     });
 
     it('should execute if it has enough confirmations and is past the activation threshold', async () => {
-      await rpc.increaseTime(SECONDS_REQUIRED);
+      await rpc.increaseTimeAsync(SECONDS_REQUIRED);
       await multiSig.executeTransaction(txId);
 
       const threshold = await multiSig.secondsRequired.call();

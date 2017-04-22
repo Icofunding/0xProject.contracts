@@ -1,8 +1,15 @@
 const ethUtil = require('ethereumjs-util');
 const ABI = require('ethereumjs-abi');
 
-module.exports = multiSig => {
-  const encodeFnArgs = ({ name, abi, args = [] }) => {
+class MultiSigWrapper {
+  constructor(multiSigContractInstance) {
+    this._multiSig = multiSigContractInstance;
+  }
+  async submitTransactionAsync({ destination, value = 0, data, from, dataParams }) {
+    const encoded = data || this._encodeFnArgs(dataParams);
+    return this._multiSig.submitTransaction(destination, value, encoded, { from });
+  }
+  _encodeFnArgs({ name, abi, args = [] }) {
     let types;
     let funcSig;
     let argsData;
@@ -19,15 +26,7 @@ module.exports = multiSig => {
       }
     }
     return funcSig + argsData.join('');
-  };
+  }
+}
 
-  const submitTransaction = ({ destination, value = 0, data, from, dataParams }) => {
-    const encoded = data || encodeFnArgs(dataParams);
-    return multiSig.submitTransaction(destination, value, encoded, { from });
-  };
-
-  return {
-    encodeFnArgs,
-    submitTransaction,
-  };
-};
+module.exports = MultiSigWrapper;

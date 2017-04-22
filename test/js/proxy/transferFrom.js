@@ -2,7 +2,7 @@ const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
 const BNUtil = require('../../../util/BNUtil');
 const testUtil = require('../../../util/testUtil');
-const factory = require('../../../util/factory');
+const Balances = require('../../../util/balances');
 
 const { add, sub } = BNUtil;
 
@@ -16,7 +16,7 @@ contract('Proxy', accounts => {
   let proxy;
   let dmyA;
 
-  let getDmyBalances;
+  let dmyBalances;
 
   before(async () => {
     [proxy, dmyA] = await Promise.all([
@@ -24,7 +24,7 @@ contract('Proxy', accounts => {
       DummyTokenA.deployed(),
     ]);
 
-    getDmyBalances = factory.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
+    dmyBalances = new Balances([dmyA], [accounts[0], accounts[1]]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
       dmyA.setBalance(INIT_BAL, { from: accounts[0] }),
@@ -44,13 +44,13 @@ contract('Proxy', accounts => {
     });
 
     it('should allow an authorized address to transfer', async () => {
-      const balances = await getDmyBalances();
+      const balances = await dmyBalances.getAsync();
 
       await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
       const transferAmt = 10000;
       await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
 
-      const newBalances = await getDmyBalances();
+      const newBalances = await dmyBalances.getAsync();
       assert.equal(newBalances[accounts[0]][dmyA.address], sub(balances[accounts[0]][dmyA.address], transferAmt));
       assert.equal(newBalances[accounts[1]][dmyA.address], add(balances[accounts[1]][dmyA.address], transferAmt));
     });

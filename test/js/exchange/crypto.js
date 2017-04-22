@@ -5,8 +5,7 @@ const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
 const BNUtil = require('../../../util/BNUtil');
-const crypto = require('../../../util/crypto');
-const exchangeUtil = require('../../../util/exchangeUtil');
+const ExchangeWrapper = require('../../../util/exchangeWrapper');
 const OrderFactory = require('../../../util/orderFactory');
 
 const { toSmallestUnits } = BNUtil;
@@ -30,39 +29,40 @@ contract('Exchange', accounts => {
 
 
   let order;
-  let exUtil;
+  let exWrapper;
   before(async () => {
     const exchange = await Exchange.deployed();
-    exUtil = exchangeUtil(exchange);
+    exWrapper = new ExchangeWrapper(exchange);
   });
 
   beforeEach(async () => {
-    order = await orderFactory.generateSignedOrderAsync();
+    order = await orderFactory.newSignedOrderAsync();
   });
 
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
-      const orderHashHex = await exUtil.getOrderHash(order);
-      assert.equal(order.orderHashHex, orderHashHex);
+      const orderHashHex = await exWrapper.getOrderHash(order);
+      assert.equal(order.params.orderHashHex, orderHashHex);
     });
   });
 
   describe('isValidSignature', () => {
     beforeEach(async () => {
-      order = await orderFactory.generateSignedOrderAsync();
+      order = await orderFactory.newSignedOrderAsync();
     });
 
     it('should return true with a valid signature', async () => {
-      const success = await exUtil.isValidSignature(order);
-      assert(crypto.isValidSignature(order));
+      const success = await exWrapper.isValidSignature(order);
+      const isValidSignature = order.isValidSignature();
+      assert(isValidSignature);
       assert(success);
     });
 
     it('should return false with an invalid signature', async () => {
-      order.r = ethUtil.sha3('invalidR');
-      order.s = ethUtil.sha3('invalidS');
-      const success = await exUtil.isValidSignature(order);
-      assert(!crypto.isValidSignature(order));
+      order.params.r = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
+      order.params.s = ethUtil.bufferToHex(ethUtil.sha3('invalidS'));
+      const success = await exWrapper.isValidSignature(order);
+      assert(!order.isValidSignature());
       assert(!success);
     });
   });
