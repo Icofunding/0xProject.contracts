@@ -39,15 +39,14 @@ contract('MultiSigWallet', accounts => {
     });
 
     it('should not execute without enough confirmations', async () => {
-      const subRes = await multiSigWrapper.submitTransactionAsync({
-        destination: MultiSigWallet.address,
-        from: owners[0],
-        dataParams: {
-          name: 'changeRequiredSeconds',
-          abi: MULTI_SIG_ABI,
-          args: [SECONDS_REQUIRED],
-        },
-      });
+      const destination = MultiSigWallet.address;
+      const from = owners[0];
+      const dataParams = {
+        name: 'changeRequiredSeconds',
+        abi: MULTI_SIG_ABI,
+        args: [SECONDS_REQUIRED],
+      };
+      const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
       txId = subRes.logs[0].args.transactionId.toString();
       const execRes = await multiSig.executeTransaction(txId);
@@ -83,15 +82,14 @@ contract('MultiSigWallet', accounts => {
 
     const newThreshold = 0;
     it('should not execute if it has enough confirmations but is not past the activation threshold', async () => {
-      const subRes = await multiSigWrapper.submitTransactionAsync({
-        destination: MultiSigWallet.address,
-        from: owners[0],
-        dataParams: {
-          name: 'changeRequiredSeconds',
-          abi: MULTI_SIG_ABI,
-          args: [newThreshold],
-        },
-      });
+      const destination = MultiSigWallet.address;
+      const from = owners[0];
+      const dataParams = {
+        name: 'changeRequiredSeconds',
+        abi: MULTI_SIG_ABI,
+        args: [newThreshold],
+      };
+      const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
       txId = subRes.logs[0].args.transactionId.toString();
       const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
