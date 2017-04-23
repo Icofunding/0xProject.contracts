@@ -10,7 +10,7 @@ module.exports = (deployer, network) => {
   deployer.then(() =>
     TokenRegistry.deployed().then(tokenRegistry => {
       if (network !== 'live') {
-        const totalSupply = 100000000 * (10 ** 18);
+        const totalSupply = 100000000 * Math.pow(10, 18); // eslint-disable-line no-restricted-properties
         return Promise.all(tokenSymbols.map(sym => DummyToken.new(
           tokens[sym].name,
           tokens[sym].symbol,
