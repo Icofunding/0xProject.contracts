@@ -1,4 +1,4 @@
-// Make a copy of this file named `multisig_config.js` and input custom params as needed
+// Make a copy of this file named `multisig.js` and input custom params as needed
 module.exports = {
   ropsten: {
     owners: [],

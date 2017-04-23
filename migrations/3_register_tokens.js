@@ -2,7 +2,7 @@ const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 const DummyEtherToken = artifacts.require('./DummyEtherToken.sol');
 const DummyToken = artifacts.require('./DummyToken.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
-const tokenData = require('./tokens.js');
+const tokenData = require('./config/tokens.js');
 
 module.exports = (deployer, network) => {
   const tokens = network === 'live' ? tokenData.live : tokenData.development;

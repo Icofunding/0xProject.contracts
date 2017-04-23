@@ -6,7 +6,7 @@ const DummyEtherToken = artifacts.require('./DummyEtherToken.sol');
 
 let multiSigConfig;
 try {
-  multiSigConfig = require('./multisig_config.js'); // eslint-disable-line global-require
+  multiSigConfig = require('./config/multisig.js'); // eslint-disable-line global-require
 } catch (e) {
   multiSigConfig = {};
 }
