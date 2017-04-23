@@ -25,7 +25,7 @@ module.exports = {
       swarmHash: '0x0',
     },
     GNT: {
-      name: 'Golem Netwok Token',
+      name: 'Golem Network Token',
       symbol: 'GNT',
       url: 'https://golem.network/',
       decimals: 18,
@@ -79,7 +79,7 @@ module.exports = {
     },
     GNT: {
       address: '0xa74476443119a942de498590fe1f2454d7d4ac0d',
-      name: 'Golem Netwok Token',
+      name: 'Golem Network Token',
       symbol: 'GNT',
       url: 'https://golem.network/',
       decimals: 18,

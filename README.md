@@ -4,7 +4,7 @@
 
 [![Slack Status](http://slack.0xProject.com/badge.svg)](http://slack.0xProject.com)
 
-[0x](https://0xProject.com) is an open protocol that facilitates trustless and low-friction exchange of Ethereum-based assets. This repository contains the system of Ethereum smart contracts comprising 0x protocol's shared settlement layer, native token (ZRX) and decentralized governance structure. Truffle is used for deployment. Mocha and Chai are used for unit tests.
+[0x](https://0xProject.com) is an open protocol that facilitates trustless and low-friction exchange of Ethereum-based assets. This repository contains the system of Ethereum smart contracts comprising 0x protocol's shared settlement layer, native token (ZRX) and decentralized governance structure. Truffle is used for deployment. Mocha is used for unit tests.
 
 ## Architecture
 
