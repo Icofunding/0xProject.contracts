@@ -13,5 +13,6 @@ contract Mintable is StandardToken, SafeMath {
             throw;
         }
         balances[msg.sender] = safeAdd(_value, balances[msg.sender]);
+        totalSupply = safeAdd(totalSupply, _value);
     }
 }
