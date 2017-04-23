@@ -12,7 +12,7 @@ contract DummyToken is Mintable, Ownable {
     string _name,
     string _symbol,
     uint _decimals,
-    uint _totalSupply) 
+    uint _totalSupply)
   {
     name = _name;
     symbol = _symbol;
@@ -24,9 +24,9 @@ contract DummyToken is Mintable, Ownable {
   function setBalance(address _target, uint _value) onlyOwner {
     uint currBalance = balanceOf(_target);
     if (_value < currBalance) {
-      totalSupply -= (currBalance - _value);
+      totalSupply = safeSub(totalSupply, safeSub(currBalance, _value));
     } else {
-      totalSupply += (_value - currBalance);
+      totalSupply = safeAdd(totalSupply, safeSub(_value, currBalance));
     }
     balances[_target] = _value;
   }
