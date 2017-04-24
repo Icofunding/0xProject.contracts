@@ -1,13 +1,12 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 const Proxy = artifacts.require('./Proxy.sol');
-const Exchange = artifacts.require('./Exchange.sol');
 const ProtocolToken = artifacts.require('./ProtocolToken.sol');
-const DummyProtocolToken = artifacts.require('./DummyProtocolToken.sol');
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
+const DummyEtherToken = artifacts.require('./DummyEtherToken.sol');
 
 let multiSigConfig;
 try {
-  multiSigConfig = require('./multisig_config.js'); // eslint-disable-line global-require
+  multiSigConfig = require('./config/multisig.js'); // eslint-disable-line global-require
 } catch (e) {
   multiSigConfig = {};
 }
@@ -19,25 +18,19 @@ module.exports = (deployer, network, accounts) => {
     secondsRequired: 0,
   };
   const config = multiSigConfig[network] || defaultConfig;
-  if (network === 'development') {
+  if (network !== 'live') {
     deployer.deploy([
       [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
       Proxy,
-      [DummyProtocolToken, 0],
       TokenRegistry,
-    ])
-    .then(() => deployer.deploy(Exchange, DummyProtocolToken.address, Proxy.address))
-    .then(() => Proxy.deployed())
-    .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
+      DummyEtherToken,
+    ]);
   } else {
     deployer.deploy([
       [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
       Proxy,
-      ProtocolToken,
       TokenRegistry,
-    ])
-    .then(() => deployer.deploy(Exchange, ProtocolToken.address, Proxy.address))
-    .then(() => Proxy.deployed())
-    .then(proxy => proxy.addAuthorizedAddress(Exchange.address, { from: accounts[0] }));
+      ProtocolToken,
+    ]);
   }
 };

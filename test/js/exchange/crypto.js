@@ -1,6 +1,5 @@
 const Exchange = artifacts.require('./util/Exchange.sol');
-const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
-const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
+const TokenRegistry = artifacts.require('./TokenRegistry.sol');
 
 const assert = require('assert');
 const ethUtil = require('ethereumjs-util');
@@ -14,25 +13,32 @@ contract('Exchange', accounts => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
-  const defaultOrderParams = {
-    exchange: Exchange.address,
-    maker,
-    feeRecipient,
-    tokenM: DummyTokenA.address,
-    tokenT: DummyTokenB.address,
-    valueM: toSmallestUnits(100),
-    valueT: toSmallestUnits(200),
-    feeM: toSmallestUnits(1),
-    feeT: toSmallestUnits(1),
-  };
-  const orderFactory = new OrderFactory(defaultOrderParams);
-
-
   let order;
   let exWrapper;
+  let orderFactory;
+
   before(async () => {
-    const exchange = await Exchange.deployed();
+    const [tokenRegistry, exchange] = await Promise.all([
+      TokenRegistry.deployed(),
+      Exchange.deployed(),
+    ]);
     exWrapper = new ExchangeWrapper(exchange);
+    const [repAddress, dgdAddress] = await Promise.all([
+      tokenRegistry.getTokenAddressBySymbol('REP'),
+      tokenRegistry.getTokenAddressBySymbol('DGD'),
+    ]);
+    const defaultOrderParams = {
+      exchange: Exchange.address,
+      maker,
+      feeRecipient,
+      tokenM: repAddress,
+      tokenT: dgdAddress,
+      valueM: toSmallestUnits(100),
+      valueT: toSmallestUnits(200),
+      feeM: toSmallestUnits(1),
+      feeT: toSmallestUnits(1),
+    };
+    orderFactory = new OrderFactory(defaultOrderParams);
   });
 
   beforeEach(async () => {
