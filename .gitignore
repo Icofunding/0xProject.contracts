@@ -3,5 +3,5 @@ node_modules
 .flooignore
 .soliumignore
 .soliumrc.json
-multisig_config.js
+migrations/config/multisig.js
 transpiled
