@@ -1,5 +1,8 @@
-module.exports = tokenReg => {
-  const addToken = ({
+class TokenRegWrapper {
+  constructor(tokenRegContractInstance) {
+    this._tokenReg = tokenRegContractInstance;
+  }
+  addTokenAsync({
     tokenAddress,
     name,
     symbol,
@@ -7,8 +10,8 @@ module.exports = tokenReg => {
     decimals,
     ipfsHash = '0x0',
     swarmHash = '0x0',
-  }, { from }) => {
-    const tx = tokenReg.addToken(
+  }, { from }) {
+    const tx = this._tokenReg.addToken(
       tokenAddress,
       name,
       symbol,
@@ -19,10 +22,9 @@ module.exports = tokenReg => {
       { from }
     );
     return tx;
-  };
-
-  const getTokenMetaData = async tokenAddress => {
-    const data = await tokenReg.getTokenMetaData(tokenAddress);
+  }
+  async getTokenMetaDataAsync(tokenAddress) {
+    const data = await this._tokenReg.getTokenMetaData(tokenAddress);
     const token = {
       tokenAddress: data[0],
       name: data[1],
@@ -33,10 +35,9 @@ module.exports = tokenReg => {
       swarmHash: data[6],
     };
     return token;
-  };
-
-  const getTokenByName = async tokenName => {
-    const data = await tokenReg.getTokenByName(tokenName);
+  }
+  async getTokenByNameAsync(tokenName) {
+    const data = await this._tokenReg.getTokenByName(tokenName);
     const token = {
       tokenAddress: data[0],
       name: data[1],
@@ -47,10 +48,9 @@ module.exports = tokenReg => {
       swarmHash: data[6],
     };
     return token;
-  };
-
-  const getTokenBySymbol = async tokenSymbol => {
-    const data = await tokenReg.getTokenBySymbol(tokenSymbol);
+  }
+  async getTokenBySymbolAsync(tokenSymbol) {
+    const data = await this._tokenReg.getTokenBySymbol(tokenSymbol);
     const token = {
       tokenAddress: data[0],
       name: data[1],
@@ -61,12 +61,7 @@ module.exports = tokenReg => {
       swarmHash: data[6],
     };
     return token;
-  };
+  }
+}
 
-  return {
-    addToken,
-    getTokenMetaData,
-    getTokenByName,
-    getTokenBySymbol,
-  };
-};
+module.exports = TokenRegWrapper;

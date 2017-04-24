@@ -1,11 +1,14 @@
 {
     extends: "airbnb/base",
+    "parser": "babel-eslint",
     rules: {
         arrow-parens: ["error", "as-needed"],
         max-len: ["error", 140],
         no-undef: "off",
         arrow-body-style: ["error", "as-needed"],
         func-names: ["error", "as-needed"],
+        no-underscore-dangle: "off",
+        class-methods-use-this: "off",
         space-before-function-paren: ["error", "never"],
             comma-dangle: ["error", {
             arrays: "always-multiline",

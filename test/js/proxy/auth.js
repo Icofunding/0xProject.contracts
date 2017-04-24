@@ -1,9 +1,11 @@
 require('babel-polyfill');
 require('source-map-support/register');
 
-const Proxy = artifacts.require('./db/Proxy.sol');
+const _ = require('lodash');
 const assert = require('assert');
-const util = require('../../../util/index.js')(web3);
+const testUtil = require('../../../util/test_util');
+
+const Proxy = artifacts.require('./db/Proxy.sol');
 
 contract('Proxy', accounts => {
   const owner = accounts[0];
@@ -23,7 +25,7 @@ contract('Proxy', accounts => {
         await proxy.addAuthorizedAddress(notOwner, { from: notOwner });
         throw new Error('addAuthorizedAddress succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -42,7 +44,7 @@ contract('Proxy', accounts => {
         await proxy.removeAuthorizedAddress(authorized, { from: notOwner });
         throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
@@ -66,7 +68,7 @@ contract('Proxy', accounts => {
       notAuthorized = null;
       const afterAdd = await proxy.getAuthorizedAddresses();
       assert.equal(afterAdd.length, 2);
-      assert(afterAdd.indexOf(authorized) !== -1);
+      assert(_.includes(afterAdd, authorized));
 
       await proxy.removeAuthorizedAddress(authorized, { from: owner });
       notAuthorized = authorized;

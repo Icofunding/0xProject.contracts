@@ -1,8 +1,10 @@
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const util = require('../../../util/index.js')(web3);
+const BNUtil = require('../../../util/bn_util');
+const testUtil = require('../../../util/test_util');
+const Balances = require('../../../util/balances');
 
-const { add, sub } = util.BNutil;
+const { add, sub } = BNUtil;
 
 contract('Proxy', accounts => {
   const INIT_BAL = 100000000;
@@ -14,7 +16,7 @@ contract('Proxy', accounts => {
   let proxy;
   let dmyA;
 
-  let getDmyBalances;
+  let dmyBalances;
 
   before(async () => {
     [proxy, dmyA] = await Promise.all([
@@ -22,7 +24,7 @@ contract('Proxy', accounts => {
       DummyTokenA.deployed(),
     ]);
 
-    getDmyBalances = util.getBalancesFactory([dmyA], [accounts[0], accounts[1]]);
+    dmyBalances = new Balances([dmyA], [accounts[0], accounts[1]]);
     await Promise.all([
       dmyA.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
       dmyA.setBalance(INIT_BAL, { from: accounts[0] }),
@@ -37,18 +39,18 @@ contract('Proxy', accounts => {
         await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], 1000, { from: notAuthorized });
         throw new Error('proxy.transferFrom succeeded when it should have thrown');
       } catch (err) {
-        util.test.assertThrow(err);
+        testUtil.assertThrow(err);
       }
     });
 
     it('should allow an authorized address to transfer', async () => {
-      const balances = await getDmyBalances();
+      const balances = await dmyBalances.getAsync();
 
       await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
       const transferAmt = 10000;
       await proxy.transferFrom(dmyA.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
 
-      const newBalances = await getDmyBalances();
+      const newBalances = await dmyBalances.getAsync();
       assert.equal(newBalances[accounts[0]][dmyA.address], sub(balances[accounts[0]][dmyA.address], transferAmt));
       assert.equal(newBalances[accounts[1]][dmyA.address], add(balances[accounts[1]][dmyA.address], transferAmt));
     });
