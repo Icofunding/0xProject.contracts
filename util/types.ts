@@ -106,7 +106,7 @@ export interface TransactionDataParams {
 }
 
 export interface Token {
-  tokenAddress: string;
+  address?: string;
   name: string;
   symbol: string;
   url: string;
@@ -123,6 +123,11 @@ export interface MultiSigConfig {
 
 export interface MultiSigConfigByNetwork {
   [networkName: string]: MultiSigConfig;
+}
+
+export interface TokenInfoByNetwork {
+  development: Token[];
+  live: Token[];
 }
 
 // Named type aliases to improve readability

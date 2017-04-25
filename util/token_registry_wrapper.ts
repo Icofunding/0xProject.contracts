@@ -8,7 +8,7 @@ export class TokenRegWrapper {
   }
   public addTokenAsync(token: Token, from: string) {
     const tx = this.tokenReg.addToken(
-      token.tokenAddress,
+      token.address,
       token.name,
       token.symbol,
       token.url,
@@ -21,8 +21,8 @@ export class TokenRegWrapper {
   }
   public async getTokenMetaDataAsync(tokenAddress: string) {
     const data = await this.tokenReg.getTokenMetaData(tokenAddress);
-    const token = {
-      tokenAddress: data[0],
+    const token: Token = {
+      address: data[0],
       name: data[1],
       symbol: data[2],
       url: data[3],
@@ -34,8 +34,8 @@ export class TokenRegWrapper {
   }
   public async getTokenByNameAsync(tokenName: string) {
     const data = await this.tokenReg.getTokenByName(tokenName);
-    const token = {
-      tokenAddress: data[0],
+    const token: Token = {
+      address: data[0],
       name: data[1],
       symbol: data[2],
       url: data[3],
@@ -47,8 +47,8 @@ export class TokenRegWrapper {
   }
   public async getTokenBySymbolAsync(tokenSymbol: string) {
     const data = await this.tokenReg.getTokenBySymbol(tokenSymbol);
-    const token = {
-      tokenAddress: data[0],
+    const token: Token = {
+      address: data[0],
       name: data[1],
       symbol: data[2],
       url: data[3],

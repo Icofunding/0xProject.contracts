@@ -1,13 +1,15 @@
+import * as assert from 'assert';
+import ethUtil = require('ethereumjs-util');
 import { BNUtil } from '../../../util/bn_util';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
 import { OrderFactory } from '../../../util/order_factory';
 import { Order } from '../../../util/order';
-import * as assert from 'assert';
-import ethUtil = require('ethereumjs-util');
+import { Artifacts } from '../../../util/artifacts';
 
-const Exchange = artifacts.require('./util/Exchange.sol');
-const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
-const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
+const {
+  Exchange,
+  TokenRegistry,
+} = new Artifacts(artifacts);
 
 const { toSmallestUnits } = BNUtil;
 
@@ -15,25 +17,32 @@ contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
-  const defaultOrderParams = {
-    exchange: Exchange.address,
-    maker,
-    feeRecipient,
-    tokenM: DummyTokenA.address,
-    tokenT: DummyTokenB.address,
-    valueM: toSmallestUnits(100),
-    valueT: toSmallestUnits(200),
-    feeM: toSmallestUnits(1),
-    feeT: toSmallestUnits(1),
-  };
-  const orderFactory = new OrderFactory(defaultOrderParams);
-
   let order: Order;
   let exWrapper: ExchangeWrapper;
+  let orderFactory: OrderFactory;
 
   before(async () => {
-    const exchange = await Exchange.deployed();
+    const [tokenRegistry, exchange] = await Promise.all([
+      TokenRegistry.deployed(),
+      Exchange.deployed(),
+    ]);
     exWrapper = new ExchangeWrapper(exchange);
+    const [repAddress, dgdAddress] = await Promise.all([
+      tokenRegistry.getTokenAddressBySymbol('REP'),
+      tokenRegistry.getTokenAddressBySymbol('DGD'),
+    ]);
+    const defaultOrderParams = {
+      exchange: Exchange.address,
+      maker,
+      feeRecipient,
+      tokenM: repAddress,
+      tokenT: dgdAddress,
+      valueM: toSmallestUnits(100),
+      valueT: toSmallestUnits(200),
+      feeM: toSmallestUnits(1),
+      feeT: toSmallestUnits(1),
+    };
+    orderFactory = new OrderFactory(defaultOrderParams);
   });
 
   beforeEach(async () => {

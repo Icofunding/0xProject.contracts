@@ -12,7 +12,7 @@ contract('TokenRegistry', (accounts: string[]) => {
   const notOwner = accounts[1];
 
   const token = {
-    tokenAddress: `0x${ethUtil.setLength(ethUtil.toBuffer('0x1'), 20).toString('hex')}`,
+    address: `0x${ethUtil.setLength(ethUtil.toBuffer('0x1'), 20).toString('hex')}`,
     name: 'testToken',
     symbol: 'TT',
     url: 'www.test.com',
@@ -22,7 +22,7 @@ contract('TokenRegistry', (accounts: string[]) => {
   };
 
   const nullToken = {
-    tokenAddress: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 20).toString('hex')}`,
+    address: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 20).toString('hex')}`,
     name: '',
     symbol: '',
     url: '',
@@ -51,7 +51,7 @@ contract('TokenRegistry', (accounts: string[]) => {
 
     it('should add token metadata when called by owner', async () => {
       await tokenRegWrapper.addTokenAsync(token, owner);
-      const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.tokenAddress);
+      const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.address);
       assert.deepEqual(tokenData, token);
     });
   });
@@ -74,7 +74,7 @@ contract('TokenRegistry', (accounts: string[]) => {
   describe('setTokenName', () => {
     it('should throw when not called by owner', async () => {
       try {
-        await tokenReg.setTokenName(token.tokenAddress, newNameToken.name, { from: notOwner });
+        await tokenReg.setTokenName(token.address, newNameToken.name, { from: notOwner });
         throw new Error('setTokenName succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -82,7 +82,7 @@ contract('TokenRegistry', (accounts: string[]) => {
     });
 
     it('should change the token name when called by owner', async () => {
-      const res = await tokenReg.setTokenName(newNameToken.tokenAddress, newNameToken.name, { from: owner });
+      const res = await tokenReg.setTokenName(newNameToken.address, newNameToken.name, { from: owner });
       assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
         tokenRegWrapper.getTokenByNameAsync(newNameToken.name),
@@ -97,7 +97,7 @@ contract('TokenRegistry', (accounts: string[]) => {
   describe('setTokenSymbol', () => {
     it('should throw when not called by owner', async () => {
       try {
-        await tokenReg.setTokenSymbol(token.tokenAddress, newSymbolToken.symbol, { from: notOwner });
+        await tokenReg.setTokenSymbol(token.address, newSymbolToken.symbol, { from: notOwner });
         throw new Error('setTokenSymbol succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -105,7 +105,7 @@ contract('TokenRegistry', (accounts: string[]) => {
     });
 
     it('should change the token symbol when called by owner', async () => {
-      const res = await tokenReg.setTokenSymbol(newSymbolToken.tokenAddress, newSymbolToken.symbol, { from: owner });
+      const res = await tokenReg.setTokenSymbol(newSymbolToken.address, newSymbolToken.symbol, { from: owner });
       assert.equal(res.logs.length, 1);
       const [newData, oldData] = await Promise.all([
         tokenRegWrapper.getTokenBySymbolAsync(newSymbolToken.symbol),
@@ -119,7 +119,7 @@ contract('TokenRegistry', (accounts: string[]) => {
   describe('removeToken', () => {
     it('should throw if not called by owner', async () => {
       try {
-        await tokenReg.removeToken(token.tokenAddress, { from: notOwner });
+        await tokenReg.removeToken(token.address, { from: notOwner });
         throw new Error('removeToken succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -127,9 +127,9 @@ contract('TokenRegistry', (accounts: string[]) => {
     });
 
     it('should remove token metadata when called by owner', async () => {
-      const res = await tokenReg.removeToken(token.tokenAddress, { from: owner });
+      const res = await tokenReg.removeToken(token.address, { from: owner });
       assert.equal(res.logs.length, 1);
-      const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.tokenAddress);
+      const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.address);
       assert.deepEqual(tokenData, nullToken);
     });
   });
