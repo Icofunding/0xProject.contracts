@@ -1,16 +1,17 @@
+import { BNUtil } from '../../../util/bn_util';
+import { ExchangeWrapper } from '../../../util/exchange_wrapper';
+import { OrderFactory } from '../../../util/order_factory';
+import { Order } from '../../../util/order';
+import * as assert from 'assert';
+import ethUtil = require('ethereumjs-util');
+
 const Exchange = artifacts.require('./util/Exchange.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 
-const assert = require('assert');
-const ethUtil = require('ethereumjs-util');
-const BNUtil = require('../../../util/bn_util');
-const ExchangeWrapper = require('../../../util/exchange_wrapper');
-const OrderFactory = require('../../../util/order_factory');
-
 const { toSmallestUnits } = BNUtil;
 
-contract('Exchange', accounts => {
+contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
@@ -27,9 +28,9 @@ contract('Exchange', accounts => {
   };
   const orderFactory = new OrderFactory(defaultOrderParams);
 
+  let order: Order;
+  let exWrapper: ExchangeWrapper;
 
-  let order;
-  let exWrapper;
   before(async () => {
     const exchange = await Exchange.deployed();
     exWrapper = new ExchangeWrapper(exchange);

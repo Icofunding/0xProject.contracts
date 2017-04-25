@@ -1,21 +1,22 @@
+import * as _ from 'lodash';
+import { Balances } from '../../../util/balances';
+import { BNUtil } from '../../../util/bn_util';
+import { ExchangeWrapper } from '../../../util/exchange_wrapper';
+import { OrderFactory } from '../../../util/order_factory';
+import { Order } from '../../../util/order';
+import { testUtil } from '../../../util/test_util';
+import { BalancesByOwner, ContractInstance } from '../../../util/types';
+import * as assert from 'assert';
+
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
-const assert = require('assert');
-const expect = require('chai').expect;
-const _ = require('lodash');
-const BNUtil = require('../../../util/bn_util');
-const ExchangeWrapper = require('../../../util/exchange_wrapper');
-const testUtil = require('../../../util/test_util');
-const OrderFactory = require('../../../util/order_factory');
-const Balances = require('../../../util/balances');
-
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 
-contract('Exchange', accounts => {
+contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
@@ -23,15 +24,15 @@ contract('Exchange', accounts => {
   const INIT_BAL = toSmallestUnits(10000);
   const INIT_ALLOW = toSmallestUnits(10000);
 
-  let dmyA;
-  let dmyB;
-  let dmyPT;
-  let exchange;
+  let dmyA: ContractInstance;
+  let dmyB: ContractInstance;
+  let dmyPT: ContractInstance;
+  let exchange: ContractInstance;
 
-  let balances;
+  let balances: BalancesByOwner;
 
-  let exWrapper;
-  let dmyBalances;
+  let exWrapper: ExchangeWrapper;
+  let dmyBalances: Balances;
 
   const defaultOrderParams = {
     exchange: Exchange.address,
@@ -83,7 +84,7 @@ contract('Exchange', accounts => {
         valueT: toSmallestUnits(200),
       });
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillOrKillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillOrKillAsync(order, taker, { fillValueM });
 
       const newBalances = await dmyBalances.getAsync();
       const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
@@ -95,7 +96,8 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], fillValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should throw if an order is expired', async () => {
@@ -104,7 +106,7 @@ contract('Exchange', accounts => {
       });
 
       try {
-        await exWrapper.fillOrKillAsync(order, { from: taker });
+        await exWrapper.fillOrKillAsync(order, taker);
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -114,10 +116,11 @@ contract('Exchange', accounts => {
     it('should throw if entire fillValueM not filled', async () => {
       const order = await orderFactory.newSignedOrderAsync();
 
-      await exWrapper.fillAsync(order, { fillValueM: div(order.params.valueM, 2), from: taker });
+      const from = taker;
+      await exWrapper.fillAsync(order, from, { fillValueM: div(order.params.valueM, 2) });
 
       try {
-        await exWrapper.fillOrKillAsync(order, { from: taker });
+        await exWrapper.fillOrKillAsync(order, taker);
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -126,7 +129,7 @@ contract('Exchange', accounts => {
   });
 
   describe('batchFill', () => {
-    let orders;
+    let orders: Order[];
     beforeEach(async () => {
       orders = await Promise.all([
         orderFactory.newSignedOrderAsync(),
@@ -137,7 +140,7 @@ contract('Exchange', accounts => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const fillValuesM = [];
+      const fillValuesM: string[] = [];
       const tokenM = dmyA.address;
       const tokenT = dmyB.address;
       orders.forEach(order => {
@@ -155,15 +158,15 @@ contract('Exchange', accounts => {
         balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT));
       });
 
-      await exWrapper.batchFillAsync(orders, { fillValuesM, from: taker });
+      await exWrapper.batchFillAsync(orders, taker, { fillValuesM });
 
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
   });
 
   describe('fillUpTo', () => {
-    let orders;
+    let orders: Order[];
     beforeEach(async () => {
       orders = await Promise.all([
         orderFactory.newSignedOrderAsync(),
@@ -175,20 +178,27 @@ contract('Exchange', accounts => {
 
     it('should stop when the entire fillValueM is filled', async () => {
       const fillValueM = add(orders[0].params.valueM, div(orders[1].params.valueM, 2));
-      await exWrapper.fillUpToAsync(orders, { fillValueM, from: taker });
+      await exWrapper.fillUpToAsync(orders, taker, { fillValueM });
 
       const newBalances = await dmyBalances.getAsync();
 
       const fillValueT = add(orders[0].params.valueT, div(orders[1].params.valueT, 2));
       const feeValueM = add(orders[0].params.feeM, div(orders[1].params.feeM, 2));
       const feeValueT = add(orders[0].params.feeT, div(orders[1].params.feeT, 2));
-      assert.equal(newBalances[maker][orders[0].params.tokenM], sub(balances[maker][orders[0].params.tokenM], fillValueM));
-      assert.equal(newBalances[maker][orders[0].params.tokenT], add(balances[maker][orders[0].params.tokenT], fillValueT));
-      assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], feeValueM));
-      assert.equal(newBalances[taker][orders[0].params.tokenT], sub(balances[taker][orders[0].params.tokenT], fillValueT));
-      assert.equal(newBalances[taker][orders[0].params.tokenM], add(balances[taker][orders[0].params.tokenM], fillValueM));
-      assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[maker][orders[0].params.tokenM],
+                   sub(balances[maker][orders[0].params.tokenM], fillValueM));
+      assert.equal(newBalances[maker][orders[0].params.tokenT],
+                   add(balances[maker][orders[0].params.tokenT], fillValueT));
+      assert.equal(newBalances[maker][dmyPT.address],
+                   sub(balances[maker][dmyPT.address], feeValueM));
+      assert.equal(newBalances[taker][orders[0].params.tokenT],
+                   sub(balances[taker][orders[0].params.tokenT], fillValueT));
+      assert.equal(newBalances[taker][orders[0].params.tokenM],
+                   add(balances[taker][orders[0].params.tokenM], fillValueM));
+      assert.equal(newBalances[taker][dmyPT.address],
+                   sub(balances[taker][dmyPT.address], feeValueT));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should fill all orders if cannot fill entire fillValueM', async () => {
@@ -200,12 +210,14 @@ contract('Exchange', accounts => {
         balances[taker][order.params.tokenM] = add(balances[taker][order.params.tokenM], order.params.valueM);
         balances[taker][order.params.tokenT] = sub(balances[taker][order.params.tokenT], order.params.valueT);
         balances[taker][dmyPT.address] = sub(balances[taker][dmyPT.address], order.params.feeT);
-        balances[feeRecipient][dmyPT.address] = add(balances[feeRecipient][dmyPT.address], add(order.params.feeM, order.params.feeT));
+        balances[feeRecipient][dmyPT.address] = add(
+          balances[feeRecipient][dmyPT.address], add(order.params.feeM, order.params.feeT),
+        );
       });
-      await exWrapper.fillUpToAsync(orders, { fillValueM, from: taker });
+      await exWrapper.fillUpToAsync(orders, taker, { fillValueM });
 
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
 
     it('should throw when an order does not use the same tokenM', async () => {
@@ -216,7 +228,7 @@ contract('Exchange', accounts => {
       ]);
 
       try {
-        await exWrapper.fillUpToAsync(orders, { fillValueM: toSmallestUnits(1000), from: taker });
+        await exWrapper.fillUpToAsync(orders, taker, { fillValueM: toSmallestUnits(1000) });
         throw new Error('FillUpTo succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -232,9 +244,9 @@ contract('Exchange', accounts => {
         orderFactory.newSignedOrderAsync(),
       ]);
       const cancelValuesM = _.map(orders, order => order.params.valueM);
-      await exWrapper.batchCancelAsync(orders, { cancelValuesM, from: maker });
+      await exWrapper.batchCancelAsync(orders, maker, { cancelValuesM });
 
-      const res = await exWrapper.batchFillAsync(orders, { fillValuesM: cancelValuesM, from: taker });
+      const res = await exWrapper.batchFillAsync(orders, taker, { fillValuesM: cancelValuesM });
       assert.equal(res.logs.length, 0);
     });
   });

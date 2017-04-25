@@ -1,29 +1,16 @@
-const _ = require('lodash');
-const ethUtil = require('ethereumjs-util');
-const promisify = require('es6-promisify');
-const crypto = require('./crypto.js');
+import * as _ from 'lodash';
+import { crypto } from './crypto';
+import { OrderParams } from './types';
+import ethUtil = require('ethereumjs-util');
+import promisify = require('es6-promisify');
+import Web3 = require('web3');
 
-class Order {
-  constructor(params) {
+export class Order {
+  public params: OrderParams;
+  constructor(params: OrderParams) {
     this.params = params;
   }
-  getOrderHash() {
-    const orderHash = crypto.solSHA3(
-        this.params.exchange,
-        this.params.maker,
-        this.params.taker,
-        this.params.tokenM,
-        this.params.tokenT,
-        this.params.feeRecipient,
-        this.params.valueM,
-        this.params.valueT,
-        this.params.feeM,
-        this.params.feeT,
-        this.params.expiration
-      );
-    return orderHash;
-  }
-  isValidSignature() {
+  public isValidSignature() {
     const { v, r, s } = this.params;
     if (_.isUndefined(v) || _.isUndefined(r) || _.isUndefined(s)) {
       throw new Error('Cannot call isValidSignature on unsigned order');
@@ -38,7 +25,7 @@ class Order {
       return false;
     }
   }
-  async signAsync() {
+  public async signAsync() {
     const orderHash = this.getOrderHash();
     // The eth_sign RPC call functions differently on testrpc and geth clients. Geth clients add
     // the personal message header before sending the request, whereas testrpc does not.
@@ -54,7 +41,7 @@ class Order {
       s: ethUtil.bufferToHex(s),
     });
   }
-  createFill(shouldCheckTransfer, fillValueM) {
+  public createFill(shouldCheckTransfer: boolean, fillValueM?: string) {
     const fill = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],
@@ -69,7 +56,7 @@ class Order {
     };
     return fill;
   }
-  createCancel(cancelValueM) {
+  public createCancel(cancelValueM?: string) {
     const cancel = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],
@@ -81,6 +68,20 @@ class Order {
     };
     return cancel;
   }
+  private getOrderHash() {
+    const orderHash = crypto.solSHA3([
+      this.params.exchange,
+      this.params.maker,
+      this.params.taker,
+      this.params.tokenM,
+      this.params.tokenT,
+      this.params.feeRecipient,
+      this.params.valueM,
+      this.params.valueT,
+      this.params.feeM,
+      this.params.feeT,
+      this.params.expiration,
+    ]);
+    return orderHash;
+  }
 }
-
-module.exports = Order;

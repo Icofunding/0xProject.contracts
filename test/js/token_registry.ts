@@ -1,15 +1,13 @@
-require('babel-polyfill');
-require('source-map-support/register');
+import * as _ from 'lodash';
+import { testUtil } from '../../util/test_util';
+import { TokenRegWrapper } from '../../util/token_registry_wrapper';
+import { ContractInstance } from '../../util/types';
+import * as assert from 'assert';
+import ethUtil = require('ethereumjs-util');
 
 const TokenRegistry = artifacts.require('./TokenRegistry.sol');
-const assert = require('assert');
-const expect = require('chai').expect;
-const _ = require('lodash');
-const ethUtil = require('ethereumjs-util');
-const testUtil = require('../../util/test_util');
-const TokenRegWrapper = require('../../util/token_registry_wrapper');
 
-contract('TokenRegistry', accounts => {
+contract('TokenRegistry', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
@@ -33,8 +31,8 @@ contract('TokenRegistry', accounts => {
     swarmHash: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 32).toString('hex')}`,
   };
 
-  let tokenReg;
-  let tokenRegWrapper;
+  let tokenReg: ContractInstance;
+  let tokenRegWrapper: TokenRegWrapper;
 
   before(async () => {
     tokenReg = await TokenRegistry.deployed();
@@ -44,7 +42,7 @@ contract('TokenRegistry', accounts => {
   describe('addToken', () => {
     it('should throw when not called by owner', async () => {
       try {
-        await tokenRegWrapper.addTokenAsync(token, { from: notOwner });
+        await tokenRegWrapper.addTokenAsync(token, notOwner);
         throw new Error('addToken succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -52,23 +50,23 @@ contract('TokenRegistry', accounts => {
     });
 
     it('should add token metadata when called by owner', async () => {
-      await tokenRegWrapper.addTokenAsync(token, { from: owner });
+      await tokenRegWrapper.addTokenAsync(token, owner);
       const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.tokenAddress);
-      expect(tokenData).to.deep.equal(token);
+      assert.deepEqual(tokenData, token);
     });
   });
 
   describe('getTokenByName', () => {
     it('should return token metadata when given the token name', async () => {
       const tokenData = await tokenRegWrapper.getTokenByNameAsync(token.name);
-      expect(tokenData).to.deep.equal(token);
+      assert.deepEqual(tokenData, token);
     });
   });
 
   describe('getTokenBySymbol', () => {
     it('should return token metadata when given the token symbol', async () => {
       const tokenData = await tokenRegWrapper.getTokenBySymbolAsync(token.symbol);
-      expect(tokenData).to.deep.equal(token);
+      assert.deepEqual(tokenData, token);
     });
   });
 
@@ -90,8 +88,8 @@ contract('TokenRegistry', accounts => {
         tokenRegWrapper.getTokenByNameAsync(newNameToken.name),
         tokenRegWrapper.getTokenByNameAsync(token.name),
       ]);
-      expect(newData).to.deep.equal(newNameToken);
-      expect(oldData).to.deep.equal(nullToken);
+      assert.deepEqual(newData, newNameToken);
+      assert.deepEqual(oldData, nullToken);
     });
   });
 
@@ -113,8 +111,8 @@ contract('TokenRegistry', accounts => {
         tokenRegWrapper.getTokenBySymbolAsync(newSymbolToken.symbol),
         tokenRegWrapper.getTokenBySymbolAsync(token.symbol),
       ]);
-      expect(newData).to.deep.equal(newSymbolToken);
-      expect(oldData).to.deep.equal(nullToken);
+      assert.deepEqual(newData, newSymbolToken);
+      assert.deepEqual(oldData, nullToken);
     });
   });
 
@@ -132,7 +130,7 @@ contract('TokenRegistry', accounts => {
       const res = await tokenReg.removeToken(token.tokenAddress, { from: owner });
       assert.equal(res.logs.length, 1);
       const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.tokenAddress);
-      expect(tokenData).to.deep.equal(nullToken);
+      assert.deepEqual(tokenData, nullToken);
     });
   });
 });

@@ -1,22 +1,25 @@
+import { Balances } from '../../../util/balances';
+import { BNUtil } from '../../../util/bn_util';
+import { testUtil } from '../../../util/test_util';
+import { ContractInstance } from '../../../util/types';
+import * as assert from 'assert';
+
 const Proxy = artifacts.require('./Proxy.sol');
 const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const BNUtil = require('../../../util/bn_util');
-const testUtil = require('../../../util/test_util');
-const Balances = require('../../../util/balances');
 
 const { add, sub } = BNUtil;
 
-contract('Proxy', accounts => {
+contract('Proxy', (accounts: string[]) => {
   const INIT_BAL = 100000000;
   const INIT_ALLOW = 100000000;
 
   const owner = accounts[0];
   const notAuthorized = owner;
 
-  let proxy;
-  let dmyA;
+  let proxy: ContractInstance;
+  let dmyA: ContractInstance;
 
-  let dmyBalances;
+  let dmyBalances: Balances;
 
   before(async () => {
     [proxy, dmyA] = await Promise.all([

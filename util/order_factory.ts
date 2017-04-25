@@ -1,11 +1,13 @@
-const _ = require('lodash');
-const Order = require('./order');
+import * as _ from 'lodash';
+import { Order } from './order';
+import { OrderParams, DefaultOrderParams, OptionalOrderParams } from './types';
 
-class OrderFactory {
-  constructor(defaultOrderParams) {
+export class OrderFactory {
+  private defaultOrderParams: DefaultOrderParams;
+  constructor(defaultOrderParams: DefaultOrderParams) {
     this.defaultOrderParams = defaultOrderParams;
   }
-  async newSignedOrderAsync(customOrderParams = {}) {
+  public async newSignedOrderAsync(customOrderParams: OptionalOrderParams = {}) {
     const randomExpiration = Math.floor((Date.now() + (Math.random() * 100000000000)) / 1000);
     const orderParams = _.assign({}, {
       expiration: randomExpiration,
@@ -16,5 +18,3 @@ class OrderFactory {
     return order;
   }
 }
-
-module.exports = OrderFactory;

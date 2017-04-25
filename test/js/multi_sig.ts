@@ -1,23 +1,22 @@
-require('babel-polyfill');
-require('source-map-support/register');
-const assert = require('assert');
-const promisify = require('es6-promisify');
+import { RPC } from '../../util/rpc';
+import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
+import { testUtil } from '../../util/test_util';
+import * as assert from 'assert';
+import promisify = require('es6-promisify');
+
 const MULTI_SIG_ABI = require('../../build/contracts/MultiSigWallet.json').abi;
-const MultiSigWrapper = require('../../util/multi_sig_wrapper');
-const testUtil = require('../../util/test_util');
-const RPC = require('../../util/rpc');
 
 const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
 
-contract('MultiSigWallet', accounts => {
+contract('MultiSigWallet', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
   const SECONDS_REQUIRED = 10000;
 
-  let multiSig;
-  let multiSigWrapper;
-  let txId;
-  let initialThreshold;
-  let rpc;
+  let multiSig: any;
+  let multiSigWrapper: any;
+  let txId: number;
+  let initialThreshold: number;
+  let rpc: RPC;
 
   before(async () => {
     multiSig = await MultiSigWallet.deployed();

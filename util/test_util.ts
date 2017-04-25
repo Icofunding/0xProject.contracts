@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const assert = require('assert');
+import * as _ from 'lodash';
+import * as assert from 'assert';
 
-const testUtil = {
-  assertThrow(err) {
+export const testUtil = {
+  assertThrow(err: Error) {
     const errMsg = `${err}`;
     const didCalledContractThrow = _.includes(errMsg, 'invalid JUMP');
     const didNestedContractThrow = _.includes(errMsg, 'out of gas');
@@ -11,5 +11,3 @@ const testUtil = {
            didGethContractThrow, `Expected contract to throw, got: ${err}`);
   },
 };
-
-module.exports = testUtil;

@@ -1,8 +1,11 @@
-const MultiSigWallet = artifacts.require('./MultiSigWallet.sol');
-const Proxy = artifacts.require('./Proxy.sol');
-const TokenRegistry = artifacts.require('./TokenRegistry.sol');
+import { Artifacts } from '../util/artifacts';
+const {
+  Proxy,
+  MultiSigWallet,
+  TokenRegistry,
+} = new Artifacts(artifacts);
 
-module.exports = (deployer, network, accounts) => {
+module.exports = (deployer: any, network: string, accounts: string[]) => {
   if (network !== 'development') {
     Promise.all([
       Proxy.deployed(),

@@ -1,10 +1,14 @@
-const TokenRegistry = artifacts.require('./TokenRegistry.sol');
-const DummyTokenA = artifacts.require('./DummyTokenA.sol');
-const DummyTokenB = artifacts.require('./DummyTokenB.sol');
-const DummyEtherToken = artifacts.require('./DummyEtherToken.sol');
+import { ContractInstance } from '../util/types';
+import { Artifacts } from '../util/artifacts';
+const {
+  DummyTokenA,
+  DummyTokenB,
+  DummyEtherToken,
+  TokenRegistry,
+} = new Artifacts(artifacts);
 
-let tokenRegistry;
-module.exports = (deployer, network) => {
+let tokenRegistry: ContractInstance;
+module.exports = (deployer: any, network: string) => {
   if (network !== 'live') {
     deployer.deploy([
         [DummyTokenA, 1000000000000000000000],
@@ -19,7 +23,10 @@ module.exports = (deployer, network) => {
           DummyEtherToken.deployed(),
         ])
     ))
-    .then(contracts => {
+    .then((contracts: ContractInstance[]) => {
+      let dummyTokenA: ContractInstance;
+      let dummyTokenB: ContractInstance;
+      let dummyEtherToken: ContractInstance;
       [tokenRegistry, dummyTokenA, dummyTokenB, dummyEtherToken] = contracts;
       return Promise.all([
         dummyTokenA.symbol(),
@@ -31,8 +38,8 @@ module.exports = (deployer, network) => {
         dummyEtherToken.decimals(),
       ]);
     })
-    .then(tokenInfo => {
-      [
+    .then((tokenInfo: any[]) => {
+      const [
         dummyTokenASymbol,
         dummyTokenAName,
         dummyTokenBSymbol,
@@ -69,7 +76,7 @@ module.exports = (deployer, network) => {
           url,
           dummyEtherTokenDecimals,
           ipfsHash,
-          swarmHash
+          swarmHash,
         ),
       ]);
     });

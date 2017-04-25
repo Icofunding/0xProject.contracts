@@ -1,18 +1,16 @@
-require('babel-polyfill');
-require('source-map-support/register');
-
-const _ = require('lodash');
-const assert = require('assert');
-const testUtil = require('../../../util/test_util');
+import * as _ from 'lodash';
+import * as assert from 'assert';
+import { testUtil } from '../../../util/test_util';
+import { ContractInstance } from '../../../util/types';
 
 const Proxy = artifacts.require('./db/Proxy.sol');
 
-contract('Proxy', accounts => {
+contract('Proxy', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  let proxy;
-  let authorized;
+  let proxy: ContractInstance;
+  let authorized: string;
   let notAuthorized = owner;
 
   before(async () => {

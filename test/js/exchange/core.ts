@@ -1,5 +1,12 @@
-require('babel-polyfill');
-require('source-map-support/register');
+import { Balances } from '../../../util/balances';
+import { BNUtil } from '../../../util/bn_util';
+import { ExchangeWrapper } from '../../../util/exchange_wrapper';
+import { OrderFactory } from '../../../util/order_factory';
+import { testUtil } from '../../../util/test_util';
+import { Order } from '../../../util/order';
+import { BalancesByOwner, ContractInstance } from '../../../util/types';
+import * as assert from 'assert';
+import ethUtil = require('ethereumjs-util');
 
 const Exchange = artifacts.require('./Exchange.sol');
 const Proxy = artifacts.require('./Proxy.sol');
@@ -7,18 +14,9 @@ const DummyTokenA = artifacts.require('./tokens/DummyTokenA.sol');
 const DummyTokenB = artifacts.require('./tokens/DummyTokenB.sol');
 const DummyProtocolToken = artifacts.require('./tokens/DummyProtocolToken.sol');
 
-const assert = require('assert');
-const expect = require('chai').expect;
-const ethUtil = require('ethereumjs-util');
-const BNUtil = require('../../../util/bn_util');
-const ExchangeWrapper = require('../../../util/exchange_wrapper');
-const OrderFactory = require('../../../util/order_factory');
-const testUtil = require('../../../util/test_util');
-const Balances = require('../../../util/balances');
-
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 
-contract('Exchange', accounts => {
+contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
@@ -26,16 +24,16 @@ contract('Exchange', accounts => {
   const INIT_BAL = toSmallestUnits(10000);
   const INIT_ALLOW = toSmallestUnits(10000);
 
-  let dmyA;
-  let dmyB;
-  let dmyPT;
-  let exchange;
+  let dmyA: ContractInstance;
+  let dmyB: ContractInstance;
+  let dmyPT: ContractInstance;
+  let exchange: ContractInstance;
 
-  let order;
-  let balances;
+  let order: Order;
+  let balances: BalancesByOwner;
 
-  let exWrapper;
-  let dmyBalances;
+  let exWrapper: ExchangeWrapper;
+  let dmyBalances: Balances;
 
   const defaultOrderParams = {
     exchange: Exchange.address,
@@ -118,7 +116,7 @@ contract('Exchange', accounts => {
       assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillAsync(order, taker, { fillValueM });
 
       const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
@@ -133,7 +131,8 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], fillValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when valueM > valueT', async () => {
@@ -146,7 +145,7 @@ contract('Exchange', accounts => {
       assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillAsync(order, taker, { fillValueM });
 
       const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
@@ -162,7 +161,8 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], fillValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when valueM < valueT', async () => {
@@ -175,7 +175,7 @@ contract('Exchange', accounts => {
       assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillAsync(order, taker, { fillValueM });
 
       const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
@@ -191,7 +191,8 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], fillValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should transfer the correct amounts when taker is specified and order is claimed by taker', async () => {
@@ -205,11 +206,12 @@ contract('Exchange', accounts => {
       assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillAsync(order, taker, { fillValueM });
 
       const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
       const expectedFillAmountMAfter = add(fillValueM, filledAmountMBefore);
-      assert.equal(filledAmountMAfter.toString(), expectedFillAmountMAfter, 'filledAmountMAfter should be same as fillValueM');
+      assert.equal(filledAmountMAfter.toString(), expectedFillAmountMAfter,
+                   'filledAmountMAfter should be same as fillValueM');
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -222,30 +224,35 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], fillValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], fillValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should fill remaining value if fillValueM > remaining valueM', async () => {
       const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, { fillValueM, from: taker });
+      await exWrapper.fillAsync(order, taker, { fillValueM });
 
-      const res = await exWrapper.fillAsync(order, { fillValueM: order.params.valueM, from: taker });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueM: order.params.valueM });
 
       assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.params.valueM, fillValueM));
       const newBalances = await dmyBalances.getAsync();
 
-      assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], order.params.valueM));
-      assert.equal(newBalances[maker][order.params.tokenT], add(balances[maker][order.params.tokenT], order.params.valueT));
+      assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM],
+                   order.params.valueM));
+      assert.equal(newBalances[maker][order.params.tokenT], add(balances[maker][order.params.tokenT],
+                   order.params.valueT));
       assert.equal(newBalances[maker][dmyPT.address], sub(balances[maker][dmyPT.address], order.params.feeM));
-      assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], order.params.valueT));
-      assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], order.params.valueM));
+      assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT],
+                   order.params.valueT));
+      assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM],
+                   order.params.valueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], order.params.feeT));
       assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address],
                    add(order.params.feeM, order.params.feeT)));
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.fillAsync(order, { fillValueM: div(order.params.valueM, 2), from: taker });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueM: div(order.params.valueM, 2) });
       assert.equal(res.logs.length, 1);
     });
 
@@ -257,7 +264,7 @@ contract('Exchange', accounts => {
       });
 
       try {
-        await exWrapper.fillAsync(order, { from: taker });
+        await exWrapper.fillAsync(order, taker);
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -272,7 +279,7 @@ contract('Exchange', accounts => {
       order.params.r = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
       order.params.s = ethUtil.bufferToHex(ethUtil.sha3('invalidS'));
       try {
-        await exWrapper.fillAsync(order, { from: taker });
+        await exWrapper.fillAsync(order, taker);
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -284,11 +291,10 @@ contract('Exchange', accounts => {
         valueM: toSmallestUnits(100000),
       });
 
-      await exWrapper.fillAsync(order, { shouldCheckTransfer: true, from: taker });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
-
 
     it('should throw if balances are too low to fill order and shouldCheckTransfer = false', async () => {
       order = await orderFactory.newSignedOrderAsync({
@@ -296,24 +302,25 @@ contract('Exchange', accounts => {
       });
 
       try {
-        await exWrapper.fillAsync(order, { from: taker });
+        await exWrapper.fillAsync(order, taker);
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
     });
 
-    it('should not change balances if allowances are too low to fill order and shouldCheckTransfer = true', async () => {
+    it('should not change balances if allowances are too low to fill order and shouldCheckTransfer = true',
+       async () => {
       await dmyA.approve(Proxy.address, 0, { from: maker });
-      await exWrapper.fillAsync(order, { shouldCheckTransfer: true, from: taker });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
 
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
 
     it('should throw if allowances are too low to fill order and shouldCheckTransfer = false', async () => {
       try {
-        await exWrapper.fillAsync(order, { from: taker });
+        await exWrapper.fillAsync(order, taker);
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -325,10 +332,10 @@ contract('Exchange', accounts => {
       order = await orderFactory.newSignedOrderAsync({
         expiration: Math.floor((Date.now() - 10000) / 1000),
       });
-      await exWrapper.fillAsync(order, { from: taker });
+      await exWrapper.fillAsync(order, taker);
 
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
 
     it('should not log events if an order is expired', async () => {
@@ -336,14 +343,14 @@ contract('Exchange', accounts => {
         expiration: Math.floor((Date.now() - 10000) / 1000),
       });
 
-      const res = await exWrapper.fillAsync(order, { from: taker });
+      const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 0);
     });
 
     it('should not log events if no value is filled', async () => {
-      await exWrapper.fillAsync(order, { from: taker });
+      await exWrapper.fillAsync(order, taker);
 
-      const res = await exWrapper.fillAsync(order, { from: taker });
+      const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 0);
     });
   });
@@ -356,7 +363,7 @@ contract('Exchange', accounts => {
 
     it('should throw if not sent by maker', async () => {
       try {
-        await exWrapper.cancelAsync(order, { from: taker });
+        await exWrapper.cancelAsync(order, taker);
         throw new Error('Cancel succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -364,18 +371,18 @@ contract('Exchange', accounts => {
     });
 
     it('should be able to cancel a full order', async () => {
-      await exWrapper.cancelAsync(order, { from: maker });
-      await exWrapper.fillAsync(order, { fillValueM: div(order.params.valueM, 2), from: taker });
+      await exWrapper.cancelAsync(order, maker);
+      await exWrapper.fillAsync(order, taker, { fillValueM: div(order.params.valueM, 2) });
 
       const newBalances = await dmyBalances.getAsync();
-      expect(newBalances).to.deep.equal(balances);
+      assert.deepEqual(balances, newBalances);
     });
 
     it('should be able to cancel part of an order', async () => {
       const cancelValueM = div(order.params.valueM, 2);
-      await exWrapper.cancelAsync(order, { cancelValueM, from: maker });
+      await exWrapper.cancelAsync(order, maker, { cancelValueM });
 
-      const res = await exWrapper.fillAsync(order, { fillValueM: order.params.valueM, from: taker });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueM: order.params.valueM });
       assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.params.valueM, cancelValueM));
 
       const newBalances = await dmyBalances.getAsync();
@@ -388,18 +395,19 @@ contract('Exchange', accounts => {
       assert.equal(newBalances[taker][order.params.tokenT], sub(balances[taker][order.params.tokenT], cancelValueT));
       assert.equal(newBalances[taker][order.params.tokenM], add(balances[taker][order.params.tokenM], cancelValueM));
       assert.equal(newBalances[taker][dmyPT.address], sub(balances[taker][dmyPT.address], feeValueT));
-      assert.equal(newBalances[feeRecipient][dmyPT.address], add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
+      assert.equal(newBalances[feeRecipient][dmyPT.address],
+                   add(balances[feeRecipient][dmyPT.address], add(feeValueM, feeValueT)));
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.cancelAsync(order, { cancelValueM: div(order.params.valueM, 2), from: maker });
+      const res = await exWrapper.cancelAsync(order, maker, { cancelValueM: div(order.params.valueM, 2) });
       assert.equal(res.logs.length, 1);
     });
 
     it('should not log events if no value is cancelled', async () => {
-      await exWrapper.cancelAsync(order, { from: maker });
+      await exWrapper.cancelAsync(order, maker);
 
-      const res = await exWrapper.cancelAsync(order, { from: maker });
+      const res = await exWrapper.cancelAsync(order, maker);
       assert.equal(res.logs.length, 0);
     });
 
@@ -408,7 +416,7 @@ contract('Exchange', accounts => {
         expiration: Math.floor((Date.now() - 10000) / 1000),
       });
 
-      const res = await exWrapper.cancelAsync(order, { from: maker });
+      const res = await exWrapper.cancelAsync(order, maker);
       assert.equal(res.logs.length, 0);
     });
   });
