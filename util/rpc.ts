@@ -1,4 +1,3 @@
-// TODO: find definitelyTypes defs for this!
 import * as request from 'request-promise-native';
 import * as truffleConf from '../truffle.js';
 
