@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
-import { crypto } from './crypto';
-import { OrderParams } from './types';
 import ethUtil = require('ethereumjs-util');
 import promisify = require('es6-promisify');
 import Web3 = require('web3');
+import { crypto } from './crypto';
+import { OrderParams } from './types';
 
 export class Order {
   public params: OrderParams;

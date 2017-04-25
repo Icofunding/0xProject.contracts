@@ -1,11 +1,12 @@
 import * as _ from 'lodash';
+import * as assert from 'assert';
+import ethUtil = require('ethereumjs-util');
 import { testUtil } from '../../util/test_util';
 import { TokenRegWrapper } from '../../util/token_registry_wrapper';
 import { ContractInstance } from '../../util/types';
-import * as assert from 'assert';
-import ethUtil = require('ethereumjs-util');
+import { Artifacts } from '../../util/artifacts';
 
-const TokenRegistry = artifacts.require('./TokenRegistry.sol');
+const { TokenRegistry } = new Artifacts(artifacts);
 
 contract('TokenRegistry', (accounts: string[]) => {
   const owner = accounts[0];
