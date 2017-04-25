@@ -4,12 +4,12 @@ import { RPC } from '../../util/rpc';
 import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { testUtil } from '../../util/test_util';
 import { ContractInstance } from '../../util/types';
-import multiSigWalletJSON from '../../build/contracts/MultiSigWallet.json';
+import * as multiSigWalletJSON from '../../build/contracts/MultiSigWallet.json';
 import { Artifacts } from '../../util/artifacts';
 
 const { MultiSigWallet } = new Artifacts(artifacts);
 
-const MULTI_SIG_ABI = multiSigWalletJSON.abi;
+const MULTI_SIG_ABI = (multiSigWalletJSON as any).abi;
 
 contract('MultiSigWallet', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
