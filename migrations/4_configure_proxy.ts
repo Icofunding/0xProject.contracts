@@ -8,7 +8,6 @@ const {
 
 let proxy: ContractInstance;
 module.exports = (deployer: any) => {
-  console.log('Number 4!');
   deployer.then(() => {
     return Promise.all([
       Proxy.deployed(),
@@ -21,7 +20,6 @@ module.exports = (deployer: any) => {
     return tokenRegistry.getTokenAddressBySymbol('ZRX');
   })
   .then((ptAddress: string) => {
-    console.log('ptAddress', ptAddress);
     return deployer.deploy(Exchange, ptAddress, proxy.address);
   }).then(() => {
     return proxy.addAuthorizedAddress(Exchange.address);
