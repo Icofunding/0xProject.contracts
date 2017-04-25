@@ -3,7 +3,7 @@ declare module 'ethereumjs-abi';
 declare module 'es6-promisify';
 
 // Truffle injects the following into the global scope
-declare var web3: any; // TODO: figure out how to use Web3 definition instead of `any`
+declare var web3: any; // TODO: figure out how to use Web3 definition from within global.d.ts instead of `any`
 declare var artifacts: any;
 declare var contract: any;
 declare var before: any;
@@ -105,9 +105,7 @@ declare module 'web3' {
         type: string;
     }
 
-    interface Contract {
-        // TODO
-    }
+    interface Contract {}
 
     interface FilterObject {
         fromBlock: number|string;
@@ -130,7 +128,7 @@ declare module 'web3' {
         }
     }
 
-    namespace Web3 {} // Empty module so the class is expotable as a module
+    namespace Web3 {}
 
     export = Web3;
 }
