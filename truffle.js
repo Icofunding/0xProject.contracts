@@ -13,4 +13,5 @@ module.exports = {
     },
   },
   test_directory: 'transpiled/test',
+  migrations_directory: 'transpiled/migrations',
 };

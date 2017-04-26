@@ -12,5 +12,5 @@ test:
   override:
     - node node_modules/ethereumjs-testrpc/bin/testrpc:
         background: true
-    - truffle migrate
+    - npm run migrate
     - npm run test

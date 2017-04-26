@@ -82,7 +82,7 @@ testrpc --networkId 42
 Compile contracts
 
 ```
-truffle compile
+npm run compile
 ```
 
 Run tests
@@ -93,8 +93,8 @@ npm run test
 
 ### Contributing
 
-#### Style guide
+#### Coding conventions
 
-We adhere to the [Airbnb javascript style guide](https://github.com/airbnb/javascript).
+We use a custom set of [TSLint](https://palantir.github.io/tslint/) rules to enforce our coding conventions.
 
-In order to see style violation errors, install an eslinter for your text editor. e.g Atom's [linter-eslint](https://atom.io/packages/linter-eslint).
+In order to see style violation errors, install a tslinter for your text editor. e.g Atom's [atom-typescript](https://atom.io/packages/atom-typescript).
