@@ -26,10 +26,12 @@ import "./base/SafeMath.sol";
 contract Exchange is SafeMath {
 
   // Error Codes
-  uint8 constant ERROR_EXPIRED = 1;           // Order has already expired
-  uint8 constant ERROR_FILLED_CANCELLED = 2;  // Order has already been filled or cancelled
-  uint8 constant ERROR_TRUNCATION = 3;        // Rounding error too large
-  uint8 constant ERROR_BALANCE_ALLOWANCE = 4; // Insufficient balance or allowance
+  uint8 constant ERROR_FILL_EXPIRED = 1;           // Order has already expired
+  uint8 constant ERROR_FILL_NO_VALUE = 2;          // Order has already been fully filled or cancelled
+  uint8 constant ERROR_FILL_TRUNCATION = 3;        // Rounding error too large
+  uint8 constant ERROR_FILL_BALANCE_ALLOWANCE = 4; // Insufficient balance or allowance for token transfer
+  uint8 constant ERROR_CANCEL_EXPIRED = 5;         // Order has already expired
+  uint8 constant ERROR_CANCEL_NO_VALUE = 6;        // Order has already been fully filled or cancelled
 
   address public PROTOCOL_TOKEN;
   address public PROXY;
@@ -67,7 +69,7 @@ contract Exchange is SafeMath {
     bytes32 orderHash
   );
 
-  event LogError(uint8 indexed errorId, bytes32 orderHash);
+  event LogError(uint8 indexed errorId, bytes32 indexed orderHash);
 
   function Exchange(address _protocolToken, address _proxy) {
     PROTOCOL_TOKEN = _protocolToken;
@@ -115,18 +117,18 @@ contract Exchange is SafeMath {
     );
 
     if (block.timestamp >= expiration) {
-      LogError(ERROR_EXPIRED, orderHash);
+      LogError(ERROR_FILL_EXPIRED, orderHash);
       return 0;
     }
 
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
     if (filledValueM == 0) {
-      LogError(ERROR_FILLED_CANCELLED, orderHash);
+      LogError(ERROR_FILL_NO_VALUE, orderHash);
       return 0;
     }
 
     if (isRoundingError(values[0], filledValueM, values[1])) {
-      LogError(ERROR_TRUNCATION, orderHash);
+      LogError(ERROR_FILL_TRUNCATION, orderHash);
       return 0;
     }
 
@@ -138,7 +140,7 @@ contract Exchange is SafeMath {
       fees,
       filledValueM
     )) {
-      LogError(ERROR_BALANCE_ALLOWANCE, orderHash);
+      LogError(ERROR_FILL_BALANCE_ALLOWANCE, orderHash);
       return 0;
     }
 
@@ -184,7 +186,7 @@ contract Exchange is SafeMath {
     }
     assert(fills[orderHash] <= values[0]);
 
-    return fillSuccess(
+    fillSuccess(
       [traders[0], msg.sender],
       tokens,
       feeRecipient,
@@ -194,6 +196,7 @@ contract Exchange is SafeMath {
       filledValueM,
       orderHash
     );
+    return filledValueM;
   }
 
   /// @dev Cancels the input order.
@@ -227,19 +230,19 @@ contract Exchange is SafeMath {
     );
 
     if (block.timestamp >= expiration) {
-      LogError(ERROR_EXPIRED, orderHash);
+      LogError(ERROR_CANCEL_EXPIRED, orderHash);
       return 0;
     }
 
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
     if (cancelledValueM == 0) {
-      LogError(ERROR_FILLED_CANCELLED, orderHash);
+      LogError(ERROR_CANCEL_NO_VALUE, orderHash);
       return 0;
     }
 
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
 
-    return cancelSuccess(
+    cancelSuccess(
       traders[0],
       tokens,
       feeRecipient,
@@ -249,6 +252,7 @@ contract Exchange is SafeMath {
       cancelledValueM,
       orderHash
     );
+    return cancelledValueM;
   }
 
   /*
@@ -549,6 +553,36 @@ contract Exchange is SafeMath {
     return safeDiv(safeMul(fillValue, target), value);
   }
 
+  function getAllErrors()
+    returns (
+      string err1,
+      string err2,
+      string err3,
+      string err4,
+      string err5,
+      string err6
+    )
+  {
+    err1 = "ERROR_FILL_EXPIRED";
+    err2 = "ERROR_FILL_NO_VALUE";
+    err3 = "ERROR_FILL_TRUNCATION";
+    err4 = "ERROR_FILL_BALANCE_ALLOWANCE";
+    err5 = "ERROR_CANCEL_EXPIRED";
+    err6 = "ERROR_CANCEL_NO_VALUE";
+  }
+
+  function getError(uint errCode)
+    constant
+    returns (string err)
+  {
+    if (errCode == 1) return "ERROR_FILL_EXPIRED";
+    if (errCode == 2) return "ERROR_FILL_NO_VALUE";
+    if (errCode == 3) return "ERROR_FILL_TRUNCATION";
+    if (errCode == 4) return "ERROR_FILL_BALANCE_ALLOWANCE";
+    if (errCode == 5) return "ERROR_CANCEL_EXPIRED";
+    if (errCode == 6) return "ERROR_CANCEL_NO_VALUE";
+  }
+
   /*
   * Private functions
   */
@@ -590,8 +624,6 @@ contract Exchange is SafeMath {
     uint filledValueM,
     bytes32 orderHash)
     private
-    constant
-    returns (uint)
   {
     LogFill(
       traders[0],
@@ -608,7 +640,6 @@ contract Exchange is SafeMath {
       sha3(tokens[0], tokens[1]),
       orderHash
     );
-    return filledValueM;
   }
 
   /// @dev Logs cancel event and returns value cancelled.
@@ -631,8 +662,6 @@ contract Exchange is SafeMath {
     uint cancelledValueM,
     bytes32 orderHash)
     private
-    constant
-    returns (uint)
   {
     LogCancel(
       maker,
@@ -648,7 +677,6 @@ contract Exchange is SafeMath {
       sha3(tokens[0], tokens[1]),
       orderHash
     );
-    return cancelledValueM;
   }
 
   /// @dev Checks if any order transfers will fail.
