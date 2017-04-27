@@ -258,7 +258,8 @@ contract('Exchange', (accounts: string[]) => {
       await exWrapper.batchCancelAsync(orders, maker, { cancelValuesM });
 
       const res = await exWrapper.batchFillAsync(orders, taker, { fillValuesM: cancelValuesM });
-      assert.equal(res.logs.length, 0);
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(balances, newBalances);
     });
   });
 });

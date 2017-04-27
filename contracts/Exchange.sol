@@ -553,7 +553,7 @@ contract Exchange is SafeMath {
     return safeDiv(safeMul(fillValue, target), value);
   }
 
-  function getAllErrors()
+  function getAllErrCodes()
     returns (
       string err1,
       string err2,
@@ -571,16 +571,16 @@ contract Exchange is SafeMath {
     err6 = "ERROR_CANCEL_NO_VALUE";
   }
 
-  function getError(uint errCode)
+  function getErrCode(uint errId)
     constant
     returns (string err)
   {
-    if (errCode == 1) return "ERROR_FILL_EXPIRED";
-    if (errCode == 2) return "ERROR_FILL_NO_VALUE";
-    if (errCode == 3) return "ERROR_FILL_TRUNCATION";
-    if (errCode == 4) return "ERROR_FILL_BALANCE_ALLOWANCE";
-    if (errCode == 5) return "ERROR_CANCEL_EXPIRED";
-    if (errCode == 6) return "ERROR_CANCEL_NO_VALUE";
+    if (errId == 1) return "ERROR_FILL_EXPIRED";
+    if (errId == 2) return "ERROR_FILL_NO_VALUE";
+    if (errId == 3) return "ERROR_FILL_TRUNCATION";
+    if (errId == 4) return "ERROR_FILL_BALANCE_ALLOWANCE";
+    if (errId == 5) return "ERROR_CANCEL_EXPIRED";
+    if (errId == 6) return "ERROR_CANCEL_NO_VALUE";
   }
 
   /*
