@@ -26,12 +26,12 @@ import "./base/SafeMath.sol";
 contract Exchange is SafeMath {
 
   // Error Codes
-  uint8 constant ERROR_FILL_EXPIRED = 1;           // Order has already expired
-  uint8 constant ERROR_FILL_NO_VALUE = 2;          // Order has already been fully filled or cancelled
-  uint8 constant ERROR_FILL_TRUNCATION = 3;        // Rounding error too large
-  uint8 constant ERROR_FILL_BALANCE_ALLOWANCE = 4; // Insufficient balance or allowance for token transfer
-  uint8 constant ERROR_CANCEL_EXPIRED = 5;         // Order has already expired
-  uint8 constant ERROR_CANCEL_NO_VALUE = 6;        // Order has already been fully filled or cancelled
+  uint8 constant ERROR_FILL_EXPIRED = 0;           // Order has already expired
+  uint8 constant ERROR_FILL_NO_VALUE = 1;          // Order has already been fully filled or cancelled
+  uint8 constant ERROR_FILL_TRUNCATION = 2;        // Rounding error too large
+  uint8 constant ERROR_FILL_BALANCE_ALLOWANCE = 3; // Insufficient balance or allowance for token transfer
+  uint8 constant ERROR_CANCEL_EXPIRED = 4;         // Order has already expired
+  uint8 constant ERROR_CANCEL_NO_VALUE = 5;        // Order has already been fully filled or cancelled
 
   address public PROTOCOL_TOKEN;
   address public PROXY;
@@ -553,34 +553,25 @@ contract Exchange is SafeMath {
     return safeDiv(safeMul(fillValue, target), value);
   }
 
-  function getAllErrCodes()
+  /// @dev Helper function for retrieving error codes.
+  /// @return Error code strings in order of errorId.
+  function getErrorCodes()
+    constant
     returns (
+      string err0,
       string err1,
       string err2,
       string err3,
       string err4,
-      string err5,
-      string err6
+      string err5
     )
   {
-    err1 = "ERROR_FILL_EXPIRED";
-    err2 = "ERROR_FILL_NO_VALUE";
-    err3 = "ERROR_FILL_TRUNCATION";
-    err4 = "ERROR_FILL_BALANCE_ALLOWANCE";
-    err5 = "ERROR_CANCEL_EXPIRED";
-    err6 = "ERROR_CANCEL_NO_VALUE";
-  }
-
-  function getErrCode(uint errId)
-    constant
-    returns (string err)
-  {
-    if (errId == 1) return "ERROR_FILL_EXPIRED";
-    if (errId == 2) return "ERROR_FILL_NO_VALUE";
-    if (errId == 3) return "ERROR_FILL_TRUNCATION";
-    if (errId == 4) return "ERROR_FILL_BALANCE_ALLOWANCE";
-    if (errId == 5) return "ERROR_CANCEL_EXPIRED";
-    if (errId == 6) return "ERROR_CANCEL_NO_VALUE";
+    err0 = "ERROR_FILL_EXPIRED";
+    err1 = "ERROR_FILL_NO_VALUE";
+    err2 = "ERROR_FILL_TRUNCATION";
+    err3 = "ERROR_FILL_BALANCE_ALLOWANCE";
+    err4 = "ERROR_CANCEL_EXPIRED";
+    err5 = "ERROR_CANCEL_NO_VALUE";
   }
 
   /*

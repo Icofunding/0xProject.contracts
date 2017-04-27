@@ -46,7 +46,7 @@ contract('Exchange', (accounts: string[]) => {
       Exchange.deployed(),
     ]);
     exWrapper = new ExchangeWrapper(exchange);
-    errCodes = await exchange.getAllErrCodes.call();
+    errCodes = await exchange.getErrorCodes.call();
 
     const [repAddress, dgdAddress, zrxAddress] = await Promise.all([
       tokenRegistry.getTokenAddressBySymbol('REP'),
@@ -362,7 +362,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
       const expectedErrCode = 'ERROR_FILL_EXPIRED';
-      assert.equal(expectedErrCode, errCodes[errId - 1]);
+      assert.equal(expectedErrCode, errCodes[errId]);
     });
 
     it('should log an error event if no value is filled', async () => {
@@ -372,7 +372,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
       const expectedErrCode = 'ERROR_FILL_NO_VALUE';
-      assert.equal(expectedErrCode, errCodes[errId - 1]);
+      assert.equal(expectedErrCode, errCodes[errId]);
     });
   });
 
@@ -432,7 +432,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
       const expectedErrCode = 'ERROR_CANCEL_NO_VALUE';
-      assert.equal(expectedErrCode, errCodes[errId - 1]);
+      assert.equal(expectedErrCode, errCodes[errId]);
     });
 
     it('should not log events if order is expired', async () => {
@@ -444,7 +444,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
       const expectedErrCode = 'ERROR_CANCEL_EXPIRED';
-      assert.equal(expectedErrCode, errCodes[errId - 1]);
+      assert.equal(expectedErrCode, errCodes[errId]);
     });
   });
 });
