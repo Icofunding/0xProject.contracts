@@ -6,7 +6,7 @@ import { ExchangeWrapper } from '../../../util/exchange_wrapper';
 import { OrderFactory } from '../../../util/order_factory';
 import { testUtil } from '../../../util/test_util';
 import { Order } from '../../../util/order';
-import { BalancesByOwner, ContractInstance } from '../../../util/types';
+import { BalancesByOwner, ContractInstance, ExchangeContractErrs } from '../../../util/types';
 import { Artifacts } from '../../../util/artifacts';
 
 const {
@@ -35,7 +35,6 @@ contract('Exchange', (accounts: string[]) => {
 
   let order: Order;
   let balances: BalancesByOwner;
-  let errCodes: string[];
   let exWrapper: ExchangeWrapper;
   let dmyBalances: Balances;
   let orderFactory: OrderFactory;
@@ -46,7 +45,6 @@ contract('Exchange', (accounts: string[]) => {
       Exchange.deployed(),
     ]);
     exWrapper = new ExchangeWrapper(exchange);
-    errCodes = await exchange.getErrorCodes.call();
 
     const [repAddress, dgdAddress, zrxAddress] = await Promise.all([
       tokenRegistry.getTokenAddressBySymbol('REP'),
@@ -360,9 +358,8 @@ contract('Exchange', (accounts: string[]) => {
 
       const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 1);
-      const errId = res.logs[0].args.errorId.toNumber();
-      const expectedErrCode = 'ERROR_FILL_EXPIRED';
-      assert.equal(expectedErrCode, errCodes[errId]);
+      const errCode = res.logs[0].args.errorId.toNumber();
+      assert.equal(errCode, ExchangeContractErrs.ERROR_FILL_EXPIRED);
     });
 
     it('should log an error event if no value is filled', async () => {
@@ -370,9 +367,8 @@ contract('Exchange', (accounts: string[]) => {
 
       const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 1);
-      const errId = res.logs[0].args.errorId.toNumber();
-      const expectedErrCode = 'ERROR_FILL_NO_VALUE';
-      assert.equal(expectedErrCode, errCodes[errId]);
+      const errCode = res.logs[0].args.errorId.toNumber();
+      assert.equal(errCode, ExchangeContractErrs.ERROR_FILL_NO_VALUE);
     });
   });
 
@@ -431,8 +427,8 @@ contract('Exchange', (accounts: string[]) => {
       const res = await exWrapper.cancelAsync(order, maker);
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
-      const expectedErrCode = 'ERROR_CANCEL_NO_VALUE';
-      assert.equal(expectedErrCode, errCodes[errId]);
+      const errCode = res.logs[0].args.errorId.toNumber();
+      assert.equal(errCode, ExchangeContractErrs.ERROR_CANCEL_NO_VALUE);
     });
 
     it('should not log events if order is expired', async () => {
@@ -442,9 +438,8 @@ contract('Exchange', (accounts: string[]) => {
 
       const res = await exWrapper.cancelAsync(order, maker);
       assert.equal(res.logs.length, 1);
-      const errId = res.logs[0].args.errorId.toNumber();
-      const expectedErrCode = 'ERROR_CANCEL_EXPIRED';
-      assert.equal(expectedErrCode, errCodes[errId]);
+      const errCode = res.logs[0].args.errorId.toNumber();
+      assert.equal(errCode, ExchangeContractErrs.ERROR_CANCEL_EXPIRED);
     });
   });
 });

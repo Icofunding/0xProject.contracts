@@ -553,27 +553,6 @@ contract Exchange is SafeMath {
     return safeDiv(safeMul(fillValue, target), value);
   }
 
-  /// @dev Helper function for retrieving error codes.
-  /// @return Error code strings in order of errorId.
-  function getErrorCodes()
-    constant
-    returns (
-      string err0,
-      string err1,
-      string err2,
-      string err3,
-      string err4,
-      string err5
-    )
-  {
-    err0 = "ERROR_FILL_EXPIRED";
-    err1 = "ERROR_FILL_NO_VALUE";
-    err2 = "ERROR_FILL_TRUNCATION";
-    err3 = "ERROR_FILL_BALANCE_ALLOWANCE";
-    err4 = "ERROR_CANCEL_EXPIRED";
-    err5 = "ERROR_CANCEL_NO_VALUE";
-  }
-
   /*
   * Private functions
   */
