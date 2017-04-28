@@ -10,7 +10,8 @@ const {
 let multiSigConfigByNetwork: MultiSigConfigByNetwork;
 try {
   /* tslint:disable */
-  multiSigConfigByNetwork = require('./config/multisig');
+  const multiSigConfig = require('./config/multisig');
+  multiSigConfigByNetwork = multiSigConfig.multiSig;
   /* tslint:enable */
 } catch (e) {
   multiSigConfigByNetwork = {};
