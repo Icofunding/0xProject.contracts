@@ -10,7 +10,8 @@
     "transpile": "rm -rf ./transpiled; node node_modules/copyfiles/copyfiles ./build/**/* ./transpiled; node node_modules/typescript/bin/tsc",
     "test": "npm run transpile; truffle test",
     "compile": "rm -rf build/contracts; truffle compile",
-    "migrate": "npm run transpile; truffle migrate"
+    "migrate": "npm run transpile; truffle migrate",
+    "deploy": "npm run transpile; truffle migrate --network kovan"
   },
   "repository": {
     "type": "git",
