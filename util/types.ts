@@ -132,3 +132,12 @@ export interface TokenInfoByNetwork {
 
 // Named type aliases to improve readability
 export type ContractInstance = any;
+
+export enum ExchangeContractErrs {
+  ERROR_FILL_EXPIRED,
+  ERROR_FILL_NO_VALUE,
+  ERROR_FILL_TRUNCATION,
+  ERROR_FILL_BALANCE_ALLOWANCE,
+  ERROR_CANCEL_EXPIRED,
+  ERROR_CANCEL_NO_VALUE,
+}

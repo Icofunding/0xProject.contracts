@@ -25,6 +25,14 @@ import "./base/SafeMath.sol";
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract Exchange is SafeMath {
 
+  // Error Codes
+  uint8 constant ERROR_FILL_EXPIRED = 0;           // Order has already expired
+  uint8 constant ERROR_FILL_NO_VALUE = 1;          // Order has already been fully filled or cancelled
+  uint8 constant ERROR_FILL_TRUNCATION = 2;        // Rounding error too large
+  uint8 constant ERROR_FILL_BALANCE_ALLOWANCE = 3; // Insufficient balance or allowance for token transfer
+  uint8 constant ERROR_CANCEL_EXPIRED = 4;         // Order has already expired
+  uint8 constant ERROR_CANCEL_NO_VALUE = 5;        // Order has already been fully filled or cancelled
+
   address public PROTOCOL_TOKEN;
   address public PROXY;
 
@@ -61,6 +69,8 @@ contract Exchange is SafeMath {
     bytes32 orderHash
   );
 
+  event LogError(uint8 indexed errorId, bytes32 indexed orderHash);
+
   function Exchange(address _protocolToken, address _proxy) {
     PROTOCOL_TOKEN = _protocolToken;
     PROXY = _proxy;
@@ -96,7 +106,6 @@ contract Exchange is SafeMath {
     returns (uint filledValueM)
   {
     assert(traders[1] == address(0) || traders[1] == msg.sender);
-    if (block.timestamp >= expiration) return 0;
 
     bytes32 orderHash = getOrderHash(
       traders,
@@ -106,9 +115,22 @@ contract Exchange is SafeMath {
       fees,
       expiration
     );
+
+    if (block.timestamp >= expiration) {
+      LogError(ERROR_FILL_EXPIRED, orderHash);
+      return 0;
+    }
+
     filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
-    if (filledValueM == 0) return 0;
-    if (isRoundingError(values[0], filledValueM, values[1])) return 0;
+    if (filledValueM == 0) {
+      LogError(ERROR_FILL_NO_VALUE, orderHash);
+      return 0;
+    }
+
+    if (isRoundingError(values[0], filledValueM, values[1])) {
+      LogError(ERROR_FILL_TRUNCATION, orderHash);
+      return 0;
+    }
 
     if (shouldCheckTransfer && !isTransferable(
       [traders[0], msg.sender],
@@ -117,7 +139,11 @@ contract Exchange is SafeMath {
       values,
       fees,
       filledValueM
-    )) return 0;
+    )) {
+      LogError(ERROR_FILL_BALANCE_ALLOWANCE, orderHash);
+      return 0;
+    }
+
     assert(isValidSignature(
       traders[0],
       orderHash,
@@ -160,7 +186,7 @@ contract Exchange is SafeMath {
     }
     assert(fills[orderHash] <= values[0]);
 
-    return fillSuccess(
+    fillSuccess(
       [traders[0], msg.sender],
       tokens,
       feeRecipient,
@@ -170,6 +196,7 @@ contract Exchange is SafeMath {
       filledValueM,
       orderHash
     );
+    return filledValueM;
   }
 
   /// @dev Cancels the input order.
@@ -192,7 +219,6 @@ contract Exchange is SafeMath {
     returns (uint cancelledValueM)
   {
     assert(traders[0] == msg.sender);
-    if (block.timestamp >= expiration) return 0;
 
     bytes32 orderHash = getOrderHash(
       traders,
@@ -202,11 +228,21 @@ contract Exchange is SafeMath {
       fees,
       expiration
     );
+
+    if (block.timestamp >= expiration) {
+      LogError(ERROR_CANCEL_EXPIRED, orderHash);
+      return 0;
+    }
+
     cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
-    if (cancelledValueM == 0) return 0;
+    if (cancelledValueM == 0) {
+      LogError(ERROR_CANCEL_NO_VALUE, orderHash);
+      return 0;
+    }
+
     fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
 
-    return cancelSuccess(
+    cancelSuccess(
       traders[0],
       tokens,
       feeRecipient,
@@ -216,6 +252,7 @@ contract Exchange is SafeMath {
       cancelledValueM,
       orderHash
     );
+    return cancelledValueM;
   }
 
   /*
@@ -557,8 +594,6 @@ contract Exchange is SafeMath {
     uint filledValueM,
     bytes32 orderHash)
     private
-    constant
-    returns (uint)
   {
     LogFill(
       traders[0],
@@ -575,7 +610,6 @@ contract Exchange is SafeMath {
       sha3(tokens[0], tokens[1]),
       orderHash
     );
-    return filledValueM;
   }
 
   /// @dev Logs cancel event and returns value cancelled.
@@ -598,8 +632,6 @@ contract Exchange is SafeMath {
     uint cancelledValueM,
     bytes32 orderHash)
     private
-    constant
-    returns (uint)
   {
     LogCancel(
       maker,
@@ -615,12 +647,11 @@ contract Exchange is SafeMath {
       sha3(tokens[0], tokens[1]),
       orderHash
     );
-    return cancelledValueM;
   }
 
   /// @dev Checks if any order transfers will fail.
-  /// @param traders Array of maker and caller addresses.
-  /// @param tokens Array of order tokenM and tokenT addresses.
+  /// @param traders Array of maker and taker addresses.
+  /// @param tokens Array of tokenM and tokenT addresses.
   /// @param feeRecipient Address that receives order fees.
   /// @param values Array of order valueM and valueT.
   /// @param fees Array of order feeM and feeT.
