@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as Bluebird from 'bluebird';
 import { ContractInstance, TokenInfoByNetwork, Token } from '../util/types';
 import { Artifacts } from '../util/artifacts';
 const {
@@ -16,12 +17,12 @@ module.exports = (deployer: any, network: string) => {
   }).then((tokenRegistry: ContractInstance) => {
     if (network !== 'live') {
       const totalSupply = 100000000 * Math.pow(10, 18);
-      return Promise.all(tokens.map((token: Token) => DummyToken.new(
+      return Bluebird.each(tokens.map((token: Token) => DummyToken.new(
         token.name,
         token.symbol,
         token.decimals,
         totalSupply,
-      ))).then((dummyTokens: ContractInstance[]) => {
+    )), _.noop).then((dummyTokens: ContractInstance[]) => {
         const weth = {
           address: DummyEtherToken.address,
           name: 'ETH Token',
@@ -31,7 +32,7 @@ module.exports = (deployer: any, network: string) => {
           ipfsHash: '0x0',
           swarmHash: '0x0',
         };
-        return Promise.all(dummyTokens.map((tokenContract: ContractInstance, i: number) => {
+        return Bluebird.each(dummyTokens.map((tokenContract: ContractInstance, i: number) => {
           const token = tokens[i];
           return tokenRegistry.addToken(
             tokenContract.address,
@@ -50,7 +51,7 @@ module.exports = (deployer: any, network: string) => {
           weth.decimals,
           weth.ipfsHash,
           weth.swarmHash,
-        )));
+      )), _.noop);
       });
     } else {
       const zrx = {
@@ -62,7 +63,7 @@ module.exports = (deployer: any, network: string) => {
         ipfsHash: '0x0',
         swarmHash: '0x0',
       };
-      return Promise.all(tokens.map((token: Token) => {
+      return Bluebird.each(tokens.map((token: Token) => {
         return tokenRegistry.addToken(
           token.address,
           token.name,
@@ -80,7 +81,7 @@ module.exports = (deployer: any, network: string) => {
         zrx.decimals,
         zrx.ipfsHash,
         zrx.swarmHash,
-      )));
+    )), _.noop);
     }
   });
 };

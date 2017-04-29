@@ -76,7 +76,7 @@ npm install
 Start Testrpc
 
 ```
-testrpc --networkId 42
+testrpc --networkId 50
 ```
 
 Compile contracts

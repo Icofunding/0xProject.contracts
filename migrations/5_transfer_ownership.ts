@@ -6,6 +6,7 @@ const {
   TokenRegistry,
 } = new Artifacts(artifacts);
 
+let tokenRegistry: ContractInstance;
 module.exports = (deployer: any, network: string) => {
   if (network !== 'development') {
     deployer.then(() => {
@@ -13,11 +14,11 @@ module.exports = (deployer: any, network: string) => {
         Proxy.deployed(),
         TokenRegistry.deployed(),
       ]).then((instances: ContractInstance[]) => {
-        const [proxy, tokenRegistry] = instances;
-        return Promise.all([
-          proxy.transferOwnership(MultiSigWallet.address),
-          tokenRegistry.transferOwnership(MultiSigWallet.address),
-        ]);
+        let proxy: ContractInstance;
+        [proxy, tokenRegistry] = instances;
+        return proxy.transferOwnership(MultiSigWallet.address);
+      }).then(() => {
+        return tokenRegistry.transferOwnership(MultiSigWallet.address);
       });
     });
   }

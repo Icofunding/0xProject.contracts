@@ -10,7 +10,8 @@ const {
 let multiSigConfigByNetwork: MultiSigConfigByNetwork;
 try {
   /* tslint:disable */
-  multiSigConfigByNetwork = require('./config/multisig');
+  const multiSigConfig = require('./config/multisig');
+  multiSigConfigByNetwork = multiSigConfig.multiSig;
   /* tslint:enable */
 } catch (e) {
   multiSigConfigByNetwork = {};
@@ -24,12 +25,14 @@ module.exports = (deployer: any, network: string, accounts: string[]) => {
   };
   const config = multiSigConfigByNetwork[network] || defaultConfig;
   if (network !== 'live') {
-    deployer.deploy([
-      [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
-      Proxy,
-      TokenRegistry,
-      DummyEtherToken,
-    ]);
+      deployer.deploy(MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired)
+      .then(() => {
+          return deployer.deploy(Proxy);
+      }).then(() => {
+          return deployer.deploy(TokenRegistry);
+      }).then(() => {
+          return deployer.deploy(DummyEtherToken);
+      });
   } else {
     deployer.deploy([
       [MultiSigWallet, config.owners, config.confirmationsRequired, config.secondsRequired],
