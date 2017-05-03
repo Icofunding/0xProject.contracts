@@ -269,7 +269,7 @@ contract Exchange is SafeMath {
     /// @param fillValueT Desired amount of tokenT to fill in order.
     /// @param v ECDSA signature parameter v.
     /// @param rs Array of ECDSA signature parameters r and s.
-    /// @return Success of entire fillValueM being filled.
+    /// @return Success of entire fillValueT being filled.
     function fillOrKill(
         address[2] traders,
         address[2] tokens,
@@ -349,7 +349,7 @@ contract Exchange is SafeMath {
     /// @param fillValuesT Array of desired amounts of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
-    /// @return Success of all orders being filled with respective fillValueM.
+    /// @return Success of all orders being filled with respective fillValueT.
     function batchFillOrKill(
         address[2][] traders,
         address[2][] tokens,
@@ -378,7 +378,7 @@ contract Exchange is SafeMath {
         return true;
     }
 
-    /// @dev Synchronously executes multiple fill orders in a single transaction until total fillValueM filled.
+    /// @dev Synchronously executes multiple fill orders in a single transaction until total fillValueT filled.
     /// @param traders Array of order maker and taker address tuples.
     /// @param tokens Array of order tokenM and tokenT address tuples.
     /// @param feeRecipients Array of addresses that receive order fees.
@@ -389,7 +389,7 @@ contract Exchange is SafeMath {
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
     /// @param shouldCheckTransfer Test if transfers will fail before attempting.
-    /// @return Total amount of fillValueM filled in orders.
+    /// @return Total amount of fillValueT filled in orders.
     function fillUpTo(
         address[2][] traders,
         address[2][] tokens,
@@ -541,7 +541,7 @@ contract Exchange is SafeMath {
         return (target < 10**3 && mulmod(target, numerator, denominator) != 0);
     }
 
-    /// @dev Calculates partial value given fillValueM and order valueM.
+    /// @dev Calculates partial value given a fillValue and a corresponding total value.
     /// @param value Amount of token specified in order.
     /// @param fillValue Amount of token to be filled.
     /// @param target Value to calculate partial.
