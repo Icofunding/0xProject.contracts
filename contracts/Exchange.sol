@@ -24,7 +24,7 @@ import "./base/SafeMath.sol";
 /// @title Exchange - Facilitates exchange of ERC20 tokens.
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
 contract Exchange is SafeMath {
-  
+
     // Error Codes
     uint8 constant ERROR_FILL_EXPIRED = 0;           // Order has already expired
     uint8 constant ERROR_FILL_NO_VALUE = 1;          // Order has already been fully filled or cancelled
@@ -49,7 +49,7 @@ contract Exchange is SafeMath {
         uint feeM,
         uint feeT,
         uint expiration,
-        uint filledValueM,
+        uint filledValueT,
         bytes32 indexed tokens,
         bytes32 orderHash
     );
@@ -64,7 +64,7 @@ contract Exchange is SafeMath {
         uint feeM,
         uint feeT,
         uint expiration,
-        uint cancelledValueM,
+        uint cancelledValueT,
         bytes32 indexed tokens,
         bytes32 orderHash
     );
@@ -88,7 +88,7 @@ contract Exchange is SafeMath {
     /// @param values Token values to be traded [valueM, valueT].
     /// @param fees Array of order feeM and feeT.
     /// @param expiration Time order expires (seconds since unix epoch).
-    /// @param fillValueM Desired amount of tokenM to fill (fillValueM <= valueM).
+    /// @param fillValueT Desired amount of tokenT to fill.
     /// @param v ECDSA signature parameter v.
     /// @param rs Array of ECDSA signature parameters r and s.
     /// @return Total amount of tokenM filled in trade.
@@ -100,10 +100,10 @@ contract Exchange is SafeMath {
         uint[2] values,
         uint[2] fees,
         uint expiration,
-        uint fillValueM,
+        uint fillValueT,
         uint8 v,
         bytes32[2] rs)
-        returns (uint filledValueM)
+        returns (uint filledValueT)
     {
         assert(traders[1] == address(0) || traders[1] == msg.sender);
 
@@ -121,13 +121,13 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        filledValueM = min(fillValueM, safeSub(values[0], fills[orderHash]));
-        if (filledValueM == 0) {
+        filledValueT = min(fillValueT, safeSub(values[1], fills[orderHash]));
+        if (filledValueT == 0) {
             LogError(ERROR_FILL_NO_VALUE, orderHash);
             return 0;
         }
 
-        if (isRoundingError(values[0], filledValueM, values[1])) {
+        if (isRoundingError(values[1], filledValueT, values[0])) {
             LogError(ERROR_FILL_TRUNCATION, orderHash);
             return 0;
         }
@@ -138,7 +138,7 @@ contract Exchange is SafeMath {
             feeRecipient,
             values,
             fees,
-            filledValueM
+            filledValueT
         )) {
             LogError(ERROR_FILL_BALANCE_ALLOWANCE, orderHash);
             return 0;
@@ -152,18 +152,18 @@ contract Exchange is SafeMath {
             rs[1]
         ));
 
-        fills[orderHash] = safeAdd(fills[orderHash], filledValueM);
+        fills[orderHash] = safeAdd(fills[orderHash], filledValueT);
         assert(transferViaProxy(
             tokens[0],
             traders[0],
             msg.sender,
-            filledValueM
+            getPartialValue(values[1], filledValueT, values[0])
         ));
         assert(transferViaProxy(
             tokens[1],
             msg.sender,
             traders[0],
-            getPartialValue(values[0], filledValueM, values[1])
+            filledValueT
         ));
 
         if (feeRecipient != address(0)) {
@@ -172,7 +172,7 @@ contract Exchange is SafeMath {
                     PROTOCOL_TOKEN,
                     traders[0],
                     feeRecipient,
-                    getPartialValue(values[0], filledValueM, fees[0])
+                    getPartialValue(values[1], filledValueT, fees[0])
                 ));
             }
             if (fees[1] > 0) {
@@ -180,11 +180,11 @@ contract Exchange is SafeMath {
                     PROTOCOL_TOKEN,
                     msg.sender,
                     feeRecipient,
-                    getPartialValue(values[0], filledValueM, fees[1])
+                    getPartialValue(values[1], filledValueT, fees[1])
                 ));
             }
         }
-        assert(fills[orderHash] <= values[0]);
+        assert(fills[orderHash] <= values[1]);
 
         fillSuccess(
             [traders[0], msg.sender],
@@ -193,10 +193,10 @@ contract Exchange is SafeMath {
             values,
             fees,
             expiration,
-            filledValueM,
+            filledValueT,
             orderHash
         );
-        return filledValueM;
+        return filledValueT;
     }
 
     /// @dev Cancels the input order.
@@ -206,7 +206,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
     /// @param expiration Time order expires in seconds.
-    /// @param cancelValueM Desired amount of tokenM to cancel in order.
+    /// @param cancelValueT Desired amount of tokenT to cancel in order.
     /// @return Amount of tokenM cancelled.
     function cancel(
         address[2] traders,
@@ -215,8 +215,8 @@ contract Exchange is SafeMath {
         uint[2] values,
         uint[2] fees,
         uint expiration,
-        uint cancelValueM)
-        returns (uint cancelledValueM)
+        uint cancelValueT)
+        returns (uint cancelledValueT)
     {
         assert(traders[0] == msg.sender);
 
@@ -234,13 +234,13 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        cancelledValueM = min(cancelValueM, safeSub(values[0], fills[orderHash]));
-        if (cancelledValueM == 0) {
+        cancelledValueT = min(cancelValueT, safeSub(values[1], fills[orderHash]));
+        if (cancelledValueT == 0) {
             LogError(ERROR_CANCEL_NO_VALUE, orderHash);
             return 0;
         }
 
-        fills[orderHash] = safeAdd(fills[orderHash], cancelledValueM);
+        fills[orderHash] = safeAdd(fills[orderHash], cancelledValueT);
 
         cancelSuccess(
             traders[0],
@@ -249,10 +249,10 @@ contract Exchange is SafeMath {
             values,
             fees,
             expiration,
-            cancelledValueM,
+            cancelledValueT,
             orderHash
         );
-        return cancelledValueM;
+        return cancelledValueT;
     }
 
     /*
@@ -266,7 +266,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
     /// @param expiration Time order expires in seconds.
-    /// @param fillValueM Desired amount of tokenM to fill in order.
+    /// @param fillValueT Desired amount of tokenT to fill in order.
     /// @param v ECDSA signature parameter v.
     /// @param rs Array of ECDSA signature parameters r and s.
     /// @return Success of entire fillValueM being filled.
@@ -277,7 +277,7 @@ contract Exchange is SafeMath {
         uint[2] values,
         uint[2] fees,
         uint expiration,
-        uint fillValueM,
+        uint fillValueT,
         uint8 v,
         bytes32[2] rs)
         returns (bool success)
@@ -290,10 +290,10 @@ contract Exchange is SafeMath {
             values,
             fees,
             expiration,
-            fillValueM,
+            fillValueT,
             v,
             rs
-        ) == fillValueM);
+        ) == fillValueT);
         return true;
     }
 
@@ -304,7 +304,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
     /// @param expirations Array of times orders expire in seconds.
-    /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+    /// @param fillValuesT Array of desired amounts of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
     /// @param shouldCheckTransfer Test if transfers will fail before attempting.
@@ -317,7 +317,7 @@ contract Exchange is SafeMath {
         uint[2][] values,
         uint[2][] fees,
         uint[] expirations,
-        uint[] fillValuesM,
+        uint[] fillValuesT,
         uint8[] v,
         bytes32[2][] rs)
         returns (bool success)
@@ -331,7 +331,7 @@ contract Exchange is SafeMath {
                 values[i],
                 fees[i],
                 expirations[i],
-                fillValuesM[i],
+                fillValuesT[i],
                 v[i],
                 rs[i]
             );
@@ -346,7 +346,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
     /// @param expirations Array of times orders expire in seconds.
-    /// @param fillValuesM Array of desired amounts of tokenM to fill in orders.
+    /// @param fillValuesT Array of desired amounts of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
     /// @return Success of all orders being filled with respective fillValueM.
@@ -357,7 +357,7 @@ contract Exchange is SafeMath {
         uint[2][] values,
         uint[2][] fees,
         uint[] expirations,
-        uint[] fillValuesM,
+        uint[] fillValuesT,
         uint8[] v,
         bytes32[2][] rs)
         returns (bool success)
@@ -370,7 +370,7 @@ contract Exchange is SafeMath {
                 values[i],
                 fees[i],
                 expirations[i],
-                fillValuesM[i],
+                fillValuesT[i],
                 v[i],
                 rs[i]
             ));
@@ -385,7 +385,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
     /// @param expirations Array of times orders expire in seconds.
-    /// @param fillValueM Desired total amount of tokenM to fill in orders.
+    /// @param fillValueT Desired total amount of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
     /// @param shouldCheckTransfer Test if transfers will fail before attempting.
@@ -398,15 +398,15 @@ contract Exchange is SafeMath {
         uint[2][] values,
         uint[2][] fees,
         uint[] expirations,
-        uint fillValueM,
+        uint fillValueT,
         uint8[] v,
         bytes32[2][] rs)
-        returns (uint filledValueM)
+        returns (uint filledValueT)
     {
-        filledValueM = 0;
+        filledValueT = 0;
         for (uint i = 0; i < traders.length; i++) {
-            assert(tokens[i][0] == tokens[0][0]);
-            filledValueM = safeAdd(filledValueM, fill(
+            assert(tokens[i][1] == tokens[0][1]);
+            filledValueT = safeAdd(filledValueT, fill(
                 traders[i],
                 tokens[i],
                 feeRecipients[i],
@@ -414,13 +414,13 @@ contract Exchange is SafeMath {
                 values[i],
                 fees[i],
                 expirations[i],
-                safeSub(fillValueM, filledValueM),
+                safeSub(fillValueT, filledValueT),
                 v[i],
                 rs[i]
             ));
-            if (filledValueM == fillValueM) break;
+            if (filledValueT == fillValueT) break;
         }
-        return filledValueM;
+        return filledValueT;
     }
 
     /// @dev Synchronously cancels multiple orders in a single transaction.
@@ -430,7 +430,7 @@ contract Exchange is SafeMath {
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
     /// @param expirations Array of times orders expire in seconds.
-    /// @param cancelValuesM Array of desired amounts of tokenM to cancel in orders.
+    /// @param cancelValuesT Array of desired amounts of tokenT to cancel in orders.
     /// @return Success if no cancels throw.
     function batchCancel(
         address[2][] traders,
@@ -439,7 +439,7 @@ contract Exchange is SafeMath {
         uint[2][] values,
         uint[2][] fees,
         uint[] expirations,
-        uint[] cancelValuesM)
+        uint[] cancelValuesT)
         returns (bool success)
     {
         for (uint i = 0; i < traders.length; i++) {
@@ -450,7 +450,7 @@ contract Exchange is SafeMath {
                 values[i],
                 fees[i],
                 expirations[i],
-                cancelValuesM[i]
+                cancelValuesT[i]
             );
         }
         return true;
@@ -574,7 +574,7 @@ contract Exchange is SafeMath {
         return Proxy(PROXY).transferFrom(token, from, to, value);
     }
 
-    /// @dev Logs fill event and returns value filled.
+    /// @dev Logs fill event.
     /// @param traders Array of order maker and caller of fill.
     /// @param tokens Array of order tokenM and tokenT addresses.
     /// @param feeRecipient Address that receives order fees.
@@ -612,7 +612,7 @@ contract Exchange is SafeMath {
         );
     }
 
-    /// @dev Logs cancel event and returns value cancelled.
+    /// @dev Logs cancel event.
     /// @param maker Address of order maker.
     /// @param tokens Array of order tokenM and tokenT addresses.
     /// @param feeRecipient Address that receives order fees.
@@ -655,7 +655,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipient Address that receives order fees.
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
-    /// @param fillValueM Amount of tokenM to be filled in order.
+    /// @param fillValueT Amount of tokenT to be filled in order.
     /// @return Predicted result of transfers.
     function isTransferable(
         address[2] traders,
@@ -663,20 +663,20 @@ contract Exchange is SafeMath {
         address feeRecipient,
         uint[2] values,
         uint[2] fees,
-        uint fillValueM)
+        uint fillValueT)
         private
         constant
         returns (bool isTransferable)
     {
-        uint fillValueT = getPartialValue(values[0], fillValueM, values[1]);
+        uint fillValueM = getPartialValue(values[1], fillValueT, values[0]);
         if (   getBalance(tokens[0], traders[0]) < fillValueM
             || getAllowance(tokens[0], traders[0]) < fillValueM
             || getBalance(tokens[1], traders[1]) < fillValueT
             || getAllowance(tokens[1], traders[1]) < fillValueT
         ) return false;
         if (feeRecipient != address(0)) {
-            uint feeValueM = getPartialValue(values[0], fillValueM, fees[0]);
-            uint feeValueT = getPartialValue(values[0], fillValueM, fees[1]);
+            uint feeValueM = getPartialValue(values[1], fillValueT, fees[0]);
+            uint feeValueT = getPartialValue(values[1], fillValueT, fees[1]);
             if (   getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM
                 || getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM
                 || getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT
