@@ -8,9 +8,9 @@ export class ExchangeWrapper {
     this.exchange = exchangeContractInstance;
   }
   public fillAsync(order: Order, from: string,
-                   opts: { fillValueM?: string, shouldCheckTransfer?: boolean } = {}) {
+                   opts: { fillValueT?: string, shouldCheckTransfer?: boolean } = {}) {
     const shouldCheckTransfer = !!opts.shouldCheckTransfer;
-    const params = order.createFill(shouldCheckTransfer, opts.fillValueM);
+    const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fill(
       params.traders,
       params.tokens,
@@ -19,14 +19,14 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expiration,
-      params.fillValueM,
+      params.fillValueT,
       params.v,
       params.rs,
       { from },
     );
   }
-  public cancelAsync(order: Order, from: string, opts: { cancelValueM?: string } = {}) {
-    const params = order.createCancel(opts.cancelValueM);
+  public cancelAsync(order: Order, from: string, opts: { cancelValueT?: string } = {}) {
+    const params = order.createCancel(opts.cancelValueT);
     return this.exchange.cancel(
       params.traders,
       params.tokens,
@@ -34,13 +34,13 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expiration,
-      params.cancelValueM,
+      params.cancelValueT,
       { from },
     );
   }
-  public fillOrKillAsync(order: Order, from: string, opts: { fillValueM?: string } = {}) {
+  public fillOrKillAsync(order: Order, from: string, opts: { fillValueT?: string } = {}) {
     const shouldCheckTransfer = false;
-    const params = order.createFill(shouldCheckTransfer, opts.fillValueM);
+    const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillOrKill(
       params.traders,
       params.tokens,
@@ -48,15 +48,15 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expiration,
-      params.fillValueM,
+      params.fillValueT,
       params.v,
       params.rs,
       { from },
     );
   }
-  public batchFillAsync(orders: Order[], from: string, opts: { fillValuesM?: string[] } = {}) {
+  public batchFillAsync(orders: Order[], from: string, opts: { fillValuesT?: string[] } = {}) {
     const shouldCheckTransfer = false;
-    const params = formatters.createBatchFill(orders, shouldCheckTransfer, opts.fillValuesM);
+    const params = formatters.createBatchFill(orders, shouldCheckTransfer, opts.fillValuesT);
     return this.exchange.batchFill(
       params.traders,
       params.tokens,
@@ -65,15 +65,15 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expirations,
-      params.fillValuesM,
+      params.fillValuesT,
       params.v,
       params.rs,
       { from },
     );
   }
-  public fillUpToAsync(orders: Order[], from: string, opts: { fillValueM?: string } = {}) {
+  public fillUpToAsync(orders: Order[], from: string, opts: { fillValueT?: string } = {}) {
     const shouldCheckTransfer = false;
-    const params = formatters.createFillUpTo(orders, shouldCheckTransfer, opts.fillValueM);
+    const params = formatters.createFillUpTo(orders, shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillUpTo(
       params.traders,
       params.tokens,
@@ -82,14 +82,14 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expirations,
-      params.fillValueM,
+      params.fillValueT,
       params.v,
       params.rs,
       { from },
     );
   }
-  public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesM?: string[] } = {}) {
-    const params = formatters.createBatchCancel(orders, opts.cancelValuesM);
+  public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesT?: string[] } = {}) {
+    const params = formatters.createBatchCancel(orders, opts.cancelValuesT);
     return this.exchange.batchCancel(
       params.traders,
       params.tokens,
@@ -97,7 +97,7 @@ export class ExchangeWrapper {
       params.values,
       params.fees,
       params.expirations,
-      params.cancelValuesM,
+      params.cancelValuesT,
       { from },
     );
   }

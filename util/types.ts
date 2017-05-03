@@ -12,7 +12,7 @@ export interface BatchFill {
   values: string[][];
   fees: string[][];
   expirations: number[];
-  fillValuesM: string[];
+  fillValuesT: string[];
   v: number[];
   rs: string[][];
 }
@@ -25,7 +25,7 @@ export interface FillUpTo {
   values: string[][];
   fees: string[][];
   expirations: number[];
-  fillValueM: string;
+  fillValueT: string;
   v: number[];
   rs: string[][];
 }
@@ -37,7 +37,7 @@ export interface BatchCancel {
   values: string[][];
   fees: string[][];
   expirations: number[];
-  cancelValuesM: string[];
+  cancelValuesT: string[];
 }
 
 export interface DefaultOrderParams {
