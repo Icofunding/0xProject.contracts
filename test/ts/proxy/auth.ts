@@ -34,6 +34,15 @@ contract('Proxy', (accounts: string[]) => {
       const isAuthorized = await proxy.authorized.call(authorized);
       assert(isAuthorized);
     });
+
+    it('should throw if owner attempts to authorize a duplicate address', async () => {
+      try {
+        await proxy.addAuthorizedAddress(authorized, { from: owner });
+        throw new Error('addAuthorizedAddress succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
   });
 
   describe('removeAuthorizedAddress', () => {
@@ -53,6 +62,15 @@ contract('Proxy', (accounts: string[]) => {
 
       const isAuthorized = await proxy.authorized.call(notAuthorized);
       assert(!isAuthorized);
+    });
+
+    it('should throw if owner attempts to remove an address that is not authorized', async () => {
+      try {
+        await proxy.removeAuthorizedAddress(notAuthorized, { from: owner });
+        throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
   });
 
