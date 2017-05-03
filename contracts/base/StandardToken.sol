@@ -35,7 +35,7 @@ contract StandardToken is Token {
     }
 
     function allowance(address _owner, address _spender) constant returns (uint remaining) {
-      return allowed[_owner][_spender];
+        return allowed[_owner][_spender];
     }
 
     mapping (address => uint) balances;
