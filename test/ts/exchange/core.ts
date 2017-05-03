@@ -242,7 +242,7 @@ contract('Exchange', (accounts: string[]) => {
                    add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
-    it('should fill remaining value if fillValueM > remaining valueM', async () => {
+    it('should fill remaining value if fillValueT > remaining valueT', async () => {
       const fillValueT = div(order.params.valueT, 2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
