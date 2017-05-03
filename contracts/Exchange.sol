@@ -33,7 +33,7 @@ contract Exchange is SafeMath {
     uint8 constant ERROR_CANCEL_EXPIRED = 4;         // Order has already expired
     uint8 constant ERROR_CANCEL_NO_VALUE = 5;        // Order has already been fully filled or cancelled
 
-    address public PROTOCOL_TOKEN;
+    address public ZRX;
     address public PROXY;
 
     mapping (bytes32 => uint) public fills;
@@ -71,8 +71,8 @@ contract Exchange is SafeMath {
 
     event LogError(uint8 indexed errorId, bytes32 indexed orderHash);
 
-    function Exchange(address _protocolToken, address _proxy) {
-        PROTOCOL_TOKEN = _protocolToken;
+    function Exchange(address _zrx, address _proxy) {
+        ZRX = _zrx;
         PROXY = _proxy;
     }
 
@@ -169,7 +169,7 @@ contract Exchange is SafeMath {
         if (feeRecipient != address(0)) {
             if (fees[0] > 0) {
                 assert(transferViaProxy(
-                    PROTOCOL_TOKEN,
+                    ZRX,
                     traders[0],
                     feeRecipient,
                     getPartialValue(values[1], filledValueT, fees[0])
@@ -177,7 +177,7 @@ contract Exchange is SafeMath {
             }
             if (fees[1] > 0) {
                 assert(transferViaProxy(
-                    PROTOCOL_TOKEN,
+                    ZRX,
                     msg.sender,
                     feeRecipient,
                     getPartialValue(values[1], filledValueT, fees[1])
@@ -677,10 +677,10 @@ contract Exchange is SafeMath {
         if (feeRecipient != address(0)) {
             uint feeValueM = getPartialValue(values[1], fillValueT, fees[0]);
             uint feeValueT = getPartialValue(values[1], fillValueT, fees[1]);
-            if (   getBalance(PROTOCOL_TOKEN, traders[0]) < feeValueM
-                || getAllowance(PROTOCOL_TOKEN, traders[0]) < feeValueM
-                || getBalance(PROTOCOL_TOKEN, traders[1]) < feeValueT
-                || getAllowance(PROTOCOL_TOKEN, traders[1]) < feeValueT
+            if (   getBalance(ZRX, traders[0]) < feeValueM
+                || getAllowance(ZRX, traders[0]) < feeValueM
+                || getBalance(ZRX, traders[1]) < feeValueT
+                || getAllowance(ZRX, traders[1]) < feeValueT
             ) return false;
         }
         return true;
