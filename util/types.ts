@@ -11,7 +11,7 @@ export interface BatchFill {
   shouldCheckTransfer: boolean;
   values: string[][];
   fees: string[][];
-  expirations: number[];
+  expirationsAndSalts: number[][];
   fillValuesT: string[];
   v: number[];
   rs: string[][];
@@ -24,7 +24,7 @@ export interface FillUpTo {
   shouldCheckTransfer: boolean;
   values: string[][];
   fees: string[][];
-  expirations: number[];
+  expirationsAndSalts: number[][];
   fillValueT: string;
   v: number[];
   rs: string[][];
@@ -36,7 +36,7 @@ export interface BatchCancel {
   feeRecipients: string[];
   values: string[][];
   fees: string[][];
-  expirations: number[];
+  expirationsAndSalts: number[][];
   cancelValuesT: string[];
 }
 
@@ -78,6 +78,7 @@ export interface OrderParams {
   feeM: string;
   feeT: string;
   expiration: number;
+  salt: number;
   orderHashHex?: string;
   v?: number;
   r?: string;

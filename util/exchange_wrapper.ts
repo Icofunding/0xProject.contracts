@@ -18,7 +18,7 @@ export class ExchangeWrapper {
       params.shouldCheckTransfer,
       params.values,
       params.fees,
-      params.expiration,
+      params.expirationAndSalt,
       params.fillValueT,
       params.v,
       params.rs,
@@ -33,7 +33,7 @@ export class ExchangeWrapper {
       params.feeRecipient,
       params.values,
       params.fees,
-      params.expiration,
+      params.expirationAndSalt,
       params.cancelValueT,
       { from },
     );
@@ -47,7 +47,7 @@ export class ExchangeWrapper {
       params.feeRecipient,
       params.values,
       params.fees,
-      params.expiration,
+      params.expirationAndSalt,
       params.fillValueT,
       params.v,
       params.rs,
@@ -64,7 +64,7 @@ export class ExchangeWrapper {
       params.shouldCheckTransfer,
       params.values,
       params.fees,
-      params.expirations,
+      params.expirationsAndSalts,
       params.fillValuesT,
       params.v,
       params.rs,
@@ -81,7 +81,7 @@ export class ExchangeWrapper {
       params.shouldCheckTransfer,
       params.values,
       params.fees,
-      params.expirations,
+      params.expirationsAndSalts,
       params.fillValueT,
       params.v,
       params.rs,
@@ -96,7 +96,7 @@ export class ExchangeWrapper {
       params.feeRecipients,
       params.values,
       params.fees,
-      params.expirations,
+      params.expirationsAndSalts,
       params.cancelValuesT,
       { from },
     );
@@ -110,7 +110,7 @@ export class ExchangeWrapper {
       params.feeRecipient,
       params.values,
       params.fees,
-      params.expiration,
+      params.expirationAndSalt,
     );
   }
   public isValidSignatureAsync(order: Order) {
