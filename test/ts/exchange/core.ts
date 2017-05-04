@@ -125,17 +125,18 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(100),
       });
 
-      const filledAmountMBefore = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
+      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTBefore, 0, 'filledAmountMBefore should be 0');
 
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, taker, { fillValueM });
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
+      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
-      const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+
+      const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], fillValueM));
@@ -154,18 +155,18 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(100),
       });
 
-      const filledAmountMBefore = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
+      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, taker, { fillValueM });
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
+      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
-      const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+      const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], fillValueM));
@@ -184,18 +185,18 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(200),
       });
 
-      const filledAmountMBefore = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
+      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, taker, { fillValueM });
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMAfter, fillValueM, 'filledAmountMAfter should be same as fillValueM');
+      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
-      const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+      const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], fillValueM));
@@ -215,20 +216,20 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(200),
       });
 
-      const filledAmountMBefore = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountMBefore, 0, 'filledAmountMBefore should be 0');
+      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, taker, { fillValueM });
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountMAfter = await exchange.fills.call(order.params.orderHashHex);
-      const expectedFillAmountMAfter = add(fillValueM, filledAmountMBefore);
-      assert.equal(filledAmountMAfter.toString(), expectedFillAmountMAfter,
-                   'filledAmountMAfter should be same as fillValueM');
+      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      const expectedFillAmountTAfter = add(fillValueT, filledAmountTBefore);
+      assert.equal(filledAmountTAfter.toString(), expectedFillAmountTAfter,
+                   'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
-      const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+      const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], fillValueM));
@@ -241,13 +242,13 @@ contract('Exchange', (accounts: string[]) => {
                    add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
-    it('should fill remaining value if fillValueM > remaining valueM', async () => {
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillAsync(order, taker, { fillValueM });
+    it('should fill remaining value if fillValueT > remaining valueT', async () => {
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const res = await exWrapper.fillAsync(order, taker, { fillValueM: order.params.valueM });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT });
 
-      assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.params.valueM, fillValueM));
+      assert.equal(res.logs[0].args.filledValueT.toString(), sub(order.params.valueT, fillValueT));
       const newBalances = await dmyBalances.getAsync();
 
       assert.equal(newBalances[maker][order.params.tokenM],
@@ -265,7 +266,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.fillAsync(order, taker, { fillValueM: div(order.params.valueM, 2) });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: div(order.params.valueT, 2) });
       assert.equal(res.logs.length, 1);
     });
 
@@ -389,21 +390,21 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should be able to cancel a full order', async () => {
       await exWrapper.cancelAsync(order, maker);
-      await exWrapper.fillAsync(order, taker, { fillValueM: div(order.params.valueM, 2) });
+      await exWrapper.fillAsync(order, taker, { fillValueT: div(order.params.valueT, 2) });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
     });
 
     it('should be able to cancel part of an order', async () => {
-      const cancelValueM = div(order.params.valueM, 2);
-      await exWrapper.cancelAsync(order, maker, { cancelValueM });
+      const cancelValueT = div(order.params.valueT, 2);
+      await exWrapper.cancelAsync(order, maker, { cancelValueT });
 
-      const res = await exWrapper.fillAsync(order, taker, { fillValueM: order.params.valueM });
-      assert.equal(res.logs[0].args.filledValueM.toString(), sub(order.params.valueM, cancelValueM));
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT });
+      assert.equal(res.logs[0].args.filledValueT.toString(), sub(order.params.valueT, cancelValueT));
 
       const newBalances = await dmyBalances.getAsync();
-      const cancelValueT = div(mul(cancelValueM, order.params.valueT), order.params.valueM);
+      const cancelValueM = div(mul(cancelValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, cancelValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, cancelValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], cancelValueM));
@@ -417,7 +418,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.cancelAsync(order, maker, { cancelValueM: div(order.params.valueM, 2) });
+      const res = await exWrapper.cancelAsync(order, maker, { cancelValueT: div(order.params.valueT, 2) });
       assert.equal(res.logs.length, 1);
     });
 

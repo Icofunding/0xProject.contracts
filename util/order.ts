@@ -41,7 +41,7 @@ export class Order {
       s: ethUtil.bufferToHex(s),
     });
   }
-  public createFill(shouldCheckTransfer: boolean, fillValueM?: string) {
+  public createFill(shouldCheckTransfer: boolean, fillValueT?: string) {
     const fill = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],
@@ -50,13 +50,13 @@ export class Order {
       values: [this.params.valueM, this.params.valueT],
       fees: [this.params.feeM, this.params.feeT],
       expiration: this.params.expiration,
-      fillValueM: fillValueM || this.params.valueM,
+      fillValueT: fillValueT || this.params.valueT,
       v: this.params.v,
       rs: [this.params.r, this.params.s],
     };
     return fill;
   }
-  public createCancel(cancelValueM?: string) {
+  public createCancel(cancelValueT?: string) {
     const cancel = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],
@@ -64,7 +64,7 @@ export class Order {
       values: [this.params.valueM, this.params.valueT],
       fees: [this.params.feeM, this.params.feeT],
       expiration: this.params.expiration,
-      cancelValueM: cancelValueM || this.params.valueM,
+      cancelValueT: cancelValueT || this.params.valueT,
     };
     return cancel;
   }

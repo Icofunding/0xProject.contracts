@@ -96,11 +96,12 @@ contract('Exchange', (accounts: string[]) => {
         valueM: toSmallestUnits(100),
         valueT: toSmallestUnits(200),
       });
-      const fillValueM = div(order.params.valueM, 2);
-      await exWrapper.fillOrKillAsync(order, taker, { fillValueM });
+      const fillValueT = div(order.params.valueT, 2);
+      await exWrapper.fillOrKillAsync(order, taker, { fillValueT });
 
       const newBalances = await dmyBalances.getAsync();
-      const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+
+      const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
       const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
       const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
       assert.equal(newBalances[maker][order.params.tokenM], sub(balances[maker][order.params.tokenM], fillValueM));
@@ -126,11 +127,11 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should throw if entire fillValueM not filled', async () => {
+    it('should throw if entire fillValueT not filled', async () => {
       const order = await orderFactory.newSignedOrderAsync();
 
       const from = taker;
-      await exWrapper.fillAsync(order, from, { fillValueM: div(order.params.valueM, 2) });
+      await exWrapper.fillAsync(order, from, { fillValueT: div(order.params.valueT, 2) });
 
       try {
         await exWrapper.fillOrKillAsync(order, taker);
@@ -153,15 +154,15 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const fillValuesM: string[] = [];
+      const fillValuesT: string[] = [];
       const tokenM = rep.address;
       const tokenT = dgd.address;
       orders.forEach(order => {
-        const fillValueM = div(order.params.valueM, 2);
-        const fillValueT = div(mul(fillValueM, order.params.valueT), order.params.valueM);
+        const fillValueT = div(order.params.valueT, 2);
+        const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
         const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
         const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
-        fillValuesM.push(fillValueM);
+        fillValuesT.push(fillValueT);
         balances[maker][tokenM] = sub(balances[maker][tokenM], fillValueM);
         balances[maker][tokenT] = add(balances[maker][tokenT], fillValueT);
         balances[maker][zrx.address] = sub(balances[maker][zrx.address], feeValueM);
@@ -171,7 +172,7 @@ contract('Exchange', (accounts: string[]) => {
         balances[feeRecipient][zrx.address] = add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT));
       });
 
-      await exWrapper.batchFillAsync(orders, taker, { fillValuesM });
+      await exWrapper.batchFillAsync(orders, taker, { fillValuesT });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -189,13 +190,13 @@ contract('Exchange', (accounts: string[]) => {
       balances = await dmyBalances.getAsync();
     });
 
-    it('should stop when the entire fillValueM is filled', async () => {
-      const fillValueM = add(orders[0].params.valueM, div(orders[1].params.valueM, 2));
-      await exWrapper.fillUpToAsync(orders, taker, { fillValueM });
+    it('should stop when the entire fillValueT is filled', async () => {
+      const fillValueT = add(orders[0].params.valueT, div(orders[1].params.valueT, 2));
+      await exWrapper.fillUpToAsync(orders, taker, { fillValueT });
 
       const newBalances = await dmyBalances.getAsync();
 
-      const fillValueT = add(orders[0].params.valueT, div(orders[1].params.valueT, 2));
+      const fillValueM = add(orders[0].params.valueM, div(orders[1].params.valueM, 2));
       const feeValueM = add(orders[0].params.feeM, div(orders[1].params.feeM, 2));
       const feeValueT = add(orders[0].params.feeT, div(orders[1].params.feeT, 2));
       assert.equal(newBalances[maker][orders[0].params.tokenM],
@@ -212,8 +213,8 @@ contract('Exchange', (accounts: string[]) => {
                    add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
-    it('should fill all orders if cannot fill entire fillValueM', async () => {
-      const fillValueM = toSmallestUnits(100000);
+    it('should fill all orders if cannot fill entire fillValueT', async () => {
+      const fillValueT = toSmallestUnits(100000);
       orders.forEach(order => {
         balances[maker][order.params.tokenM] = sub(balances[maker][order.params.tokenM], order.params.valueM);
         balances[maker][order.params.tokenT] = add(balances[maker][order.params.tokenT], order.params.valueT);
@@ -225,21 +226,21 @@ contract('Exchange', (accounts: string[]) => {
           balances[feeRecipient][zrx.address], add(order.params.feeM, order.params.feeT),
         );
       });
-      await exWrapper.fillUpToAsync(orders, taker, { fillValueM });
+      await exWrapper.fillUpToAsync(orders, taker, { fillValueT });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw when an order does not use the same tokenM', async () => {
+    it('should throw when an order does not use the same tokenT', async () => {
       orders = await Promise.all([
         orderFactory.newSignedOrderAsync(),
-        orderFactory.newSignedOrderAsync({ tokenM: zrx.address }),
+        orderFactory.newSignedOrderAsync({ tokenT: zrx.address }),
         orderFactory.newSignedOrderAsync(),
       ]);
 
       try {
-        await exWrapper.fillUpToAsync(orders, taker, { fillValueM: toSmallestUnits(1000) });
+        await exWrapper.fillUpToAsync(orders, taker, { fillValueT: toSmallestUnits(1000) });
         throw new Error('FillUpTo succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -254,10 +255,10 @@ contract('Exchange', (accounts: string[]) => {
         orderFactory.newSignedOrderAsync(),
         orderFactory.newSignedOrderAsync(),
       ]);
-      const cancelValuesM = _.map(orders, order => order.params.valueM);
-      await exWrapper.batchCancelAsync(orders, maker, { cancelValuesM });
+      const cancelValuesT = _.map(orders, order => order.params.valueT);
+      await exWrapper.batchCancelAsync(orders, maker, { cancelValuesT });
 
-      const res = await exWrapper.batchFillAsync(orders, taker, { fillValuesM: cancelValuesM });
+      const res = await exWrapper.batchFillAsync(orders, taker, { fillValuesT: cancelValuesT });
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(balances, newBalances);
     });
