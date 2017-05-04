@@ -30,6 +30,16 @@ contract Proxy is Ownable {
         _;
     }
 
+    modifier targetAuthorized(address target) {
+        if (!authorized[target]) throw;
+        _;
+    }
+
+    modifier targetNotAuthorized(address target) {
+        if (authorized[target]) throw;
+        _;
+    }
+
     mapping (address => bool) public authorized;
     address[] public authorities;
 
@@ -45,6 +55,7 @@ contract Proxy is Ownable {
     /// @return Success of authorization.
     function addAuthorizedAddress(address target)
         onlyOwner
+        targetNotAuthorized(target)
         returns (bool success)
     {
         authorized[target] = true;
@@ -58,6 +69,7 @@ contract Proxy is Ownable {
     /// @return Success of deauthorization.
     function removeAuthorizedAddress(address target)
         onlyOwner
+        targetAuthorized(target)
         returns (bool success)
     {
         delete authorized[target];
