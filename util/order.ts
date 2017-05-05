@@ -49,7 +49,7 @@ export class Order {
       shouldCheckTransfer,
       values: [this.params.valueM, this.params.valueT],
       fees: [this.params.feeM, this.params.feeT],
-      expiration: this.params.expiration,
+      expirationAndSalt: [this.params.expiration, this.params.salt],
       fillValueT: fillValueT || this.params.valueT,
       v: this.params.v,
       rs: [this.params.r, this.params.s],
@@ -63,7 +63,7 @@ export class Order {
       feeRecipient: this.params.feeRecipient,
       values: [this.params.valueM, this.params.valueT],
       fees: [this.params.feeM, this.params.feeT],
-      expiration: this.params.expiration,
+      expirationAndSalt: [this.params.expiration, this.params.salt],
       cancelValueT: cancelValueT || this.params.valueT,
     };
     return cancel;
@@ -81,6 +81,7 @@ export class Order {
       this.params.feeM,
       this.params.feeT,
       this.params.expiration,
+      this.params.salt,
     ]);
     return orderHash;
   }

@@ -87,7 +87,7 @@ contract Exchange is SafeMath {
     /// @param shouldCheckTransfer Test if transfer will fail before attempting.
     /// @param values Token values to be traded [valueM, valueT].
     /// @param fees Array of order feeM and feeT.
-    /// @param expiration Time order expires (seconds since unix epoch).
+    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
     /// @param fillValueT Desired amount of tokenT to fill.
     /// @param v ECDSA signature parameter v.
     /// @param rs Array of ECDSA signature parameters r and s.
@@ -99,7 +99,7 @@ contract Exchange is SafeMath {
         bool shouldCheckTransfer,
         uint[2] values,
         uint[2] fees,
-        uint expiration,
+        uint[2] expirationAndSalt,
         uint fillValueT,
         uint8 v,
         bytes32[2] rs)
@@ -113,10 +113,10 @@ contract Exchange is SafeMath {
             feeRecipient,
             values,
             fees,
-            expiration
+            expirationAndSalt
         );
 
-        if (block.timestamp >= expiration) {
+        if (block.timestamp >= expirationAndSalt[0]) {
             LogError(ERROR_FILL_EXPIRED, orderHash);
             return 0;
         }
@@ -192,7 +192,7 @@ contract Exchange is SafeMath {
             feeRecipient,
             values,
             fees,
-            expiration,
+            expirationAndSalt[0],
             filledValueT,
             orderHash
         );
@@ -205,7 +205,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipient Address that receives order fees.
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
-    /// @param expiration Time order expires in seconds.
+    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
     /// @param cancelValueT Desired amount of tokenT to cancel in order.
     /// @return Amount of tokenM cancelled.
     function cancel(
@@ -214,7 +214,7 @@ contract Exchange is SafeMath {
         address feeRecipient,
         uint[2] values,
         uint[2] fees,
-        uint expiration,
+        uint[2] expirationAndSalt,
         uint cancelValueT)
         returns (uint cancelledValueT)
     {
@@ -226,10 +226,10 @@ contract Exchange is SafeMath {
             feeRecipient,
             values,
             fees,
-            expiration
+            expirationAndSalt
         );
 
-        if (block.timestamp >= expiration) {
+        if (block.timestamp >= expirationAndSalt[0]) {
             LogError(ERROR_CANCEL_EXPIRED, orderHash);
             return 0;
         }
@@ -248,7 +248,7 @@ contract Exchange is SafeMath {
             feeRecipient,
             values,
             fees,
-            expiration,
+            expirationAndSalt[0],
             cancelledValueT,
             orderHash
         );
@@ -265,7 +265,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipient Address that receives order fees.
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
-    /// @param expiration Time order expires in seconds.
+    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
     /// @param fillValueT Desired amount of tokenT to fill in order.
     /// @param v ECDSA signature parameter v.
     /// @param rs Array of ECDSA signature parameters r and s.
@@ -276,7 +276,7 @@ contract Exchange is SafeMath {
         address feeRecipient,
         uint[2] values,
         uint[2] fees,
-        uint expiration,
+        uint[2] expirationAndSalt,
         uint fillValueT,
         uint8 v,
         bytes32[2] rs)
@@ -289,7 +289,7 @@ contract Exchange is SafeMath {
             false,
             values,
             fees,
-            expiration,
+            expirationAndSalt,
             fillValueT,
             v,
             rs
@@ -303,7 +303,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipients Array of addresses that receive order fees.
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
-    /// @param expirations Array of times orders expire in seconds.
+    /// @param expirationsAndSalts Array of times orders expire and random numbers.
     /// @param fillValuesT Array of desired amounts of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
@@ -316,7 +316,7 @@ contract Exchange is SafeMath {
         bool shouldCheckTransfer,
         uint[2][] values,
         uint[2][] fees,
-        uint[] expirations,
+        uint[2][] expirationsAndSalts,
         uint[] fillValuesT,
         uint8[] v,
         bytes32[2][] rs)
@@ -330,7 +330,7 @@ contract Exchange is SafeMath {
                 shouldCheckTransfer,
                 values[i],
                 fees[i],
-                expirations[i],
+                expirationsAndSalts[i],
                 fillValuesT[i],
                 v[i],
                 rs[i]
@@ -345,7 +345,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipients Array of addresses that receive order fees.
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
-    /// @param expirations Array of times orders expire in seconds.
+    /// @param expirationsAndSalts Array of times orders expire and random numbers.
     /// @param fillValuesT Array of desired amounts of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
@@ -356,7 +356,7 @@ contract Exchange is SafeMath {
         address[] feeRecipients,
         uint[2][] values,
         uint[2][] fees,
-        uint[] expirations,
+        uint[2][] expirationsAndSalts,
         uint[] fillValuesT,
         uint8[] v,
         bytes32[2][] rs)
@@ -369,7 +369,7 @@ contract Exchange is SafeMath {
                 feeRecipients[i],
                 values[i],
                 fees[i],
-                expirations[i],
+                expirationsAndSalts[i],
                 fillValuesT[i],
                 v[i],
                 rs[i]
@@ -384,7 +384,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipients Array of addresses that receive order fees.
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
-    /// @param expirations Array of times orders expire in seconds.
+    /// @param expirationsAndSalts Array of times orders expire and random numbers.
     /// @param fillValueT Desired total amount of tokenT to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param rs Array of ECDSA signature parameters r and s tuples.
@@ -397,7 +397,7 @@ contract Exchange is SafeMath {
         bool shouldCheckTransfer,
         uint[2][] values,
         uint[2][] fees,
-        uint[] expirations,
+        uint[2][] expirationsAndSalts,
         uint fillValueT,
         uint8[] v,
         bytes32[2][] rs)
@@ -413,7 +413,7 @@ contract Exchange is SafeMath {
                 shouldCheckTransfer,
                 values[i],
                 fees[i],
-                expirations[i],
+                expirationsAndSalts[i],
                 safeSub(fillValueT, filledValueT),
                 v[i],
                 rs[i]
@@ -429,7 +429,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipients Array of addresses that receive order fees.
     /// @param values Array of order valueM and valueT tuples.
     /// @param fees Array of order feeM and feeT tuples.
-    /// @param expirations Array of times orders expire in seconds.
+    /// @param expirationsAndSalts Array of times orders expire and random numbers.
     /// @param cancelValuesT Array of desired amounts of tokenT to cancel in orders.
     /// @return Success if no cancels throw.
     function batchCancel(
@@ -438,7 +438,7 @@ contract Exchange is SafeMath {
         address[] feeRecipients,
         uint[2][] values,
         uint[2][] fees,
-        uint[] expirations,
+        uint[2][] expirationsAndSalts,
         uint[] cancelValuesT)
         returns (bool success)
     {
@@ -449,7 +449,7 @@ contract Exchange is SafeMath {
                 feeRecipients[i],
                 values[i],
                 fees[i],
-                expirations[i],
+                expirationsAndSalts[i],
                 cancelValuesT[i]
             );
         }
@@ -466,7 +466,7 @@ contract Exchange is SafeMath {
     /// @param feeRecipient Address that receives order fees.
     /// @param values Array of order valueM and valueT.
     /// @param fees Array of order feeM and feeT.
-    /// @param expiration Time order expires in seconds.
+    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
     /// @return Keccak-256 hash of order.
     function getOrderHash(
         address[2] traders,
@@ -474,7 +474,7 @@ contract Exchange is SafeMath {
         address feeRecipient,
         uint[2] values,
         uint[2] fees,
-        uint expiration)
+        uint[2] expirationAndSalt)
         constant
         returns (bytes32 orderHash)
     {
@@ -489,7 +489,8 @@ contract Exchange is SafeMath {
             values[1],
             fees[0],
             fees[1],
-            expiration
+            expirationAndSalt[0],
+            expirationAndSalt[1]
         );
     }
 

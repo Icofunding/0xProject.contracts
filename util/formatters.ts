@@ -11,7 +11,7 @@ export const formatters = {
       shouldCheckTransfer,
       values: [],
       fees: [],
-      expirations: [],
+      expirationsAndSalts: [],
       fillValuesT,
       v: [],
       rs: [],
@@ -22,7 +22,7 @@ export const formatters = {
       batchFill.feeRecipients.push(order.params.feeRecipient);
       batchFill.values.push([order.params.valueM, order.params.valueT]);
       batchFill.fees.push([order.params.feeM, order.params.feeT]);
-      batchFill.expirations.push(order.params.expiration);
+      batchFill.expirationsAndSalts.push([order.params.expiration, order.params.salt]);
       batchFill.v.push(order.params.v);
       batchFill.rs.push([order.params.r, order.params.s]);
       if (fillValuesT.length < orders.length) {
@@ -39,7 +39,7 @@ export const formatters = {
       shouldCheckTransfer,
       values: [],
       fees: [],
-      expirations: [],
+      expirationsAndSalts: [],
       fillValueT,
       v: [],
       rs: [],
@@ -50,7 +50,7 @@ export const formatters = {
       fillUpTo.feeRecipients.push(order.params.feeRecipient);
       fillUpTo.values.push([order.params.valueM, order.params.valueT]);
       fillUpTo.fees.push([order.params.feeM, order.params.feeT]);
-      fillUpTo.expirations.push(order.params.expiration);
+      fillUpTo.expirationsAndSalts.push([order.params.expiration, order.params.salt]);
       fillUpTo.v.push(order.params.v);
       fillUpTo.rs.push([order.params.r, order.params.s]);
     });
@@ -63,7 +63,7 @@ export const formatters = {
       feeRecipients: [],
       values: [],
       fees: [],
-      expirations: [],
+      expirationsAndSalts: [],
       cancelValuesT,
     };
     orders.forEach(order => {
@@ -72,7 +72,7 @@ export const formatters = {
       batchCancel.feeRecipients.push(order.params.feeRecipient);
       batchCancel.values.push([order.params.valueM, order.params.valueT]);
       batchCancel.fees.push([order.params.feeM, order.params.feeT]);
-      batchCancel.expirations.push(order.params.expiration);
+      batchCancel.expirationsAndSalts.push([order.params.expiration, order.params.salt]);
       if (cancelValuesT.length < orders.length) {
         batchCancel.cancelValuesT.push(order.params.valueT);
       }
