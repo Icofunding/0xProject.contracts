@@ -44,7 +44,7 @@ tokenT | `address` | Address of an ERC20 Token contract.
 valueM | `uint256` | Total units of tokenM offered by maker.
 valueT | `uint256` | Total units of tokenT requested by maker.
 expiration | `uint256` | Time at which the order expires (seconds since unix epoch).
-salt | `uint256` | Arbitrary number.
+salt | `uint256` | Arbitrary number that allows for uniqueness of the order's Keccak SHA3 hash.
 feeRecipient | `address` | Address that recieves transaction fees (optional).
 feeM | `uint256` | Total units of ZRX paid to feeRecipient by maker.
 feeT | `uint256` | Total units of ZRX paid to feeRecipient by taker.
