@@ -1,12 +1,14 @@
-# [0x Smart Contracts](https://0xProject.com)
----
+<img src = "https://github.com/0xProject/branding/blob/master/logo_0x_github.png" width=100%>
 
-![0x](https://github.com/0xProject/0xProject.github.io/blob/master/img/logo/logo50.png)
+# 0x Protocol
+[0x][website-url] is an open protocol that facilitates trustless and low-friction exchange of Ethereum-based assets. A full description of the protocol may be found in our [whitepaper][whitepaper-url]. This repository contains the system of Ethereum smart contracts comprising 0x protocol's shared settlement layer, native token (ZRX) and decentralized governance structure. Truffle is used for deployment. Mocha is used for unit tests.
+
+[website-url]: https://0xproject.com/
+[whitepaper-url]: https://0xproject.com/pdfs/0x_white_paper.pdf
 
 [![Slack Status](http://slack.0xProject.com/badge.svg)](http://slack.0xProject.com)
 [![Join the chat at https://gitter.im/0xProject/contracts](https://badges.gitter.im/0xProject/contracts.svg)](https://gitter.im/0xProject/contracts?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-[0x](https://0xProject.com) is an open protocol that facilitates trustless and low-friction exchange of Ethereum-based assets. This repository contains the system of Ethereum smart contracts comprising 0x protocol's shared settlement layer, native token (ZRX) and decentralized governance structure. Truffle is used for deployment. Mocha is used for unit tests.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Architecture
 
