@@ -1,6 +1,7 @@
 <img src = "https://github.com/0xProject/branding/blob/master/logo_0x_github.png" width=100%>
 
-# 0x Protocol
+---
+
 [0x][website-url] is an open protocol that facilitates trustless and low-friction exchange of Ethereum-based assets. A full description of the protocol may be found in our [whitepaper][whitepaper-url]. This repository contains the system of Ethereum smart contracts comprising 0x protocol's shared settlement layer, native token (ZRX) and decentralized governance structure. Truffle is used for deployment. Mocha is used for unit tests.
 
 [website-url]: https://0xproject.com/
@@ -29,8 +30,6 @@ MultiSigWallet is a temporary placeholder contract that will be replaced by a th
 TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entries may only be created/modified/removed by MultiSigWallet (until it is replaced by a suitable DAO), meaning that information contained in the registry will generally be trustworthy. 0x message format is not human-readable making it difficult to visually verify order parameters (token addresses and exchange rates); the TokenRegistry can be used to quickly verify order parameters against audited metadata.
 
 # Protocol Specification
-
-## Off-chain Relay, On-chain Settlement
 
 ## Message Format
 
