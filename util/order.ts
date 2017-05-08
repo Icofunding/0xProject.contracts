@@ -4,6 +4,7 @@ import promisify = require('es6-promisify');
 import Web3 = require('web3');
 import { crypto } from './crypto';
 import { OrderParams } from './types';
+import BigNumber = require('bignumber.js');
 
 export class Order {
   public params: OrderParams;
@@ -41,7 +42,7 @@ export class Order {
       s: ethUtil.bufferToHex(s),
     });
   }
-  public createFill(shouldCheckTransfer: boolean, fillValueT?: string) {
+  public createFill(shouldCheckTransfer: boolean, fillValueT?: BigNumber) {
     const fill = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],
@@ -56,7 +57,7 @@ export class Order {
     };
     return fill;
   }
-  public createCancel(cancelValueT?: string) {
+  public createCancel(cancelValueT?: BigNumber) {
     const cancel = {
       traders: [this.params.maker, this.params.taker],
       tokens: [this.params.tokenM, this.params.tokenT],

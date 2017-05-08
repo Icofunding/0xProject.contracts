@@ -1,3 +1,5 @@
+import BigNumber = require('bignumber.js');
+
 export interface BalancesByOwner {
   [ownerAddress: string]: {
     [tokenAddress: string]: string;
@@ -9,10 +11,10 @@ export interface BatchFill {
   tokens: string[][];
   feeRecipients: string[];
   shouldCheckTransfer: boolean;
-  values: string[][];
-  fees: string[][];
-  expirationsAndSalts: number[][];
-  fillValuesT: string[];
+  values: BigNumber[][];
+  fees: BigNumber[][];
+  expirationsAndSalts: BigNumber[][];
+  fillValuesT: BigNumber[];
   v: number[];
   rs: string[][];
 }
@@ -22,10 +24,10 @@ export interface FillUpTo {
   tokens: string[][];
   feeRecipients: string[];
   shouldCheckTransfer: boolean;
-  values: string[][];
-  fees: string[][];
-  expirationsAndSalts: number[][];
-  fillValueT: string;
+  values: BigNumber[][];
+  fees: BigNumber[][];
+  expirationsAndSalts: BigNumber[][];
+  fillValueT: BigNumber;
   v: number[];
   rs: string[][];
 }
@@ -34,10 +36,10 @@ export interface BatchCancel {
   traders: string[][];
   tokens: string[][];
   feeRecipients: string[];
-  values: string[][];
-  fees: string[][];
-  expirationsAndSalts: number[][];
-  cancelValuesT: string[];
+  values: BigNumber[][];
+  fees: BigNumber[][];
+  expirationsAndSalts: BigNumber[][];
+  cancelValuesT: BigNumber[];
 }
 
 export interface DefaultOrderParams {
@@ -46,10 +48,10 @@ export interface DefaultOrderParams {
   feeRecipient: string;
   tokenM: string;
   tokenT: string;
-  valueM: string;
-  valueT: string;
-  feeM: string;
-  feeT: string;
+  valueM: BigNumber;
+  valueT: BigNumber;
+  feeM: BigNumber;
+  feeT: BigNumber;
 }
 
 export interface OptionalOrderParams {
@@ -59,11 +61,11 @@ export interface OptionalOrderParams {
   feeRecipient?: string;
   tokenM?: string;
   tokenT?: string;
-  valueM?: string;
-  valueT?: string;
-  feeM?: string;
-  feeT?: string;
-  expiration?: number;
+  valueM?: BigNumber;
+  valueT?: BigNumber;
+  feeM?: BigNumber;
+  feeT?: BigNumber;
+  expiration?: BigNumber;
 }
 
 export interface OrderParams {
@@ -73,12 +75,12 @@ export interface OrderParams {
   feeRecipient: string;
   tokenM: string;
   tokenT: string;
-  valueM: string;
-  valueT: string;
-  feeM: string;
-  feeT: string;
-  expiration: number;
-  salt: number;
+  valueM: BigNumber;
+  valueT: BigNumber;
+  feeM: BigNumber;
+  feeT: BigNumber;
+  expiration: BigNumber;
+  salt: BigNumber;
   orderHashHex?: string;
   v?: number;
   r?: string;

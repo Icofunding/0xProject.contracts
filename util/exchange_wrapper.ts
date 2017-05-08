@@ -1,6 +1,7 @@
 import { formatters } from './formatters';
 import { Order } from './order';
 import { ContractInstance } from './types';
+import BigNumber = require('bignumber.js');
 
 export class ExchangeWrapper {
   private exchange: ContractInstance;
@@ -8,7 +9,7 @@ export class ExchangeWrapper {
     this.exchange = exchangeContractInstance;
   }
   public fillAsync(order: Order, from: string,
-                   opts: { fillValueT?: string, shouldCheckTransfer?: boolean } = {}) {
+                   opts: { fillValueT?: BigNumber, shouldCheckTransfer?: boolean } = {}) {
     const shouldCheckTransfer = !!opts.shouldCheckTransfer;
     const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fill(
@@ -25,7 +26,7 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public cancelAsync(order: Order, from: string, opts: { cancelValueT?: string } = {}) {
+  public cancelAsync(order: Order, from: string, opts: { cancelValueT?: BigNumber } = {}) {
     const params = order.createCancel(opts.cancelValueT);
     return this.exchange.cancel(
       params.traders,
@@ -38,7 +39,7 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public fillOrKillAsync(order: Order, from: string, opts: { fillValueT?: string } = {}) {
+  public fillOrKillAsync(order: Order, from: string, opts: { fillValueT?: BigNumber } = {}) {
     const shouldCheckTransfer = false;
     const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillOrKill(
@@ -54,7 +55,7 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public batchFillAsync(orders: Order[], from: string, opts: { fillValuesT?: string[] } = {}) {
+  public batchFillAsync(orders: Order[], from: string, opts: { fillValuesT?: BigNumber[] } = {}) {
     const shouldCheckTransfer = false;
     const params = formatters.createBatchFill(orders, shouldCheckTransfer, opts.fillValuesT);
     return this.exchange.batchFill(
@@ -71,7 +72,7 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public fillUpToAsync(orders: Order[], from: string, opts: { fillValueT?: string } = {}) {
+  public fillUpToAsync(orders: Order[], from: string, opts: { fillValueT?: BigNumber } = {}) {
     const shouldCheckTransfer = false;
     const params = formatters.createFillUpTo(orders, shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillUpTo(
@@ -88,7 +89,7 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesT?: string[] } = {}) {
+  public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesT?: BigNumber[] } = {}) {
     const params = formatters.createBatchCancel(orders, opts.cancelValuesT);
     return this.exchange.batchCancel(
       params.traders,

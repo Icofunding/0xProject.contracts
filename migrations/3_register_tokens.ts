@@ -9,6 +9,7 @@ const {
   TokenRegistry,
 } = new Artifacts(artifacts);
 import { tokenInfo } from './config/token_info';
+import { constants } from '../util/constants';
 
 module.exports = (deployer: any, network: string) => {
   const tokens = network === 'live' ? tokenInfo.live : tokenInfo.development;
@@ -29,8 +30,8 @@ module.exports = (deployer: any, network: string) => {
           symbol: 'WETH',
           url: '',
           decimals: 18,
-          ipfsHash: '0x0',
-          swarmHash: '0x0',
+          ipfsHash: constants.NULL_HASH,
+          swarmHash: constants.NULL_HASH,
         };
         return Bluebird.each(dummyTokens.map((tokenContract: ContractInstance, i: number) => {
           const token = tokens[i];
@@ -60,8 +61,8 @@ module.exports = (deployer: any, network: string) => {
         symbol: 'ZRX',
         url: 'https://www.0xproject.com/',
         decimals: 18,
-        ipfsHash: '0x0',
-        swarmHash: '0x0',
+        ipfsHash: constants.NULL_HASH,
+        swarmHash: constants.NULL_HASH,
       };
       return Bluebird.each(tokens.map((token: Token) => {
         return tokenRegistry.addToken(
