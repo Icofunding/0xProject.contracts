@@ -29,6 +29,7 @@ declare module 'ethereumjs-util' {
   function setLengthLeft(a: Buffer, length: number): Buffer;
   function sha3(a: Buffer|String|Number, bits?: number): Buffer;
   function toBuffer(value: any): Buffer;
+  function isValidAddress(address: string): boolean;
 
   export = {
             bufferToHex,
@@ -41,6 +42,7 @@ declare module 'ethereumjs-util' {
             setLengthLeft,
             sha3,
             toBuffer,
+            isValidAddress,
           };
 }
 
@@ -50,12 +52,14 @@ declare module 'bignumber.js' {
     class BigNumber {
         // Those static attributes could have been in the module, a few lines beneath
         public static ROUND_DOWN: any;
+        public isBigNumber: boolean;
         public static config(arg: any): void;
+        public static random(numDecimals: number): BigNumber;
 
         constructor(value: number|string|BigNumber);
         public toNumber(): number;
-        public div(value: BigNumber): BigNumber;
-        public dividedBy(value: BigNumber): BigNumber;
+        public toString(base?: number): string;
+        public div(value: BigNumber|number): BigNumber;
         public pow(exponent: BigNumber|number): BigNumber;
         public times(value: BigNumber): BigNumber;
         public plus(value: BigNumber|number): BigNumber;
@@ -65,6 +69,7 @@ declare module 'bignumber.js' {
         public eq(value: BigNumber|number): BigNumber;
         public minus(value: BigNumber): BigNumber;
         public comparedTo(value: BigNumber): BigNumber;
+        public round(numDecimals?: BigNumber|number): BigNumber;
     }
 
     // A standalone class is not exportable, so there is an empty module

@@ -28,7 +28,7 @@ export const BNUtil = {
     });
     const a = new BigNumber(numA);
     const b = new BigNumber(numB);
-    const result = a.dividedBy(b);
+    const result = a.div(b);
     return result.toString();
   },
   cmp(numA: BNValue, numB: BNValue): BigNumber {
@@ -36,13 +36,10 @@ export const BNUtil = {
     const b = new BigNumber(numB);
     return a.comparedTo(b);
   },
-  toBuffer(num: number, size: number = 32, endian: string = 'be'): Buffer {
-    return new BN(num.toString()).toArrayLike(Buffer, endian, size);
-  },
-  toSmallestUnits(num: number, decimals: number = 18): string {
+  toSmallestUnits(num: number, decimals: number = 18) {
     const a = new BigNumber(num);
     const unit = new BigNumber(10).pow(decimals);
     const result = a.times(unit);
-    return result.toString();
+    return result;
   },
 };

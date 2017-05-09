@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import ethUtil = require('ethereumjs-util');
+import BigNumber = require('bignumber.js');
 import { Balances } from '../../../util/balances';
 import { BNUtil } from '../../../util/bn_util';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
@@ -128,11 +129,11 @@ contract('Exchange', (accounts: string[]) => {
       const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountMBefore should be 0');
 
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
       const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
+      assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -158,11 +159,11 @@ contract('Exchange', (accounts: string[]) => {
       const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
       const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
+      assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -188,11 +189,11 @@ contract('Exchange', (accounts: string[]) => {
       const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
       const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
-      assert.equal(filledAmountTAfter, fillValueT, 'filledAmountTAfter should be same as fillValueT');
+      assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -219,7 +220,7 @@ contract('Exchange', (accounts: string[]) => {
       const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
       const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
@@ -243,7 +244,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should fill remaining value if fillValueT > remaining valueT', async () => {
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
       const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT });
@@ -266,7 +267,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.fillAsync(order, taker, { fillValueT: div(order.params.valueT, 2) });
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(2) });
       assert.equal(res.logs.length, 1);
     });
 
@@ -344,7 +345,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should not change balances if an order is expired', async () => {
       order = await orderFactory.newSignedOrderAsync({
-        expiration: Math.floor((Date.now() - 10000) / 1000),
+        expiration: new BigNumber(Math.floor((Date.now() - 10000) / 1000)),
       });
       await exWrapper.fillAsync(order, taker);
 
@@ -354,7 +355,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should log an error event if an order is expired', async () => {
       order = await orderFactory.newSignedOrderAsync({
-        expiration: Math.floor((Date.now() - 10000) / 1000),
+        expiration: new BigNumber(Math.floor((Date.now() - 10000) / 1000)),
       });
 
       const res = await exWrapper.fillAsync(order, taker);
@@ -390,14 +391,14 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should be able to cancel a full order', async () => {
       await exWrapper.cancelAsync(order, maker);
-      await exWrapper.fillAsync(order, taker, { fillValueT: div(order.params.valueT, 2) });
+      await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(2) });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
     });
 
     it('should be able to cancel part of an order', async () => {
-      const cancelValueT = div(order.params.valueT, 2);
+      const cancelValueT = order.params.valueT.div(2);
       await exWrapper.cancelAsync(order, maker, { cancelValueT });
 
       const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT });
@@ -418,7 +419,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should log 1 event', async () => {
-      const res = await exWrapper.cancelAsync(order, maker, { cancelValueT: div(order.params.valueT, 2) });
+      const res = await exWrapper.cancelAsync(order, maker, { cancelValueT: order.params.valueT.div(2) });
       assert.equal(res.logs.length, 1);
     });
 
@@ -434,7 +435,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should not log events if order is expired', async () => {
       order = await orderFactory.newSignedOrderAsync({
-        expiration: Math.floor((Date.now() - 10000) / 1000),
+        expiration: new BigNumber(Math.floor((Date.now() - 10000) / 1000)),
       });
 
       const res = await exWrapper.cancelAsync(order, maker);

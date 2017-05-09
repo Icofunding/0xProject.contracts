@@ -1,9 +1,10 @@
 import * as _ from 'lodash';
 import { BatchFill, BatchCancel, FillUpTo } from './types';
 import { Order } from './order';
+import BigNumber = require('bignumber.js');
 
 export const formatters = {
-  createBatchFill(orders: Order[], shouldCheckTransfer: boolean, fillValuesT: string[] = []) {
+  createBatchFill(orders: Order[], shouldCheckTransfer: boolean, fillValuesT: BigNumber[] = []) {
     const batchFill: BatchFill = {
       traders: [],
       tokens: [],
@@ -31,7 +32,7 @@ export const formatters = {
     });
     return batchFill;
   },
-  createFillUpTo(orders: Order[], shouldCheckTransfer: boolean, fillValueT: string) {
+  createFillUpTo(orders: Order[], shouldCheckTransfer: boolean, fillValueT: BigNumber) {
     const fillUpTo: FillUpTo = {
       traders: [],
       tokens: [],
@@ -56,7 +57,7 @@ export const formatters = {
     });
     return fillUpTo;
   },
-  createBatchCancel(orders: Order[], cancelValuesT: string[] = []) {
+  createBatchCancel(orders: Order[], cancelValuesT: BigNumber[] = []) {
     const batchCancel: BatchCancel = {
       traders: [],
       tokens: [],

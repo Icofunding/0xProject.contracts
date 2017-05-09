@@ -5,6 +5,7 @@ import { testUtil } from '../../util/test_util';
 import { TokenRegWrapper } from '../../util/token_registry_wrapper';
 import { ContractInstance } from '../../util/types';
 import { Artifacts } from '../../util/artifacts';
+import { constants } from '../../util/constants';
 
 const { TokenRegistry } = new Artifacts(artifacts);
 
@@ -23,13 +24,13 @@ contract('TokenRegistry', (accounts: string[]) => {
   };
 
   const nullToken = {
-    address: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 20).toString('hex')}`,
+    address: constants.NULL_ADDRESS,
     name: '',
     symbol: '',
     url: '',
     decimals: 0,
-    ipfsHash: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 32).toString('hex')}`,
-    swarmHash: `0x${ethUtil.setLengthLeft(ethUtil.toBuffer('0x0'), 32).toString('hex')}`,
+    ipfsHash: constants.NULL_HASH,
+    swarmHash: constants.NULL_HASH,
   };
 
   let tokenReg: ContractInstance;

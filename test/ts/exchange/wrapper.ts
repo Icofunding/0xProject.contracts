@@ -8,6 +8,7 @@ import { Order } from '../../../util/order';
 import { testUtil } from '../../../util/test_util';
 import { BalancesByOwner, ContractInstance } from '../../../util/types';
 import { Artifacts } from '../../../util/artifacts';
+import BigNumber = require('bignumber.js');
 
 const {
   Exchange,
@@ -96,7 +97,7 @@ contract('Exchange', (accounts: string[]) => {
         valueM: toSmallestUnits(100),
         valueT: toSmallestUnits(200),
       });
-      const fillValueT = div(order.params.valueT, 2);
+      const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillOrKillAsync(order, taker, { fillValueT });
 
       const newBalances = await dmyBalances.getAsync();
@@ -116,7 +117,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should throw if an order is expired', async () => {
       const order = await orderFactory.newSignedOrderAsync({
-        expiration: Math.floor((Date.now() - 10000) / 1000),
+        expiration: new BigNumber(Math.floor((Date.now() - 10000) / 1000)),
       });
 
       try {
@@ -131,7 +132,7 @@ contract('Exchange', (accounts: string[]) => {
       const order = await orderFactory.newSignedOrderAsync();
 
       const from = taker;
-      await exWrapper.fillAsync(order, from, { fillValueT: div(order.params.valueT, 2) });
+      await exWrapper.fillAsync(order, from, { fillValueT: order.params.valueT.div(2) });
 
       try {
         await exWrapper.fillOrKillAsync(order, taker);
@@ -154,11 +155,11 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const fillValuesT: string[] = [];
+      const fillValuesT: BigNumber[] = [];
       const tokenM = rep.address;
       const tokenT = dgd.address;
       orders.forEach(order => {
-        const fillValueT = div(order.params.valueT, 2);
+        const fillValueT = order.params.valueT.div(2);
         const fillValueM = div(mul(fillValueT, order.params.valueM), order.params.valueT);
         const feeValueM = div(mul(order.params.feeM, fillValueM), order.params.valueM);
         const feeValueT = div(mul(order.params.feeT, fillValueM), order.params.valueM);
@@ -191,7 +192,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should stop when the entire fillValueT is filled', async () => {
-      const fillValueT = add(orders[0].params.valueT, div(orders[1].params.valueT, 2));
+      const fillValueT = orders[0].params.valueT.plus(orders[1].params.valueT.div(2));
       await exWrapper.fillUpToAsync(orders, taker, { fillValueT });
 
       const newBalances = await dmyBalances.getAsync();
