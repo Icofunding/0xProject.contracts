@@ -18,7 +18,7 @@ const {
   Proxy,
 } = new Artifacts(artifacts);
 
-const { toSmallestUnits } = BNUtil;
+const { add, sub, mul, div, toSmallestUnits } = BNUtil;
 
 contract('SimpleCrowdsale', (accounts: string[]) => {
   const maker = accounts[0];
@@ -32,8 +32,9 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   let wEth: ContractInstance;
 
   let order: Order;
-  let balances: BalancesByOwner;
   let dmyBalances: Balances;
+
+  const sendTransaction = promisify(web3.eth.sendTransaction);
 
   before(async () => {
     [tokenRegistry, simpleCrowdsale] = await Promise.all([
@@ -56,7 +57,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       valueT: toSmallestUnits(100),
       feeM: new BigNumber(0),
       feeT: new BigNumber(0),
-      expiration: new BigNumber(Math.floor(Date.now() / 1000) + 86400),
+      expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
       salt: new BigNumber(0),
     };
     order = new Order(orderParams);
@@ -66,11 +67,28 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       DummyToken.at(zrxAddress),
       DummyToken.at(wEthAddress),
     ]);
-    dmyBalances = new Balances([zrx, wEth], [maker]);
+    dmyBalances = new Balances([zrx, wEth], [maker, taker]);
     await Promise.all([
       zrx.approve(Proxy.address, order.params.valueM, { from: maker }),
       zrx.setBalance(maker, order.params.valueM, { from: owner }),
     ]);
+  });
+
+  describe('fallback', () => {
+    it('should throw if sale not initialized', async () => {
+      try {
+        const ethValue = toSmallestUnits(1);
+        await sendTransaction({
+          from: taker,
+          to: simpleCrowdsale.address,
+          value: ethValue,
+          gas: 300000,
+        });
+        throw new Error('Fallback succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
   });
 
   describe('init', () => {
@@ -145,6 +163,27 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       } catch (err) {
         testUtil.assertThrow(err);
       }
+    });
+
+    describe('fallback', () => {
+      it('should trade sent ETH for protocol tokens', async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const ethValue = toSmallestUnits(1);
+        const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
+        await sendTransaction({
+          from: taker,
+          to: simpleCrowdsale.address,
+          value: ethValue,
+          gas: 300000,
+        });
+        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        assert.equal(finalBalances[maker][order.params.tokenM],
+                     sub(initBalances[maker][order.params.tokenM], zrxValue));
+        assert.equal(finalBalances[maker][order.params.tokenT],
+                     add(initBalances[maker][order.params.tokenT], ethValue));
+        assert.equal(finalBalances[taker][order.params.tokenM],
+                     add(initBalances[taker][order.params.tokenM], zrxValue));
+      });
     });
   });
 });

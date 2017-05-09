@@ -133,14 +133,6 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         return true;
     }
 
-    function withdrawToken(address _token, uint _value)
-        onlyOwner
-        returns (bool success)
-    {
-        assert(Token(_token).transfer(msg.sender, _value));
-        return true;
-    }
-
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
     /// @param traders Array of order maker and taker addresses.
     /// @param tokens Array of order tokenM and tokenT addresses.
