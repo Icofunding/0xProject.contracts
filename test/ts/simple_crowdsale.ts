@@ -81,7 +81,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   describe('fallback', () => {
     it('should throw if sale not initialized', async () => {
       try {
-        const ethValue = toSmallestUnits(1);
+        const ethValue = web3.fromWei(1, 'ether');
         await sendTransaction({
           from: taker,
           to: simpleCrowdsale.address,
@@ -174,7 +174,8 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     it('should trade sent ETH for protocol tokens if ETH <= remaining order ETH', async () => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
-      const ethValue = toSmallestUnits(1);
+
+      const ethValue = web3.fromWei(1, 'ether');
       const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
       const gasPrice = web3.toWei(20, 'gwei');
 

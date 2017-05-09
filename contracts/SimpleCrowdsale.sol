@@ -68,8 +68,8 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         payable
         saleInProgress
     {
-        uint filledEth = exchange.fills(order.orderHash);
-        uint ethToFill = min(msg.value, safeSub(order.values[1], filledEth));
+        uint remainingEth = safeSub(order.values[1], exchange.fills(order.orderHash));
+        uint ethToFill = min(msg.value, remainingEth);
         ethToken.buyTokens.value(ethToFill)();
         assert(exchange.fillOrKill(
             order.traders,
@@ -127,7 +127,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             rs[0],
             rs[1]
         ));
-        setTokenAllowance(tokens[1], values[1]);
+        assert(setTokenAllowance(tokens[1], values[1]));
         isInitialized = true;
     }
 
