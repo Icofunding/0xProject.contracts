@@ -18,7 +18,7 @@ const {
   Proxy,
 } = new Artifacts(artifacts);
 
-const { add, sub, mul, div, toSmallestUnits } = BNUtil;
+const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
 
 contract('SimpleCrowdsale', (accounts: string[]) => {
   const maker = accounts[0];
@@ -28,6 +28,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
   let tokenRegistry: ContractInstance;
   let simpleCrowdsale: ContractInstance;
+  let exchange: ContractInstance;
   let zrx: ContractInstance;
   let wEth: ContractInstance;
 
@@ -35,11 +36,14 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   let dmyBalances: Balances;
 
   const sendTransaction = promisify(web3.eth.sendTransaction);
+  const getEthBalance = promisify(web3.eth.getBalance);
+  const getTransactionReceipt = promisify(web3.eth.getTransactionReceipt);
 
   before(async () => {
-    [tokenRegistry, simpleCrowdsale] = await Promise.all([
+    [tokenRegistry, simpleCrowdsale, exchange] = await Promise.all([
       TokenRegistry.deployed(),
       SimpleCrowdsale.deployed(),
+      Exchange.deployed(),
     ]);
     const [zrxAddress, wEthAddress] = await Promise.all([
       tokenRegistry.getTokenAddressBySymbol('ZRX'),
@@ -53,8 +57,8 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       feeRecipient: constants.NULL_ADDRESS,
       tokenM: zrxAddress,
       tokenT: wEthAddress,
-      valueM: toSmallestUnits(100),
-      valueT: toSmallestUnits(100),
+      valueM: toSmallestUnits(10),
+      valueT: toSmallestUnits(10),
       feeM: new BigNumber(0),
       feeT: new BigNumber(0),
       expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
@@ -164,26 +168,69 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
         testUtil.assertThrow(err);
       }
     });
+  });
 
-    describe('fallback', () => {
-      it('should trade sent ETH for protocol tokens', async () => {
-        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
-        const ethValue = toSmallestUnits(1);
-        const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
-        await sendTransaction({
-          from: taker,
-          to: simpleCrowdsale.address,
-          value: ethValue,
-          gas: 300000,
-        });
-        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
-        assert.equal(finalBalances[maker][order.params.tokenM],
-                     sub(initBalances[maker][order.params.tokenM], zrxValue));
-        assert.equal(finalBalances[maker][order.params.tokenT],
-                     add(initBalances[maker][order.params.tokenT], ethValue));
-        assert.equal(finalBalances[taker][order.params.tokenM],
-                     add(initBalances[taker][order.params.tokenM], zrxValue));
+  describe('fallback', () => {
+    it('should trade sent ETH for protocol tokens if ETH <= remaining order ETH', async () => {
+      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+      const initTakerEthBalance = await getEthBalance(taker);
+      const ethValue = toSmallestUnits(1);
+      const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
+      const gasPrice = web3.toWei(20, 'gwei');
+
+      const txHash = await sendTransaction({
+        from: taker,
+        to: simpleCrowdsale.address,
+        value: ethValue,
+        gas: 300000,
+        gasPrice,
       });
+      const receipt = await getTransactionReceipt(txHash);
+
+      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+      const finalTakerEthBalance = await getEthBalance(taker);
+      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+
+      assert.equal(finalBalances[maker][order.params.tokenM],
+                   sub(initBalances[maker][order.params.tokenM], zrxValue));
+      assert.equal(finalBalances[maker][order.params.tokenT],
+                   add(initBalances[maker][order.params.tokenT], ethValue));
+      assert.equal(finalBalances[taker][order.params.tokenM],
+                   add(initBalances[taker][order.params.tokenM], zrxValue));
+      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+    });
+
+    it('should partial fill if sent ETH > remaining order ETH', async () => {
+      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+      const initTakerEthBalance = await getEthBalance(taker);
+      const remainingValueT = sub(order.params.valueT, await exchange.fills.call(order.params.orderHashHex));
+
+      const ethValueSent = web3.toWei(20, 'ether');
+      const expectedZrxValue = div(mul(ethValueSent, order.params.valueM), order.params.valueT);
+      const gasPrice = web3.toWei(20, 'gwei');
+
+      const txHash = await sendTransaction({
+        from: taker,
+        to: simpleCrowdsale.address,
+        value: ethValueSent,
+        gas: 300000,
+        gasPrice,
+      });
+      const receipt = await getTransactionReceipt(txHash);
+
+      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+      const finalTakerEthBalance = await getEthBalance(taker);
+      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+      const zrxValue = cmp(expectedZrxValue, remainingValueT) > 0 ? remainingValueT : expectedZrxValue;
+      const ethValue = div(mul(zrxValue, order.params.valueM), order.params.valueT);
+
+      assert.equal(finalBalances[maker][order.params.tokenM],
+                   sub(initBalances[maker][order.params.tokenM], zrxValue));
+      assert.equal(finalBalances[maker][order.params.tokenT],
+                   add(initBalances[maker][order.params.tokenT], ethValue));
+      assert.equal(finalBalances[taker][order.params.tokenM],
+                   add(initBalances[taker][order.params.tokenM], zrxValue));
+      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
     });
   });
 });

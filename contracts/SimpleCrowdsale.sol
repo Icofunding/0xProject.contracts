@@ -29,6 +29,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         uint[2] expirationAndSalt;
         uint8 v;
         bytes32[2] rs;
+        bytes32 orderHash;
     }
 
     modifier saleInProgress() {
@@ -67,7 +68,9 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         payable
         saleInProgress
     {
-        ethToken.buyTokens.value(msg.value)();
+        uint filledEth = exchange.fills(order.orderHash);
+        uint ethToFill = min(msg.value, safeSub(order.values[1], filledEth));
+        ethToken.buyTokens.value(ethToFill)();
         assert(exchange.fillOrKill(
             order.traders,
             order.tokens,
@@ -75,12 +78,15 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             order.values,
             order.fees,
             order.expirationAndSalt,
-            msg.value,
+            ethToFill,
             order.v,
             order.rs
         ));
-        uint filledProtocolToken = safeDiv(safeMul(order.values[0], msg.value), order.values[1]);
+        uint filledProtocolToken = safeDiv(safeMul(order.values[0], ethToFill), order.values[1]);
         assert(protocolToken.transfer(msg.sender, filledProtocolToken));
+        if (ethToFill < msg.value) {
+            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
+        }
     }
 
     function init(
@@ -104,19 +110,19 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             fees: fees,
             expirationAndSalt: expirationAndSalt,
             v: v,
-            rs: rs
+            rs: rs,
+            orderHash: getOrderHash(
+                traders,
+                tokens,
+                feeRecipient,
+                values,
+                fees,
+                expirationAndSalt
+            )
         });
-        bytes32 orderHash = getOrderHash(
-            traders,
-            tokens,
-            feeRecipient,
-            values,
-            fees,
-            expirationAndSalt
-        );
         assert(isValidSignature(
             traders[0],
-            orderHash,
+            order.orderHash,
             v,
             rs[0],
             rs[1]
@@ -189,5 +195,17 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             r,
             s
         );
+    }
+
+    /// @dev Calculates minimum of two values.
+    /// @param a First value.
+    /// @param b Second value.
+    /// @return Minimum of values.
+    function min(uint a, uint b)
+        constant
+        returns (uint min)
+    {
+        if (a < b) return a;
+        return b;
     }
 }
