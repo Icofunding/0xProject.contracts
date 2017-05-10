@@ -50,7 +50,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       };
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
-      txId = subRes.logs[0].args.transactionId.toString();
+      txId = subRes.logs[0].args.transactionId.toNumber();
       try {
         const execRes = await multiSig.executeTransaction(txId);
         throw new Error('changeTimeLock executed without enough confirmations');
@@ -64,9 +64,9 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       assert.equal(res.logs.length, 2);
       const blockNum = await promisify(web3.eth.getBlockNumber)();
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
-      const timestamp = blockInfo.timestamp.toString();
+      const timestamp = blockInfo.timestamp;
       const confirmationTimeBigNum = await multiSig.confirmationTimes.call(txId);
-      const confirmationTime = confirmationTimeBigNum.toString();
+      const confirmationTime = confirmationTimeBigNum.toNumber();
 
       assert.equal(timestamp, confirmationTime);
     });
@@ -93,7 +93,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       };
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
-      txId = subRes.logs[0].args.transactionId.toString();
+      txId = subRes.logs[0].args.transactionId.toNumber();
       const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
       assert.equal(confRes.logs.length, 2);
 
