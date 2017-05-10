@@ -36,9 +36,9 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     }
 
     modifier pastTimeLock(uint transactionId) {
-      uint confirmationTime = confirmationTimes[transactionId];
-      if (confirmationTime == 0 || block.timestamp < confirmationTime + secondsTimeLocked) throw;
-      _;
+        uint confirmationTime = confirmationTimes[transactionId];
+        if (confirmationTime == 0 || block.timestamp < confirmationTime + secondsTimeLocked) throw;
+        _;
     }
 
     /*
@@ -52,7 +52,6 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     function MultiSigWalletWithTimeLock(address[] _owners, uint _required, uint _secondsTimeLocked)
         public
         MultiSigWallet(_owners, _required)
-        validRequirement(_owners.length, _required)
     {
         secondsTimeLocked = _secondsTimeLocked;
     }
