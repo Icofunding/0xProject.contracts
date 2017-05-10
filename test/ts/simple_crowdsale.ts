@@ -147,7 +147,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
         { from: owner },
       );
       const isInitialized = await simpleCrowdsale.isInitialized.call();
-      assert(isInitialized);
+      assert.equal(isInitialized, true);
     });
 
     it('should throw if the sale has already been initialized', async () => {
@@ -201,7 +201,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
     });
 
-    it('should partial fill if sent ETH > remaining order ETH', async () => {
+    it('should partial fill and end sale if sent ETH > remaining order ETH', async () => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
       const remainingValueT = sub(order.params.valueT, await exchange.fills.call(order.params.orderHashHex));
@@ -232,6 +232,24 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       assert.equal(finalBalances[taker][order.params.tokenM],
                    add(initBalances[taker][order.params.tokenM], zrxValue));
       assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+
+      const isFinished = await simpleCrowdsale.isFinished.call();
+      assert.equal(isFinished, true);
+    });
+
+    it('should throw if sale finished', async () => {
+      try {
+        const ethValue = web3.toWei(1, 'ether');
+        await sendTransaction({
+          from: taker,
+          to: simpleCrowdsale.address,
+          value: ethValue,
+          gas: 300000,
+        });
+        throw new Error('Fallback succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
   });
 });
