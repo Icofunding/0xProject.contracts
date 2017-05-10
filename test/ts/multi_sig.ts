@@ -4,59 +4,59 @@ import { RPC } from '../../util/rpc';
 import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { testUtil } from '../../util/test_util';
 import { ContractInstance } from '../../util/types';
-import * as multiSigWalletJSON from '../../build/contracts/MultiSigWallet.json';
+import * as multiSigWalletJSON from '../../build/contracts/MultiSigWalletWithTimeLock.json';
 import { Artifacts } from '../../util/artifacts';
 
-const { MultiSigWallet } = new Artifacts(artifacts);
+const { MultiSigWalletWithTimeLock } = new Artifacts(artifacts);
 
 const MULTI_SIG_ABI = (multiSigWalletJSON as any).abi;
 
-contract('MultiSigWallet', (accounts: string[]) => {
+contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
-  const SECONDS_REQUIRED = 10000;
+  const SECONDS_TIME_LOCKED = 10000;
 
   let multiSig: ContractInstance;
   let multiSigWrapper: MultiSigWrapper;
   let txId: number;
-  let initialThreshold: number;
+  let initialSecondsTimeLocked: number;
   let rpc: RPC;
 
   before(async () => {
-    multiSig = await MultiSigWallet.deployed();
+    multiSig = await MultiSigWalletWithTimeLock.deployed();
     multiSigWrapper = new MultiSigWrapper(multiSig);
 
-    const threshold = await multiSig.secondsRequired.call();
-    initialThreshold = threshold.toNumber();
+    const secondsTimeLocked = await multiSig.secondsTimeLocked.call();
+    initialSecondsTimeLocked = secondsTimeLocked.toNumber();
     rpc = new RPC();
   });
 
-  describe('changeRequiredSeconds', () => {
+  describe('changeTimeLock', () => {
     it('should throw when not called by wallet', async () => {
       try {
-        await multiSig.changeRequiredSeconds(SECONDS_REQUIRED, { from: owners[0] });
-        throw new Error('changeRequiredSeconds succeeded when it should have thrown');
+        await multiSig.changeTimeLock(SECONDS_TIME_LOCKED, { from: owners[0] });
+        throw new Error('changeTimeLock succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
     });
 
-    it('should not execute without enough confirmations', async () => {
-      const destination = MultiSigWallet.address;
+    it('should throw without enough confirmations', async () => {
+      const destination = multiSig.address;
       const from = owners[0];
       const dataParams = {
-        name: 'changeRequiredSeconds',
+        name: 'changeTimeLock',
         abi: MULTI_SIG_ABI,
-        args: [SECONDS_REQUIRED],
+        args: [SECONDS_TIME_LOCKED],
       };
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
-      txId = subRes.logs[0].args.transactionId.toString();
-      const execRes = await multiSig.executeTransaction(txId);
-      assert.equal(execRes.logs.length, 0);
-
-      const tx = await multiSig.transactions.call(txId);
-      const executed = tx[4];
-      assert(!executed);
+      txId = subRes.logs[0].args.transactionId.toNumber();
+      try {
+        const execRes = await multiSig.executeTransaction(txId);
+        throw new Error('changeTimeLock executed without enough confirmations');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
 
     it('should set confirmation time with enough confirmations', async () => {
@@ -64,53 +64,53 @@ contract('MultiSigWallet', (accounts: string[]) => {
       assert.equal(res.logs.length, 2);
       const blockNum = await promisify(web3.eth.getBlockNumber)();
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
-      const timestamp = blockInfo.timestamp.toString();
-      const tx = await multiSig.transactions(txId);
+      const timestamp = blockInfo.timestamp;
+      const confirmationTimeBigNum = await multiSig.confirmationTimes.call(txId);
+      const confirmationTime = confirmationTimeBigNum.toNumber();
 
-      const confirmationTime = tx[2].toString();
       assert.equal(timestamp, confirmationTime);
     });
 
-    it('should be executable with enough confirmations and secondsRequired of 0', async () => {
-      assert.equal(initialThreshold, 0);
+    it('should be executable with enough confirmations and secondsTimeLocked of 0', async () => {
+      assert.equal(initialSecondsTimeLocked, 0);
 
       const res = await multiSig.executeTransaction(txId);
       assert.equal(res.logs.length, 2);
 
-      const threshold = await multiSig.secondsRequired.call();
-      const newThreshold = threshold.toNumber();
-      assert.equal(newThreshold, SECONDS_REQUIRED);
+      const secondsTimeLocked = await multiSig.secondsTimeLocked.call();
+      const newSecondsTimeLocked = secondsTimeLocked.toNumber();
+      assert.equal(newSecondsTimeLocked, SECONDS_TIME_LOCKED);
     });
 
-    const newThreshold = 0;
-    it('should not execute if it has enough confirmations but is not past the activation threshold', async () => {
-      const destination = MultiSigWallet.address;
+    const newSecondsTimeLocked = 0;
+    it('should throw if it has enough confirmations but is not past the time lock', async () => {
+      const destination = multiSig.address;
       const from = owners[0];
       const dataParams = {
-        name: 'changeRequiredSeconds',
+        name: 'changeTimeLock',
         abi: MULTI_SIG_ABI,
-        args: [newThreshold],
+        args: [newSecondsTimeLocked],
       };
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
-      txId = subRes.logs[0].args.transactionId.toString();
+      txId = subRes.logs[0].args.transactionId.toNumber();
       const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
       assert.equal(confRes.logs.length, 2);
 
-      const execRes = await multiSig.executeTransaction(txId);
-      assert.equal(execRes.logs.length, 0);
-
-      const tx = await multiSig.transactions.call(txId);
-      const executed = tx[4];
-      assert(!executed);
+      try {
+        const execRes = await multiSig.executeTransaction(txId);
+        throw new Error('changeTimeLock executed without enough confirmations');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
 
-    it('should execute if it has enough confirmations and is past the activation threshold', async () => {
-      await rpc.increaseTimeAsync(SECONDS_REQUIRED);
+    it('should execute if it has enough confirmations and is past the time lock', async () => {
+      await rpc.increaseTimeAsync(SECONDS_TIME_LOCKED);
       await multiSig.executeTransaction(txId);
 
-      const threshold = await multiSig.secondsRequired.call();
-      assert.equal(threshold.toNumber(), newThreshold);
+      const secondsTimeLocked = await multiSig.secondsTimeLocked.call();
+      assert.equal(secondsTimeLocked.toNumber(), newSecondsTimeLocked);
     });
   });
 });
