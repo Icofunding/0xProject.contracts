@@ -83,7 +83,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     {
         confirmations[transactionId][msg.sender] = true;
         Confirmation(msg.sender, transactionId);
-        if (!isConfirmationTimeSet(transactionId) && isConfirmed(transactionId)) {
+        if (isConfirmed(transactionId)) {
             setConfirmationTime(transactionId, block.timestamp);
         }
     }
@@ -116,17 +116,6 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
             ExecutionFailure(transactionId);
             tx.executed = false;
         }
-    }
-
-    /// @dev Checks if a transaction's confirmation time has been set.
-    /// @param transactionId Transaction ID.
-    /// @return Status of confirmation time.
-    function isConfirmationTimeSet(uint transactionId)
-        public
-        constant
-        returns (bool)
-    {
-        return confirmationTimes[transactionId] != 0;
     }
 
     /*
