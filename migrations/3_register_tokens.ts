@@ -4,7 +4,7 @@ import { ContractInstance, TokenInfoByNetwork, Token } from '../util/types';
 import { Artifacts } from '../util/artifacts';
 const {
   DummyToken,
-  DummyEtherToken,
+  EtherToken,
   ProtocolToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
@@ -25,7 +25,7 @@ module.exports = (deployer: any, network: string) => {
         totalSupply,
     )), _.noop).then((dummyTokens: ContractInstance[]) => {
         const weth = {
-          address: DummyEtherToken.address,
+          address: EtherToken.address,
           name: 'ETH Token',
           symbol: 'WETH',
           url: '',

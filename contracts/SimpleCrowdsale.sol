@@ -1,7 +1,7 @@
 pragma solidity ^0.4.8;
 
 import "./Exchange.sol";
-import "./tokens/DummyEtherToken.sol";
+import "./tokens/EtherToken.sol";
 import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
@@ -15,7 +15,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
 
     Exchange exchange;
     Token protocolToken;
-    DummyEtherToken ethToken;
+    EtherToken ethToken;
 
     bool public isInitialized;
     Order order;
@@ -61,7 +61,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
 
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
-        ethToken = DummyEtherToken(_ethToken);
+        ethToken = EtherToken(_ethToken);
     }
 
     function()
@@ -70,7 +70,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     {
         uint remainingEth = safeSub(order.values[1], exchange.fills(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
-        ethToken.buyTokens.value(ethToFill)();
+        ethToken.deposit.value(ethToFill)();
         assert(exchange.fillOrKill(
             order.traders,
             order.tokens,
