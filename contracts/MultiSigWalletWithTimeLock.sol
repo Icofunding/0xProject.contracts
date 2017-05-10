@@ -51,14 +51,9 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
     function MultiSigWalletWithTimeLock(address[] _owners, uint _required, uint _secondsTimeLocked)
         public
+        MultiSigWallet(_owners, _required)
         validRequirement(_owners.length, _required)
     {
-        for (uint i = 0; i < _owners.length; i++) {
-            if (isOwner[_owners[i]] || _owners[i] == 0) throw;
-            isOwner[_owners[i]] = true;
-        }
-        owners = _owners;
-        required = _required;
         secondsTimeLocked = _secondsTimeLocked;
     }
 

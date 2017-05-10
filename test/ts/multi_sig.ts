@@ -66,8 +66,9 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
       const timestamp = blockInfo.timestamp.toString();
       const tx = await multiSig.transactions(txId);
-
-      const confirmationTime = tx[2].toString();
+      const confirmationTimeBigNum = await multiSig.confirmationTimes.call(txId);
+      const confirmationTime = confirmationTimeBigNum.toString();
+      
       assert.equal(timestamp, confirmationTime);
     });
 
