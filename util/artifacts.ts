@@ -2,7 +2,7 @@ export class Artifacts {
   public Migrations: any;
   public Proxy: any;
   public TokenRegistry: any;
-  public MultiSigWallet: any;
+  public MultiSigWalletWithTimeLock: any;
   public Exchange: any;
   public ProtocolToken: any;
   public DummyToken: any;
@@ -11,7 +11,7 @@ export class Artifacts {
     this.Migrations = artifacts.require('Migrations');
     this.Proxy = artifacts.require('Proxy');
     this.TokenRegistry = artifacts.require('TokenRegistry');
-    this.MultiSigWallet = artifacts.require('MultiSigWallet');
+    this.MultiSigWalletWithTimeLock = artifacts.require('MultiSigWalletWithTimeLock');
     this.Exchange = artifacts.require('Exchange');
     this.ProtocolToken = artifacts.require('ProtocolToken');
     this.DummyToken = artifacts.require('DummyToken');

@@ -2,7 +2,7 @@ import { ContractInstance } from '../util/types';
 import { Artifacts } from '../util/artifacts';
 const {
   Proxy,
-  MultiSigWallet,
+  MultiSigWalletWithTimeLock,
   TokenRegistry,
 } = new Artifacts(artifacts);
 
@@ -16,9 +16,9 @@ module.exports = (deployer: any, network: string) => {
       ]).then((instances: ContractInstance[]) => {
         let proxy: ContractInstance;
         [proxy, tokenRegistry] = instances;
-        return proxy.transferOwnership(MultiSigWallet.address);
+        return proxy.transferOwnership(MultiSigWalletWithTimeLock.address);
       }).then(() => {
-        return tokenRegistry.transferOwnership(MultiSigWallet.address);
+        return tokenRegistry.transferOwnership(MultiSigWalletWithTimeLock.address);
       });
     });
   }
