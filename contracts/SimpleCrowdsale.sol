@@ -18,6 +18,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     EtherToken ethToken;
 
     bool public isInitialized;
+    bool public isFinished;
     Order order;
 
     struct Order {
@@ -32,13 +33,23 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         bytes32 orderHash;
     }
 
-    modifier saleInProgress() {
-        assert(isInitialized && order.expirationAndSalt[0] > block.timestamp);
+    modifier saleInitialized() {
+        assert(isInitialized);
         _;
     }
 
     modifier saleNotInitialized() {
         assert(!isInitialized);
+        _;
+    }
+
+    modifier saleNotFinished() {
+        assert(!isFinished);
+        _;
+    }
+
+    modifier orderNotExpired() {
+        assert(order.expirationAndSalt[0] > block.timestamp);
         _;
     }
 
@@ -64,9 +75,12 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         ethToken = EtherToken(_ethToken);
     }
 
+    /// @dev Allows users to fill stored order by sending ETH to contract.
     function()
         payable
-        saleInProgress
+        saleInitialized
+        saleNotFinished
+        orderNotExpired
     {
         uint remainingEth = safeSub(order.values[1], exchange.fills(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
@@ -86,9 +100,19 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         assert(protocolToken.transfer(msg.sender, filledProtocolToken));
         if (ethToFill < msg.value) {
             assert(msg.sender.send(safeSub(msg.value, ethToFill)));
+            isFinished = true;
         }
     }
 
+    /// @dev Stores order and initializes sale.
+    /// @param traders Array of order maker and taker (optional) addresses.
+    /// @param tokens Array of ERC20 token addresses [tokenM, tokenT].
+    /// @param feeRecipient Address that receives order fees.
+    /// @param values Token values to be traded [valueM, valueT].
+    /// @param fees Array of order feeM and feeT.
+    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
+    /// @param v ECDSA signature parameter v.
+    /// @param rs Array of ECDSA signature parameters r and s.
     function init(
         address[2] traders,
         address[2] tokens,
