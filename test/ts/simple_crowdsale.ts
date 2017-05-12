@@ -32,6 +32,10 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   let zrx: ContractInstance;
   let wEth: ContractInstance;
 
+  let invalidTokenAddress: string;
+  let zrxAddress: string;
+  let wEthAddress: string;
+
   let order: Order;
   let dmyBalances: Balances;
 
@@ -45,9 +49,10 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       SimpleCrowdsale.deployed(),
       Exchange.deployed(),
     ]);
-    const [zrxAddress, wEthAddress] = await Promise.all([
+    [zrxAddress, wEthAddress, invalidTokenAddress] = await Promise.all([
       tokenRegistry.getTokenAddressBySymbol('ZRX'),
       tokenRegistry.getTokenAddressBySymbol('WETH'),
+      tokenRegistry.getTokenAddressBySymbol('REP'),
     ]);
 
     const orderParams = {
@@ -115,7 +120,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       }
     });
 
-    it('should throw if called with an invalid order', async () => {
+    it('should throw if called with an invalid order signature', async () => {
       try {
         const invalidR = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
         await simpleCrowdsale.init(
@@ -127,6 +132,76 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           [order.params.expiration, order.params.salt],
           order.params.v,
           [invalidR, order.params.s],
+        );
+        throw new Error('Init succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if called with an invalid tokenM', async () => {
+      const orderParams = {
+        exchange: Exchange.address,
+        maker,
+        taker: constants.NULL_ADDRESS,
+        feeRecipient: constants.NULL_ADDRESS,
+        tokenM: invalidTokenAddress,
+        tokenT: wEthAddress,
+        valueM: toSmallestUnits(10),
+        valueT: toSmallestUnits(10),
+        feeM: new BigNumber(0),
+        feeT: new BigNumber(0),
+        expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+        salt: new BigNumber(0),
+      };
+      const newOrder = new Order(orderParams);
+      await newOrder.signAsync();
+
+      try {
+        await simpleCrowdsale.init(
+          [newOrder.params.maker, newOrder.params.taker],
+          [newOrder.params.tokenM, newOrder.params.tokenT],
+          newOrder.params.feeRecipient,
+          [newOrder.params.valueM, newOrder.params.valueT],
+          [newOrder.params.feeM, newOrder.params.feeT],
+          [newOrder.params.expiration, newOrder.params.salt],
+          newOrder.params.v,
+          [newOrder.params.r, newOrder.params.s],
+        );
+        throw new Error('Init succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if called with an invalid tokenT', async () => {
+      const orderParams = {
+        exchange: Exchange.address,
+        maker,
+        taker: constants.NULL_ADDRESS,
+        feeRecipient: constants.NULL_ADDRESS,
+        tokenM: zrxAddress,
+        tokenT: invalidTokenAddress,
+        valueM: toSmallestUnits(10),
+        valueT: toSmallestUnits(10),
+        feeM: new BigNumber(0),
+        feeT: new BigNumber(0),
+        expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+        salt: new BigNumber(0),
+      };
+      const newOrder = new Order(orderParams);
+      await newOrder.signAsync();
+
+      try {
+        await simpleCrowdsale.init(
+          [newOrder.params.maker, newOrder.params.taker],
+          [newOrder.params.tokenM, newOrder.params.tokenT],
+          newOrder.params.feeRecipient,
+          [newOrder.params.valueM, newOrder.params.valueT],
+          [newOrder.params.feeM, newOrder.params.feeT],
+          [newOrder.params.expiration, newOrder.params.salt],
+          newOrder.params.v,
+          [newOrder.params.r, newOrder.params.s],
         );
         throw new Error('Init succeeded when it should have thrown');
       } catch (err) {
@@ -207,7 +282,6 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const remainingValueT = sub(order.params.valueT, await exchange.fills.call(order.params.orderHashHex));
 
       const ethValueSent = web3.toWei(20, 'ether');
-      const expectedZrxValue = div(mul(ethValueSent, order.params.valueM), order.params.valueT);
       const gasPrice = web3.toWei(20, 'gwei');
 
       const txHash = await sendTransaction({
@@ -222,7 +296,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
       const finalTakerEthBalance = await getEthBalance(taker);
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
-      const zrxValue = cmp(expectedZrxValue, remainingValueT) > 0 ? remainingValueT : expectedZrxValue;
+      const zrxValue = remainingValueT;
       const ethValue = div(mul(zrxValue, order.params.valueM), order.params.valueT);
 
       assert.equal(finalBalances[maker][order.params.tokenM],

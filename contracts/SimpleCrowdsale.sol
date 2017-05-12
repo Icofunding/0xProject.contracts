@@ -48,11 +48,6 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         _;
     }
 
-    modifier orderNotExpired() {
-        assert(order.expirationAndSalt[0] > block.timestamp);
-        _;
-    }
-
     modifier validTokens(address[2] tokens) {
         assert(tokens[0] == PROTOCOL_TOKEN_ADDRESS);
         assert(tokens[1] == ETH_TOKEN_ADDRESS);
@@ -80,7 +75,6 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         payable
         saleInitialized
         saleNotFinished
-        orderNotExpired
     {
         uint remainingEth = safeSub(order.values[1], exchange.fills(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
