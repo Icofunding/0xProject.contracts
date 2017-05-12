@@ -68,7 +68,7 @@ declare module 'bignumber.js' {
         public gt(value: BigNumber|number): BigNumber;
         public eq(value: BigNumber|number): BigNumber;
         public minus(value: BigNumber): BigNumber;
-        public comparedTo(value: BigNumber): BigNumber;
+        public comparedTo(value: BigNumber): number;
         public round(numDecimals?: BigNumber|number): BigNumber;
     }
 

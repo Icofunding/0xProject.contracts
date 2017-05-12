@@ -31,7 +31,7 @@ export const BNUtil = {
     const result = a.div(b);
     return result.toString();
   },
-  cmp(numA: BNValue, numB: BNValue): BigNumber {
+  cmp(numA: BNValue, numB: BNValue): number {
     const a = new BigNumber(numA);
     const b = new BigNumber(numB);
     return a.comparedTo(b);

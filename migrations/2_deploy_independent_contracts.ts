@@ -3,7 +3,7 @@ import { Artifacts } from '../util/artifacts';
 const {
   MultiSigWalletWithTimeLock,
   Proxy,
-  DummyEtherToken,
+  EtherToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
 
@@ -31,7 +31,7 @@ module.exports = (deployer: any, network: string, accounts: string[]) => {
       }).then(() => {
           return deployer.deploy(TokenRegistry);
       }).then(() => {
-          return deployer.deploy(DummyEtherToken);
+          return deployer.deploy(EtherToken);
       });
   } else {
     deployer.deploy([
