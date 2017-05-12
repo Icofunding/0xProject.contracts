@@ -26,7 +26,7 @@ module.exports = (deployer: any, network: string) => {
     )), _.noop).then((dummyTokens: ContractInstance[]) => {
         const weth = {
           address: EtherToken.address,
-          name: 'ETH Token',
+          name: 'Ether Token',
           symbol: 'WETH',
           url: '',
           decimals: 18,
