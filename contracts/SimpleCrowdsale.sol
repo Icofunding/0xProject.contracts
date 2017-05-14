@@ -22,14 +22,20 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     Order order;
 
     struct Order {
-        address[2] traders;
-        address[2] tokens;
+        address maker;
+        address taker;
+        address tokenM;
+        address tokenT;
         address feeRecipient;
-        uint[2] values;
-        uint[2] fees;
-        uint[2] expirationAndSalt;
+        uint valueM;
+        uint valueT;
+        uint feeM;
+        uint feeT;
+        uint expiration;
+        uint salt;
         uint8 v;
-        bytes32[2] rs;
+        bytes32 r;
+        bytes32 s;
         bytes32 orderHash;
     }
 
@@ -45,12 +51,6 @@ contract SimpleCrowdsale is Ownable, SafeMath {
 
     modifier saleNotFinished() {
         assert(!isFinished);
-        _;
-    }
-
-    modifier validTokens(address[2] tokens) {
-        assert(tokens[0] == PROTOCOL_TOKEN_ADDRESS);
-        assert(tokens[1] == ETH_TOKEN_ADDRESS);
         _;
     }
 
@@ -76,21 +76,18 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         saleInitialized
         saleNotFinished
     {
-        uint remainingEth = safeSub(order.values[1], exchange.fills(order.orderHash));
+        uint remainingEth = safeSub(order.valueT, exchange.fills(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
         ethToken.deposit.value(ethToFill)();
         assert(exchange.fillOrKill(
-            order.traders,
-            order.tokens,
-            order.feeRecipient,
-            order.values,
-            order.fees,
-            order.expirationAndSalt,
+            [order.maker, order.taker, order.tokenM, order.tokenT, order.feeRecipient],
+            [order.valueM, order.valueT, order.feeM, order.feeT, order.expiration, order.salt],
             ethToFill,
             order.v,
-            order.rs
+            order.r,
+            order.s
         ));
-        uint filledProtocolToken = safeDiv(safeMul(order.values[0], ethToFill), order.values[1]);
+        uint filledProtocolToken = safeDiv(safeMul(order.valueM, ethToFill), order.valueT);
         assert(protocolToken.transfer(msg.sender, filledProtocolToken));
         if (ethToFill < msg.value) {
             assert(msg.sender.send(safeSub(msg.value, ethToFill)));
@@ -99,53 +96,50 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     }
 
     /// @dev Stores order and initializes sale.
-    /// @param traders Array of order maker and taker (optional) addresses.
-    /// @param tokens Array of ERC20 token addresses [tokenM, tokenT].
-    /// @param feeRecipient Address that receives order fees.
-    /// @param values Token values to be traded [valueM, valueT].
-    /// @param fees Array of order feeM and feeT.
-    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
+    /// @param orderAddresses Array of order's maker, taker, tokenM, tokenT, and feeRecipient.
+    /// @param orderValues Array of order's valueM, valueT, feeM, feeT, expiration, and salt.
     /// @param v ECDSA signature parameter v.
-    /// @param rs Array of ECDSA signature parameters r and s.
+    /// @param r CDSA signature parameters r.
+    /// @param s CDSA signature parameters s.
     function init(
-        address[2] traders,
-        address[2] tokens,
-        address feeRecipient,
-        uint[2] values,
-        uint[2] fees,
-        uint[2] expirationAndSalt,
+        address[5] orderAddresses,
+        uint[6] orderValues,
         uint8 v,
-        bytes32[2] rs)
+        bytes32 r,
+        bytes32 s)
         saleNotInitialized
         onlyOwner
-        validTokens(tokens)
     {
         order = Order({
-            traders: traders,
-            tokens: tokens,
-            feeRecipient: feeRecipient,
-            values: values,
-            fees: fees,
-            expirationAndSalt: expirationAndSalt,
+            maker: orderAddresses[0],
+            taker: orderAddresses[1],
+            tokenM: orderAddresses[2],
+            tokenT: orderAddresses[3],
+            feeRecipient: orderAddresses[4],
+            valueM: orderValues[0],
+            valueT: orderValues[1],
+            feeM: orderValues[2],
+            feeT: orderValues[3],
+            expiration: orderValues[4],
+            salt: orderValues[5],
             v: v,
-            rs: rs,
-            orderHash: getOrderHash(
-                traders,
-                tokens,
-                feeRecipient,
-                values,
-                fees,
-                expirationAndSalt
-            )
+            r: r,
+            s: s,
+            orderHash: getOrderHash(orderAddresses, orderValues)
         });
+
+        assert(order.tokenM == PROTOCOL_TOKEN_ADDRESS);
+        assert(order.tokenT == ETH_TOKEN_ADDRESS);
+
         assert(isValidSignature(
-            traders[0],
+            order.maker,
             order.orderHash,
             v,
-            rs[0],
-            rs[1]
+            r,
+            s
         ));
-        assert(setTokenAllowance(tokens[1], values[1]));
+
+        assert(setTokenAllowance(order.tokenT, order.valueT));
         isInitialized = true;
     }
 
@@ -158,36 +152,26 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     }
 
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
-    /// @param traders Array of order maker and taker addresses.
-    /// @param tokens Array of order tokenM and tokenT addresses.
-    /// @param feeRecipient Address that receives order fees.
-    /// @param values Array of order valueM and valueT.
-    /// @param fees Array of order feeM and feeT.
-    /// @param expirationAndSalt Time order expires (seconds since unix epoch) and random number.
+    /// @param orderAddresses Array of order's maker, taker, tokenM, tokenT, and feeRecipient.
+    /// @param orderValues Array of order's valueM, valueT, feeM, feeT, expiration, and salt.
     /// @return Keccak-256 hash of order.
-    function getOrderHash(
-        address[2] traders,
-        address[2] tokens,
-        address feeRecipient,
-        uint[2] values,
-        uint[2] fees,
-        uint[2] expirationAndSalt)
+    function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
         constant
         returns (bytes32 orderHash)
     {
         return sha3(
             EXCHANGE_ADDRESS,
-            traders[0],
-            traders[1],
-            tokens[0],
-            tokens[1],
-            feeRecipient,
-            values[0],
-            values[1],
-            fees[0],
-            fees[1],
-            expirationAndSalt[0],
-            expirationAndSalt[1]
+            orderAddresses[0],
+            orderAddresses[1],
+            orderAddresses[2],
+            orderAddresses[3],
+            orderAddresses[4],
+            orderValues[0],
+            orderValues[1],
+            orderValues[2],
+            orderValues[3],
+            orderValues[4],
+            orderValues[5]
         );
     }
 
