@@ -49,7 +49,6 @@ contract Exchange is SafeMath {
         uint feeM,
         uint feeT,
         uint expiration,
-        uint salt,
         uint filledValueT,
         bytes32 indexed tokens,
         bytes32 orderHash
@@ -65,7 +64,6 @@ contract Exchange is SafeMath {
         uint feeM,
         uint feeT,
         uint expiration,
-        uint salt,
         uint cancelledValueT,
         bytes32 indexed tokens,
         bytes32 orderHash
@@ -206,7 +204,6 @@ contract Exchange is SafeMath {
             order.feeM,
             order.feeT,
             order.expiration,
-            order.salt,
             filledValueT,
             sha3(order.tokenM, order.tokenT),
             order.orderHash
@@ -265,7 +262,6 @@ contract Exchange is SafeMath {
             order.feeM,
             order.feeT,
             order.expiration,
-            order.salt,
             cancelledValueT,
             sha3(order.tokenM, order.tokenT),
             order.orderHash
