@@ -37,6 +37,7 @@ contract Exchange is SafeMath {
     address public PROXY;
 
     mapping (bytes32 => uint) public fills;
+    mapping (bytes32 => uint) public cancels;
 
     event LogFill(
         address indexed maker,
@@ -136,7 +137,8 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        filledValueT = min(fillValueT, safeSub(order.valueT, fills[order.orderHash]));
+        uint remainingValueT = safeSub(order.valueT, getUnavailableValueT(order.orderHash));
+        filledValueT = min(fillValueT, remainingValueT);
         if (filledValueT == 0) {
             LogError(ERROR_FILL_NO_VALUE, order.orderHash);
             return 0;
@@ -191,7 +193,6 @@ contract Exchange is SafeMath {
                 ));
             }
         }
-        assert(fills[order.orderHash] <= order.valueT);
 
         LogFill(
             order.maker,
@@ -244,13 +245,14 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        cancelledValueT = min(cancelValueT, safeSub(order.valueT, fills[order.orderHash]));
+        uint remainingValueT = safeSub(order.valueT, getUnavailableValueT(order.orderHash));
+        cancelledValueT = min(cancelValueT, remainingValueT);
         if (cancelledValueT == 0) {
             LogError(ERROR_CANCEL_NO_VALUE, order.orderHash);
             return 0;
         }
 
-        fills[order.orderHash] = safeAdd(fills[order.orderHash], cancelledValueT);
+        cancels[order.orderHash] = safeAdd(cancels[order.orderHash], cancelledValueT);
 
         LogCancel(
             order.maker,
@@ -510,8 +512,19 @@ contract Exchange is SafeMath {
         return safeDiv(safeMul(fillValue, target), value);
     }
 
+    /// @dev Calculates the sum of values already filled and cancelled for a given order.
+    /// @param orderHash The Keccak-256 hash of the given order.
+    /// @return Sum of values already filled and cancelled.
+    function getUnavailableValueT(bytes32 orderHash)
+        constant
+        returns (uint unavailableValueT)
+    {
+        return safeAdd(fills[orderHash], cancels[orderHash]);
+    }
+
+
     /*
-    * Private functions
+    * Internal functions
     */
 
     /// @dev Transfers a token using Proxy transferFrom function.
@@ -525,14 +538,14 @@ contract Exchange is SafeMath {
         address from,
         address to,
         uint value)
-        private
+        internal
         returns (bool success)
     {
         return Proxy(PROXY).transferFrom(token, from, to, value);
     }
 
     /// @dev Checks if any order transfers will fail.
-    /// @param order Order that will be checked.
+    /// @param order Order struct of params that will be checked.
     /// @param fillValueT Desired amount of tokenT to fill.
     /// @return Predicted result of transfers.
     function isTransferable(Order order, uint fillValueT)

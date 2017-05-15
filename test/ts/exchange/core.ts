@@ -88,17 +88,9 @@ contract('Exchange', (accounts: string[]) => {
     ]);
   });
 
-  describe('private functions', () => {
+  describe('internal functions', () => {
     it('should include transferViaProxy', () => {
       assert.equal(exchange.transferViaProxy, undefined);
-    });
-
-    it('should include fillSuccess', () => {
-      assert.equal(exchange.fillSuccess, undefined);
-    });
-
-    it('should include cancelSuccess', () => {
-      assert.equal(exchange.cancelSuccess, undefined);
     });
 
     it('should include isTransferable', () => {

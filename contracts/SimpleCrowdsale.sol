@@ -76,7 +76,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         saleInitialized
         saleNotFinished
     {
-        uint remainingEth = safeSub(order.valueT, exchange.fills(order.orderHash));
+        uint remainingEth = safeSub(order.valueT, exchange.getUnavailableValueT(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
         ethToken.deposit.value(ethToFill)();
         assert(exchange.fillOrKill(
