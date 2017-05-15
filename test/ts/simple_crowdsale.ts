@@ -267,7 +267,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     it('should partial fill and end sale if sent ETH > remaining order ETH', async () => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
-      const remainingValueT = sub(order.params.valueT, await exchange.fills.call(order.params.orderHashHex));
+      const remainingValueT = sub(order.params.valueT, await exchange.getUnavailableValueT(order.params.orderHashHex));
 
       const ethValueSent = web3.toWei(20, 'ether');
       const gasPrice = web3.toWei(20, 'gwei');

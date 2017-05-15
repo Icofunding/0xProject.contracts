@@ -118,13 +118,13 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(100),
       });
 
-      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTBefore = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountMBefore should be 0');
 
       const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTAfter = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
@@ -148,13 +148,13 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(100),
       });
 
-      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTBefore = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
       const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTAfter = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
@@ -178,13 +178,13 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(200),
       });
 
-      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTBefore = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
       const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTAfter = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTAfter, fillValueT.toString(), 'filledAmountTAfter should be same as fillValueT');
 
       const newBalances = await dmyBalances.getAsync();
@@ -209,13 +209,13 @@ contract('Exchange', (accounts: string[]) => {
         valueT: toSmallestUnits(200),
       });
 
-      const filledAmountTBefore = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTBefore = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledAmountTBefore, 0, 'filledAmountTBefore should be 0');
 
       const fillValueT = order.params.valueT.div(2);
       await exWrapper.fillAsync(order, taker, { fillValueT });
 
-      const filledAmountTAfter = await exchange.fills.call(order.params.orderHashHex);
+      const filledAmountTAfter = await exchange.filled.call(order.params.orderHashHex);
       const expectedFillAmountTAfter = add(fillValueT, filledAmountTBefore);
       assert.equal(filledAmountTAfter.toString(), expectedFillAmountTAfter,
                    'filledAmountTAfter should be same as fillValueT');

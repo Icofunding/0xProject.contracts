@@ -36,8 +36,9 @@ contract Exchange is SafeMath {
     address public ZRX;
     address public PROXY;
 
-    mapping (bytes32 => uint) public fills;
-    mapping (bytes32 => uint) public cancels;
+    /// Mappings of orderHash => amounts of valueT filled or cancelled.
+    mapping (bytes32 => uint) public filled;
+    mapping (bytes32 => uint) public cancelled;
 
     event LogFill(
         address indexed maker,
@@ -160,7 +161,7 @@ contract Exchange is SafeMath {
             s
         ));
 
-        fills[order.orderHash] = safeAdd(fills[order.orderHash], filledValueT);
+        filled[order.orderHash] = safeAdd(filled[order.orderHash], filledValueT);
         assert(transferViaProxy(
             order.tokenM,
             order.maker,
@@ -249,7 +250,7 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        cancels[order.orderHash] = safeAdd(cancels[order.orderHash], cancelledValueT);
+        cancelled[order.orderHash] = safeAdd(cancelled[order.orderHash], cancelledValueT);
 
         LogCancel(
             order.maker,
@@ -516,7 +517,7 @@ contract Exchange is SafeMath {
         constant
         returns (uint unavailableValueT)
     {
-        return safeAdd(fills[orderHash], cancels[orderHash]);
+        return safeAdd(filled[orderHash], cancelled[orderHash]);
     }
 
 
