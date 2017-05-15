@@ -83,7 +83,6 @@ contract Exchange is SafeMath {
         uint feeM;
         uint feeT;
         uint expiration;
-        uint salt;
         bytes32 orderHash;
     }
 
@@ -126,7 +125,6 @@ contract Exchange is SafeMath {
             feeM: orderValues[2],
             feeT: orderValues[3],
             expiration: orderValues[4],
-            salt: orderValues[5],
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
@@ -234,7 +232,6 @@ contract Exchange is SafeMath {
             feeM: orderValues[2],
             feeT: orderValues[3],
             expiration: orderValues[4],
-            salt: orderValues[5],
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
