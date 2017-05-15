@@ -7,38 +7,28 @@ export interface BalancesByOwner {
 }
 
 export interface BatchFill {
-  traders: string[][];
-  tokens: string[][];
-  feeRecipients: string[];
-  shouldCheckTransfer: boolean;
-  values: BigNumber[][];
-  fees: BigNumber[][];
-  expirationsAndSalts: BigNumber[][];
+  orderAddresses: string[][];
+  orderValues: BigNumber[][];
   fillValuesT: BigNumber[];
+  shouldCheckTransfer: boolean;
   v: number[];
-  rs: string[][];
+  r: string[];
+  s: string[];
 }
 
 export interface FillUpTo {
-  traders: string[][];
-  tokens: string[][];
-  feeRecipients: string[];
-  shouldCheckTransfer: boolean;
-  values: BigNumber[][];
-  fees: BigNumber[][];
-  expirationsAndSalts: BigNumber[][];
+  orderAddresses: string[][];
+  orderValues: BigNumber[][];
   fillValueT: BigNumber;
+  shouldCheckTransfer: boolean;
   v: number[];
-  rs: string[][];
+  r: string[];
+  s: string[];
 }
 
 export interface BatchCancel {
-  traders: string[][];
-  tokens: string[][];
-  feeRecipients: string[];
-  values: BigNumber[][];
-  fees: BigNumber[][];
-  expirationsAndSalts: BigNumber[][];
+  orderAddresses: string[][];
+  orderValues: BigNumber[][];
   cancelValuesT: BigNumber[];
 }
 

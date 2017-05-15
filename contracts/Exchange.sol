@@ -159,7 +159,7 @@ contract Exchange is SafeMath {
             order.orderHash,
             v,
             r,
-            r
+            s
         ));
 
         fills[order.orderHash] = safeAdd(fills[order.orderHash], filledValueT);
