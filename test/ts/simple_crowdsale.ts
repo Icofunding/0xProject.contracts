@@ -102,26 +102,14 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
   describe('init', () => {
     it('should throw when not called by owner', async () => {
+      const params = order.createFill();
       try {
         await simpleCrowdsale.init(
-          [
-            order.params.maker,
-            order.params.taker,
-            order.params.tokenM,
-            order.params.tokenT,
-            order.params.feeRecipient,
-          ],
-          [
-            order.params.valueM,
-            order.params.valueT,
-            order.params.feeM,
-            order.params.feeT,
-            order.params.expiration,
-            order.params.salt,
-          ],
-          order.params.v,
-          order.params.r,
-          order.params.s,
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
           { from: notOwner },
         );
         throw new Error('Init succeeded when it should have thrown');
@@ -132,26 +120,14 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
     it('should throw if called with an invalid order signature', async () => {
       try {
+        const params = order.createFill();
         const invalidR = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
         await simpleCrowdsale.init(
-          [
-            order.params.maker,
-            order.params.taker,
-            order.params.tokenM,
-            order.params.tokenT,
-            order.params.feeRecipient,
-          ],
-          [
-            order.params.valueM,
-            order.params.valueT,
-            order.params.feeM,
-            order.params.feeT,
-            order.params.expiration,
-            order.params.salt,
-          ],
-          order.params.v,
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
           invalidR,
-          order.params.s,
+          params.s,
         );
         throw new Error('Init succeeded when it should have thrown');
       } catch (err) {
@@ -176,27 +152,15 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       };
       const newOrder = new Order(orderParams);
       await newOrder.signAsync();
+      const params = newOrder.createFill();
 
       try {
         await simpleCrowdsale.init(
-          [
-            newOrder.params.maker,
-            newOrder.params.taker,
-            newOrder.params.tokenM,
-            newOrder.params.tokenT,
-            newOrder.params.feeRecipient,
-          ],
-          [
-            newOrder.params.valueM,
-            newOrder.params.valueT,
-            newOrder.params.feeM,
-            newOrder.params.feeT,
-            newOrder.params.expiration,
-            newOrder.params.salt,
-          ],
-          newOrder.params.v,
-          newOrder.params.r,
-          newOrder.params.s,
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
         );
         throw new Error('Init succeeded when it should have thrown');
       } catch (err) {
@@ -221,27 +185,15 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       };
       const newOrder = new Order(orderParams);
       await newOrder.signAsync();
+      const params = newOrder.createFill();
 
       try {
         await simpleCrowdsale.init(
-          [
-            newOrder.params.maker,
-            newOrder.params.taker,
-            newOrder.params.tokenM,
-            newOrder.params.tokenT,
-            newOrder.params.feeRecipient,
-          ],
-          [
-            newOrder.params.valueM,
-            newOrder.params.valueT,
-            newOrder.params.feeM,
-            newOrder.params.feeT,
-            newOrder.params.expiration,
-            newOrder.params.salt,
-          ],
-          newOrder.params.v,
-          newOrder.params.r,
-          newOrder.params.s,
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
         );
         throw new Error('Init succeeded when it should have thrown');
       } catch (err) {
@@ -250,25 +202,13 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     });
 
     it('should initialize the sale if called by owner with a valid order', async () => {
+      const params = order.createFill();
       await simpleCrowdsale.init(
-        [
-          order.params.maker,
-          order.params.taker,
-          order.params.tokenM,
-          order.params.tokenT,
-          order.params.feeRecipient,
-        ],
-        [
-          order.params.valueM,
-          order.params.valueT,
-          order.params.feeM,
-          order.params.feeT,
-          order.params.expiration,
-          order.params.salt,
-        ],
-        order.params.v,
-        order.params.r,
-        order.params.s,
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
         { from: owner },
       );
       const isInitialized = await simpleCrowdsale.isInitialized.call();
@@ -276,26 +216,14 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     });
 
     it('should throw if the sale has already been initialized', async () => {
+      const params = order.createFill();
       try {
         await simpleCrowdsale.init(
-          [
-            order.params.maker,
-            order.params.taker,
-            order.params.tokenM,
-            order.params.tokenT,
-            order.params.feeRecipient,
-          ],
-          [
-            order.params.valueM,
-            order.params.valueT,
-            order.params.feeM,
-            order.params.feeT,
-            order.params.expiration,
-            order.params.salt,
-          ],
-          order.params.v,
-          order.params.r,
-          order.params.s,
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
           { from: owner },
         );
         throw new Error('Init succeeded when it should have thrown');

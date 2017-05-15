@@ -42,7 +42,7 @@ export class Order {
       s: ethUtil.bufferToHex(s),
     });
   }
-  public createFill(shouldCheckTransfer: boolean, fillValueT?: BigNumber) {
+  public createFill(shouldCheckTransfer?: boolean, fillValueT?: BigNumber) {
     const fill = {
       orderAddresses: [
         this.params.maker,
@@ -60,7 +60,7 @@ export class Order {
         this.params.salt,
       ],
       fillValueT: fillValueT || this.params.valueT,
-      shouldCheckTransfer,
+      shouldCheckTransfer: !!shouldCheckTransfer,
       v: this.params.v,
       r: this.params.r,
       s: this.params.s,
