@@ -13,17 +13,17 @@
 
 ## Table of Contents
 
-* [Architecture](#Architecture)
-* [Contracts](#Contracts)
-    * [Descriptions](#Descriptions)
-    * [Deployed Addresses](#Deployed-Addresses)
-        * [Kovan](#Kovan)
-* [Protocol Specification](#Protocol-Specification)
-    * [Message Format](#Message-Format)
-* [Setup](#Setup)
-    * [Installing Dependencies](#Install-Dependencies)
-    * [Running Tests](#Running-Tests)
-    * [Contributing](#Contributing)
+* [Architecture](#architecture)
+* [Contracts](#contracts)
+    * [Descriptions](#descriptions)
+    * [Deployed Addresses](#deployed-addresses)
+        * [Kovan](#kovan)
+* [Protocol Specification](#protocol-specification)
+    * [Message Format](#message-format)
+* [Setup](#setup)
+    * [Installing Dependencies](#install-dependencies)
+    * [Running Tests](#running-tests)
+    * [Contributing](#contributing)
 
 ## Architecture
 
