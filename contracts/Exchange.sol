@@ -551,19 +551,20 @@ contract Exchange is SafeMath {
         constant
         returns (bool isTransferable)
     {
+        address taker = msg.sender;
         uint fillValueM = getPartialValue(order.valueT, fillValueT, order.valueM);
         if (   getBalance(order.tokenM, order.maker) < fillValueM
             || getAllowance(order.tokenM, order.maker) < fillValueM
-            || getBalance(order.tokenT, order.taker) < fillValueT
-            || getAllowance(order.tokenT, order.taker) < fillValueT
+            || getBalance(order.tokenT, taker) < fillValueT
+            || getAllowance(order.tokenT, taker) < fillValueT
         ) return false;
         if (order.feeRecipient != address(0)) {
             uint feeValueM = getPartialValue(order.valueT, fillValueT, order.feeM);
             uint feeValueT = getPartialValue(order.valueT, fillValueT, order.feeT);
             if (   getBalance(ZRX, order.maker) < feeValueM
                 || getAllowance(ZRX, order.maker) < feeValueM
-                || getBalance(ZRX, order.taker) < feeValueT
-                || getAllowance(ZRX, order.taker) < feeValueT
+                || getBalance(ZRX, taker) < feeValueT
+                || getAllowance(ZRX, taker) < feeValueT
             ) return false;
         }
         return true;
