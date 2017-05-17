@@ -49,10 +49,10 @@ TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entrie
 
 #### Kovan
 
-* Exchange.sol: [0x161ba3e55339417c4f4033b5276e33baee5cce74](https://kovan.etherscan.io/address/0x161ba3e55339417c4f4033b5276e33baee5cce74)
-* Proxy.sol: [0xcaf00012223eea8ab2abc82a933e27bfbdf14cfa](https://kovan.etherscan.io/address/0xcaf00012223eea8ab2abc82a933e27bfbdf14cfa)
-* MultiSigWalletWithTimeLock.sol: [0x8714bcdbcfcfe8208a6c68a32feaa1f6dfcd5d25](https://kovan.etherscan.io/address/0x8714bcdbcfcfe8208a6c68a32feaa1f6dfcd5d25)
-* TokenRegistry.sol: [0xd98ff4093fa9cdd3d25de75d6d8027b0330b3d4a](https://kovan.etherscan.io/address/0xd98ff4093fa9cdd3d25de75d6d8027b0330b3d4a)
+* Exchange.sol: [0x9ce1a5e2311f9b8b8e6b40ed20b5b090de4a4c4d](https://kovan.etherscan.io/address/0x9ce1a5e2311f9b8b8e6b40ed20b5b090de4a4c4d)
+* Proxy.sol: [0x72a2820f45b3e977897a63f2a726c21754f3730d](https://kovan.etherscan.io/address/0x72a2820f45b3e977897a63f2a726c21754f3730d)
+* MultiSigWalletWithTimeLock.sol: [0xc3d6ba937350ebb3569a8b15d07a44fecacf1bcb](https://kovan.etherscan.io/address/0xc3d6ba937350ebb3569a8b15d07a44fecacf1bcb)
+* TokenRegistry.sol: [0xbfa86463a4faa2598bbe177debac62f4c8a3a294](https://kovan.etherscan.io/address/0xbfa86463a4faa2598bbe177debac62f4c8a3a294)
 
 ## Protocol Specification
 
