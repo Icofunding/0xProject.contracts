@@ -1,4 +1,4 @@
-<img src = "https://github.com/0xProject/branding/blob/master/logo_0x_github.png" width=100%>
+<img src = "https://github.com/0xProject/branding/blob/master/0x_Black_CMYK.png" width=100%>
 
 ---
 
