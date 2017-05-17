@@ -42,29 +42,48 @@ export class Order {
       s: ethUtil.bufferToHex(s),
     });
   }
-  public createFill(shouldCheckTransfer: boolean, fillValueT?: BigNumber) {
+  public createFill(shouldCheckTransfer?: boolean, fillValueT?: BigNumber) {
     const fill = {
-      traders: [this.params.maker, this.params.taker],
-      tokens: [this.params.tokenM, this.params.tokenT],
-      feeRecipient: this.params.feeRecipient,
-      shouldCheckTransfer,
-      values: [this.params.valueM, this.params.valueT],
-      fees: [this.params.feeM, this.params.feeT],
-      expirationAndSalt: [this.params.expiration, this.params.salt],
+      orderAddresses: [
+        this.params.maker,
+        this.params.taker,
+        this.params.tokenM,
+        this.params.tokenT,
+        this.params.feeRecipient,
+      ],
+      orderValues: [
+        this.params.valueM,
+        this.params.valueT,
+        this.params.feeM,
+        this.params.feeT,
+        this.params.expiration,
+        this.params.salt,
+      ],
       fillValueT: fillValueT || this.params.valueT,
+      shouldCheckTransfer: !!shouldCheckTransfer,
       v: this.params.v,
-      rs: [this.params.r, this.params.s],
+      r: this.params.r,
+      s: this.params.s,
     };
     return fill;
   }
   public createCancel(cancelValueT?: BigNumber) {
     const cancel = {
-      traders: [this.params.maker, this.params.taker],
-      tokens: [this.params.tokenM, this.params.tokenT],
-      feeRecipient: this.params.feeRecipient,
-      values: [this.params.valueM, this.params.valueT],
-      fees: [this.params.feeM, this.params.feeT],
-      expirationAndSalt: [this.params.expiration, this.params.salt],
+      orderAddresses: [
+        this.params.maker,
+        this.params.taker,
+        this.params.tokenM,
+        this.params.tokenT,
+        this.params.feeRecipient,
+      ],
+      orderValues: [
+        this.params.valueM,
+        this.params.valueT,
+        this.params.feeM,
+        this.params.feeT,
+        this.params.expiration,
+        this.params.salt,
+      ],
       cancelValueT: cancelValueT || this.params.valueT,
     };
     return cancel;

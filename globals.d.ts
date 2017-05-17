@@ -27,7 +27,7 @@ declare module 'ethereumjs-util' {
   function pubToAddress(pubKey: Buffer, sanitize?: boolean): Buffer;
   function setLength(a: Buffer, length: number): Buffer;
   function setLengthLeft(a: Buffer, length: number): Buffer;
-  function sha3(a: Buffer|String|Number, bits?: number): Buffer;
+  function sha3(a: Buffer|string|number, bits?: number): Buffer;
   function toBuffer(value: any): Buffer;
   function isValidAddress(address: string): boolean;
 

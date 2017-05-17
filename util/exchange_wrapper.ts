@@ -13,28 +13,21 @@ export class ExchangeWrapper {
     const shouldCheckTransfer = !!opts.shouldCheckTransfer;
     const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fill(
-      params.traders,
-      params.tokens,
-      params.feeRecipient,
-      params.shouldCheckTransfer,
-      params.values,
-      params.fees,
-      params.expirationAndSalt,
+      params.orderAddresses,
+      params.orderValues,
       params.fillValueT,
+      params.shouldCheckTransfer,
       params.v,
-      params.rs,
+      params.r,
+      params.s,
       { from },
     );
   }
   public cancelAsync(order: Order, from: string, opts: { cancelValueT?: BigNumber } = {}) {
     const params = order.createCancel(opts.cancelValueT);
     return this.exchange.cancel(
-      params.traders,
-      params.tokens,
-      params.feeRecipient,
-      params.values,
-      params.fees,
-      params.expirationAndSalt,
+      params.orderAddresses,
+      params.orderValues,
       params.cancelValueT,
       { from },
     );
@@ -43,61 +36,50 @@ export class ExchangeWrapper {
     const shouldCheckTransfer = false;
     const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillOrKill(
-      params.traders,
-      params.tokens,
-      params.feeRecipient,
-      params.values,
-      params.fees,
-      params.expirationAndSalt,
+      params.orderAddresses,
+      params.orderValues,
       params.fillValueT,
       params.v,
-      params.rs,
+      params.r,
+      params.s,
       { from },
     );
   }
-  public batchFillAsync(orders: Order[], from: string, opts: { fillValuesT?: BigNumber[] } = {}) {
-    const shouldCheckTransfer = false;
+  public batchFillAsync(orders: Order[], from: string,
+                        opts: { fillValuesT?: BigNumber[], shouldCheckTransfer?: boolean } = {}) {
+    const shouldCheckTransfer = !!opts.shouldCheckTransfer;
     const params = formatters.createBatchFill(orders, shouldCheckTransfer, opts.fillValuesT);
     return this.exchange.batchFill(
-      params.traders,
-      params.tokens,
-      params.feeRecipients,
-      params.shouldCheckTransfer,
-      params.values,
-      params.fees,
-      params.expirationsAndSalts,
+      params.orderAddresses,
+      params.orderValues,
       params.fillValuesT,
+      params.shouldCheckTransfer,
       params.v,
-      params.rs,
+      params.r,
+      params.s,
       { from },
     );
   }
-  public fillUpToAsync(orders: Order[], from: string, opts: { fillValueT?: BigNumber } = {}) {
-    const shouldCheckTransfer = false;
+  public fillUpToAsync(orders: Order[], from: string,
+                       opts: { fillValueT?: BigNumber, shouldCheckTransfer?: boolean } = {}) {
+    const shouldCheckTransfer = !!opts.shouldCheckTransfer;
     const params = formatters.createFillUpTo(orders, shouldCheckTransfer, opts.fillValueT);
     return this.exchange.fillUpTo(
-      params.traders,
-      params.tokens,
-      params.feeRecipients,
-      params.shouldCheckTransfer,
-      params.values,
-      params.fees,
-      params.expirationsAndSalts,
+      params.orderAddresses,
+      params.orderValues,
       params.fillValueT,
+      params.shouldCheckTransfer,
       params.v,
-      params.rs,
+      params.r,
+      params.s,
       { from },
     );
   }
   public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesT?: BigNumber[] } = {}) {
     const params = formatters.createBatchCancel(orders, opts.cancelValuesT);
     return this.exchange.batchCancel(
-      params.traders,
-      params.tokens,
-      params.feeRecipients,
-      params.values,
-      params.fees,
-      params.expirationsAndSalts,
+      params.orderAddresses,
+      params.orderValues,
       params.cancelValuesT,
       { from },
     );
@@ -105,14 +87,7 @@ export class ExchangeWrapper {
   public getOrderHashAsync(order: Order) {
     const shouldCheckTransfer = false;
     const params = order.createFill(shouldCheckTransfer);
-    return this.exchange.getOrderHash(
-      params.traders,
-      params.tokens,
-      params.feeRecipient,
-      params.values,
-      params.fees,
-      params.expirationAndSalt,
-    );
+    return this.exchange.getOrderHash(params.orderAddresses, params.orderValues);
   }
   public isValidSignatureAsync(order: Order) {
     const isValidSignature = this.exchange.isValidSignature(
