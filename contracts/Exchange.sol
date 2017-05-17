@@ -196,9 +196,9 @@ contract Exchange is SafeMath {
         LogFill(
             order.maker,
             order.taker,
+            order.feeRecipient,
             order.tokenM,
             order.tokenT,
-            order.feeRecipient,
             order.valueM,
             order.valueT,
             order.feeM,
