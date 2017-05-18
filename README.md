@@ -84,12 +84,6 @@ s | `bytes32` | ECDSA signature of the above arguments.
 
 Install [Node v6.9.1](https://nodejs.org/en/download/releases/)
 
-Install truffle
-
-```
-npm i -g truffle@^3.2.1
-```
-
 Install ethereumjs-testrpc
 
 ```
