@@ -45,36 +45,3 @@ declare module 'ethereumjs-util' {
             isValidAddress,
           };
 }
-
-// Bignumber.js interface
-declare module 'bignumber.js' {
-
-    class BigNumber {
-        // Those static attributes could have been in the module, a few lines beneath
-        public static ROUND_DOWN: any;
-        public isBigNumber: boolean;
-        public static config(arg: any): void;
-        public static random(numDecimals: number): BigNumber;
-
-        constructor(value: number|string|BigNumber);
-        public toNumber(): number;
-        public toString(base?: number): string;
-        public div(value: BigNumber|number): BigNumber;
-        public pow(exponent: BigNumber|number): BigNumber;
-        public times(value: BigNumber): BigNumber;
-        public plus(value: BigNumber|number): BigNumber;
-        public lt(value: BigNumber|number): BigNumber;
-        public gte(value: BigNumber|number): BigNumber;
-        public gt(value: BigNumber|number): BigNumber;
-        public eq(value: BigNumber|number): BigNumber;
-        public minus(value: BigNumber): BigNumber;
-        public comparedTo(value: BigNumber): number;
-        public round(numDecimals?: BigNumber|number): BigNumber;
-    }
-
-    // A standalone class is not exportable, so there is an empty module
-    namespace BigNumber { }
-
-    // The exported values is the merge of the BigNumber class and the BigNumber module
-    export = BigNumber;
-}

@@ -1,6 +1,5 @@
 import * as assert from 'assert';
-import BigNumber = require('bignumber.js');
-import Web3 = require('web3');
+import * as BigNumber from 'bignumber.js';
 import promisify = require('es6-promisify');
 import ethUtil = require('ethereumjs-util');
 import { Balances } from '../../util/balances';

@@ -8,7 +8,7 @@ import { Order } from '../../../util/order';
 import { testUtil } from '../../../util/test_util';
 import { BalancesByOwner, ContractInstance } from '../../../util/types';
 import { Artifacts } from '../../../util/artifacts';
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 
 const {
   Exchange,
@@ -155,7 +155,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const fillValuesT: BigNumber[] = [];
+      const fillValuesT: BigNumber.BigNumber[] = [];
       const tokenM = rep.address;
       const tokenT = dgd.address;
       orders.forEach(order => {

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { Order } from './order';
 import { OrderParams, DefaultOrderParams, OptionalOrderParams } from './types';
 import { constants } from './constants';
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 
 const MAX_DIGITS_IN_UNSIGNED_256_INT = 78;
 

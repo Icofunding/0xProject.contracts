@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import ethUtil = require('ethereumjs-util');
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 import { Balances } from '../../../util/balances';
 import { BNUtil } from '../../../util/bn_util';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
