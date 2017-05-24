@@ -1,4 +1,4 @@
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 
 export interface BalancesByOwner {
   [ownerAddress: string]: {
@@ -8,8 +8,8 @@ export interface BalancesByOwner {
 
 export interface BatchFill {
   orderAddresses: string[][];
-  orderValues: BigNumber[][];
-  fillValuesT: BigNumber[];
+  orderValues: BigNumber.BigNumber[][];
+  fillValuesT: BigNumber.BigNumber[];
   shouldCheckTransfer: boolean;
   v: number[];
   r: string[];
@@ -18,8 +18,8 @@ export interface BatchFill {
 
 export interface FillUpTo {
   orderAddresses: string[][];
-  orderValues: BigNumber[][];
-  fillValueT: BigNumber;
+  orderValues: BigNumber.BigNumber[][];
+  fillValueT: BigNumber.BigNumber;
   shouldCheckTransfer: boolean;
   v: number[];
   r: string[];
@@ -28,8 +28,8 @@ export interface FillUpTo {
 
 export interface BatchCancel {
   orderAddresses: string[][];
-  orderValues: BigNumber[][];
-  cancelValuesT: BigNumber[];
+  orderValues: BigNumber.BigNumber[][];
+  cancelValuesT: BigNumber.BigNumber[];
 }
 
 export interface DefaultOrderParams {
@@ -38,10 +38,10 @@ export interface DefaultOrderParams {
   feeRecipient: string;
   tokenM: string;
   tokenT: string;
-  valueM: BigNumber;
-  valueT: BigNumber;
-  feeM: BigNumber;
-  feeT: BigNumber;
+  valueM: BigNumber.BigNumber;
+  valueT: BigNumber.BigNumber;
+  feeM: BigNumber.BigNumber;
+  feeT: BigNumber.BigNumber;
 }
 
 export interface OptionalOrderParams {
@@ -51,11 +51,11 @@ export interface OptionalOrderParams {
   feeRecipient?: string;
   tokenM?: string;
   tokenT?: string;
-  valueM?: BigNumber;
-  valueT?: BigNumber;
-  feeM?: BigNumber;
-  feeT?: BigNumber;
-  expiration?: BigNumber;
+  valueM?: BigNumber.BigNumber;
+  valueT?: BigNumber.BigNumber;
+  feeM?: BigNumber.BigNumber;
+  feeT?: BigNumber.BigNumber;
+  expiration?: BigNumber.BigNumber;
 }
 
 export interface OrderParams {
@@ -65,12 +65,12 @@ export interface OrderParams {
   feeRecipient: string;
   tokenM: string;
   tokenT: string;
-  valueM: BigNumber;
-  valueT: BigNumber;
-  feeM: BigNumber;
-  feeT: BigNumber;
-  expiration: BigNumber;
-  salt: BigNumber;
+  valueM: BigNumber.BigNumber;
+  valueT: BigNumber.BigNumber;
+  feeM: BigNumber.BigNumber;
+  feeT: BigNumber.BigNumber;
+  expiration: BigNumber.BigNumber;
+  salt: BigNumber.BigNumber;
   orderHashHex?: string;
   v?: number;
   r?: string;

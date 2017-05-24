@@ -1,7 +1,7 @@
 import BN = require('bn.js');
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 
-type BNValue = number|string|BigNumber;
+type BNValue = number|string|BigNumber.BigNumber;
 
 export const BNUtil = {
   add(numA: BNValue, numB: BNValue): string {
