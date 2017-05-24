@@ -25,7 +25,6 @@
   "homepage": "https://github.com/0xProject/0x-Smart-Contracts#readme",
   "devDependencies": {
     "@types/bluebird": "^3.5.3",
-    "@types/es6-promise": "0.0.32",
     "@types/lodash": "^4.14.63",
     "@types/node": "^7.0.13",
     "@types/request-promise-native": "^1.0.2",

@@ -8,6 +8,9 @@
         "baseUrl": ".",
         "allowJs": true
     },
+    "lib": [
+        "es2015"
+    ],
     "include": [
         "./globals.d.ts",
         "./util/**/*",
