@@ -12,6 +12,7 @@
         "es2015"
     ],
     "include": [
+        "node_modules/web3-typescript-typings/index.d.ts",
         "./globals.d.ts",
         "./util/**/*",
         "./test/**/*",

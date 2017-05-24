@@ -29,8 +29,9 @@
     "@types/node": "^7.0.13",
     "@types/request-promise-native": "^1.0.2",
     "copyfiles": "^1.2.0",
+    "truffle": "3.2.1",
     "typescript": "^2.2.2",
-    "truffle": "3.2.1"
+    "web3-typescript-typings": "0.0.2"
   },
   "dependencies": {
     "bignumber.js": "^4.0.0",

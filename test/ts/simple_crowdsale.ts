@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import BigNumber = require('bignumber.js');
+import Web3 = require('web3');
 import promisify = require('es6-promisify');
 import ethUtil = require('ethereumjs-util');
 import { Balances } from '../../util/balances';
@@ -20,6 +21,10 @@ const {
 
 const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
 
+// In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
+// with type `any` to a variable of type `Web3`.
+const web3Instance: Web3 = web3;
+
 contract('SimpleCrowdsale', (accounts: string[]) => {
   const maker = accounts[0];
   const taker = accounts[1];
@@ -39,9 +44,9 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   let order: Order;
   let dmyBalances: Balances;
 
-  const sendTransaction = promisify(web3.eth.sendTransaction);
-  const getEthBalance = promisify(web3.eth.getBalance);
-  const getTransactionReceipt = promisify(web3.eth.getTransactionReceipt);
+  const sendTransaction = promisify(web3Instance.eth.sendTransaction);
+  const getEthBalance = promisify(web3Instance.eth.getBalance);
+  const getTransactionReceipt = promisify(web3Instance.eth.getTransactionReceipt);
 
   before(async () => {
     [tokenRegistry, simpleCrowdsale, exchange] = await Promise.all([
@@ -86,7 +91,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   describe('fallback', () => {
     it('should throw if sale not initialized', async () => {
       try {
-        const ethValue = web3.toWei(1, 'ether');
+        const ethValue = web3Instance.toWei(1, 'ether');
         await sendTransaction({
           from: taker,
           to: simpleCrowdsale.address,
@@ -238,9 +243,9 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
 
-      const ethValue = web3.toWei(1, 'ether');
+      const ethValue = web3Instance.toWei(1, 'ether');
       const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
-      const gasPrice = web3.toWei(20, 'gwei');
+      const gasPrice = web3Instance.toWei(20, 'gwei');
 
       const txHash = await sendTransaction({
         from: taker,
@@ -269,8 +274,8 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const initTakerEthBalance = await getEthBalance(taker);
       const remainingValueT = sub(order.params.valueT, await exchange.getUnavailableValueT(order.params.orderHashHex));
 
-      const ethValueSent = web3.toWei(20, 'ether');
-      const gasPrice = web3.toWei(20, 'gwei');
+      const ethValueSent = web3Instance.toWei(20, 'ether');
+      const gasPrice = web3Instance.toWei(20, 'gwei');
 
       const txHash = await sendTransaction({
         from: taker,
@@ -301,7 +306,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
     it('should throw if sale finished', async () => {
       try {
-        const ethValue = web3.toWei(1, 'ether');
+        const ethValue = web3Instance.toWei(1, 'ether');
         await sendTransaction({
           from: taker,
           to: simpleCrowdsale.address,

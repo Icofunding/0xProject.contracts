@@ -6,6 +6,10 @@ import { crypto } from './crypto';
 import { OrderParams } from './types';
 import BigNumber = require('bignumber.js');
 
+// In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
+// with type `any` to a variable of type `Web3`.
+const web3Instance: Web3 = web3;
+
 export class Order {
   public params: OrderParams;
   constructor(params: OrderParams) {
@@ -33,7 +37,7 @@ export class Order {
     // TODO: In order to run the tests against any client, add client detection and conditionally add the
     // personal message header when needed.
     const msgHash = ethUtil.hashPersonalMessage(orderHash);
-    const signature = await promisify(web3.eth.sign)(this.params.maker, ethUtil.bufferToHex(msgHash));
+    const signature = await promisify(web3Instance.eth.sign)(this.params.maker, ethUtil.bufferToHex(msgHash));
     const { v, r, s } = ethUtil.fromRpcSig(signature);
     this.params = _.assign(this.params, {
       orderHashHex: ethUtil.bufferToHex(orderHash),

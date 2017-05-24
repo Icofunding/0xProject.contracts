@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import promisify = require('es6-promisify');
+import Web3 = require('web3');
 import { RPC } from '../../util/rpc';
 import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { testUtil } from '../../util/test_util';
@@ -10,6 +11,10 @@ import { Artifacts } from '../../util/artifacts';
 const { MultiSigWalletWithTimeLock } = new Artifacts(artifacts);
 
 const MULTI_SIG_ABI = (multiSigWalletJSON as any).abi;
+
+// In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
+// with type `any` to a variable of type `Web3`.
+const web3Instance: Web3 = web3;
 
 contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
@@ -62,8 +67,8 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
     it('should set confirmation time with enough confirmations', async () => {
       const res = await multiSig.confirmTransaction(txId, { from: owners[1] });
       assert.equal(res.logs.length, 2);
-      const blockNum = await promisify(web3.eth.getBlockNumber)();
-      const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
+      const blockNum = await promisify(web3Instance.eth.getBlockNumber)();
+      const blockInfo = await promisify(web3Instance.eth.getBlock)(blockNum);
       const timestamp = blockInfo.timestamp;
       const confirmationTimeBigNum = await multiSig.confirmationTimes.call(txId);
       const confirmationTime = confirmationTimeBigNum.toNumber();
