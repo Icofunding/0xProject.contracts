@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 import { BalancesByOwner, ContractInstance } from './types';
 
 export class Balances {

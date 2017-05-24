@@ -3,7 +3,7 @@ import BN = require('bn.js');
 import { BNUtil } from './bn_util';
 import ethUtil = require('ethereumjs-util');
 import ABI = require('ethereumjs-abi');
-import BigNumber = require('bignumber.js');
+import * as BigNumber from 'bignumber.js';
 
 export const crypto = {
   /*
@@ -20,7 +20,7 @@ export const crypto = {
       const isNumber = _.isFinite(arg);
       if (isNumber) {
         argTypes.push('uint8');
-      } else if ((arg as BigNumber).isBigNumber) {
+      } else if ((arg as BigNumber.BigNumber).isBigNumber) {
         argTypes.push('uint256');
         args[i] = new BN(arg.toString(10), 10);
       } else if (ethUtil.isValidAddress(arg)) {

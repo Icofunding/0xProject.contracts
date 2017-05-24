@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/0xProject/0x-Smart-Contracts#readme",
   "devDependencies": {
+    "@types/bignumber.js": "^4.0.2",
     "@types/bluebird": "^3.5.3",
     "@types/lodash": "^4.14.63",
     "@types/node": "^7.0.13",
