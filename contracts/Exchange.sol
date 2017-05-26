@@ -453,14 +453,14 @@ contract Exchange is SafeMath {
     }
 
     /// @dev Verifies that an order signature is valid.
-    /// @param pubKey Public address of signer.
+    /// @param signer address of signer.
     /// @param hash Signed Keccak-256 hash.
     /// @param v ECDSA signature parameter v.
     /// @param r ECDSA signature parameters r.
     /// @param s ECDSA signature parameters s.
     /// @return Validity of order signature.
     function isValidSignature(
-        address pubKey,
+        address signer,
         bytes32 hash,
         uint8 v,
         bytes32 r,
@@ -468,7 +468,7 @@ contract Exchange is SafeMath {
         constant
         returns (bool isValid)
     {
-        return pubKey == ecrecover(
+        return signer == ecrecover(
             sha3("\x19Ethereum Signed Message:\n32", hash),
             v,
             r,
