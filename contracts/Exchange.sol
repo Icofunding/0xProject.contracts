@@ -46,13 +46,10 @@ contract Exchange is SafeMath {
         address indexed feeRecipient,
         address tokenM,
         address tokenT,
-        address filledBy,
-        uint valueM,
-        uint valueT,
-        uint feeM,
-        uint feeT,
-        uint expiration,
+        uint filledValueM,
         uint filledValueT,
+        uint feeMPaid,
+        uint feeTPaid,
         bytes32 indexed tokens,
         bytes32 orderHash
     );
@@ -62,11 +59,7 @@ contract Exchange is SafeMath {
         address indexed feeRecipient,
         address tokenM,
         address tokenT,
-        uint valueM,
-        uint valueT,
-        uint feeM,
-        uint feeT,
-        uint expiration,
+        uint cancelledValueM,
         uint cancelledValueT,
         bytes32 indexed tokens,
         bytes32 orderHash
@@ -162,12 +155,15 @@ contract Exchange is SafeMath {
             s
         ));
 
+        uint filledValueM = getPartialValue(order.valueT, filledValueT, order.valueM);
+        uint feeMPaid;
+        uint feeTPaid;
         filled[order.orderHash] = safeAdd(filled[order.orderHash], filledValueT);
         assert(transferViaProxy(
             order.tokenM,
             order.maker,
             msg.sender,
-            getPartialValue(order.valueT, filledValueT, order.valueM)
+            filledValueM
         ));
         assert(transferViaProxy(
             order.tokenT,
@@ -177,36 +173,35 @@ contract Exchange is SafeMath {
         ));
         if (order.feeRecipient != address(0)) {
             if (order.feeM > 0) {
+                feeMPaid = getPartialValue(order.valueT, filledValueT, order.feeM);
                 assert(transferViaProxy(
                     ZRX,
                     order.maker,
                     order.feeRecipient,
-                    getPartialValue(order.valueT, filledValueT, order.feeM)
+                    feeMPaid
                 ));
             }
             if (order.feeT > 0) {
+                feeTPaid = getPartialValue(order.valueT, filledValueT, order.feeT);
                 assert(transferViaProxy(
                     ZRX,
                     msg.sender,
                     order.feeRecipient,
-                    getPartialValue(order.valueT, filledValueT, order.feeT)
+                    feeTPaid
                 ));
             }
         }
 
         LogFill(
             order.maker,
-            order.taker,
+            msg.sender,
             order.feeRecipient,
             order.tokenM,
             order.tokenT,
-            msg.sender,
-            order.valueM,
-            order.valueT,
-            order.feeM,
-            order.feeT,
-            order.expiration,
+            filledValueM,
             filledValueT,
+            feeMPaid,
+            feeTPaid,
             sha3(order.tokenM, order.tokenT),
             order.orderHash
         );
@@ -259,11 +254,7 @@ contract Exchange is SafeMath {
             order.feeRecipient,
             order.tokenM,
             order.tokenT,
-            order.valueM,
-            order.valueT,
-            order.feeM,
-            order.feeT,
-            order.expiration,
+            getPartialValue(order.valueT, cancelledValueT, order.valueM),
             cancelledValueT,
             sha3(order.tokenM, order.tokenT),
             order.orderHash
