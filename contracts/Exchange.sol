@@ -36,7 +36,7 @@ contract Exchange is SafeMath {
     address public ZRX;
     address public PROXY;
 
-    /// Mappings of orderHash => amounts of valueT filled or cancelled.
+    // Mappings of orderHash => amounts of valueT filled or cancelled.
     mapping (bytes32 => uint) public filled;
     mapping (bytes32 => uint) public cancelled;
 
@@ -379,7 +379,7 @@ contract Exchange is SafeMath {
     {
         filledValueT = 0;
         for (uint i = 0; i < orderAddresses.length; i++) {
-            assert(orderAddresses[i][3] == orderAddresses[0][3]);
+            assert(orderAddresses[i][3] == orderAddresses[0][3]); // tokenT must be the same for each order
             filledValueT = safeAdd(filledValueT, fill(
                 orderAddresses[i],
                 orderValues[i],
@@ -429,17 +429,17 @@ contract Exchange is SafeMath {
     {
         return sha3(
             this,
-            orderAddresses[0],
-            orderAddresses[1],
-            orderAddresses[2],
-            orderAddresses[3],
-            orderAddresses[4],
-            orderValues[0],
-            orderValues[1],
-            orderValues[2],
-            orderValues[3],
-            orderValues[4],
-            orderValues[5]
+            orderAddresses[0], // maker
+            orderAddresses[1], // taker
+            orderAddresses[2], // tokenM
+            orderAddresses[3], // tokenT
+            orderAddresses[4], // feeRecipient
+            orderValues[0],    // valueM
+            orderValues[1],    // valueT
+            orderValues[2],    // feeM
+            orderValues[3],    // feeT
+            orderValues[4],    // expiration
+            orderValues[5]     // salt
         );
     }
 
