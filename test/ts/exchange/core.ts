@@ -1,8 +1,10 @@
 import * as assert from 'assert';
 import ethUtil = require('ethereumjs-util');
 import * as BigNumber from 'bignumber.js';
+import { constants } from '../../../util/constants';
 import { Balances } from '../../../util/balances';
 import { BNUtil } from '../../../util/bn_util';
+import { crypto } from '../../../util/crypto';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
 import { OrderFactory } from '../../../util/order_factory';
 import { testUtil } from '../../../util/test_util';
@@ -258,9 +260,59 @@ contract('Exchange', (accounts: string[]) => {
                    add(order.params.feeM, order.params.feeT)));
     });
 
-    it('should log 1 event', async () => {
-      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(2) });
+    it('should log 1 event with the correct arguments when order has a feeRecipient', async () => {
+      const divisor = 2;
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(divisor) });
       assert.equal(res.logs.length, 1);
+
+      const logArgs = res.logs[0].args;
+      const expectedFilledValuM = order.params.valueM.div(divisor);
+      const expectedFilledValuT = order.params.valueT.div(divisor);
+      const expectedFeeMPaid = order.params.feeM.div(divisor);
+      const expectedFeeTPaid = order.params.feeT.div(divisor);
+      const tokensHashBuff = crypto.solSHA3([order.params.tokenM, order.params.tokenT]);
+      const expectedTokens = ethUtil.bufferToHex(tokensHashBuff);
+
+      assert.equal(order.params.maker, logArgs.maker);
+      assert.equal(taker, logArgs.taker);
+      assert.equal(order.params.feeRecipient, logArgs.feeRecipient);
+      assert.equal(order.params.tokenM, logArgs.tokenM);
+      assert.equal(order.params.tokenT, logArgs.tokenT);
+      assert.equal(expectedFilledValuM.toString(), logArgs.filledValueM.toString());
+      assert.equal(expectedFilledValuT.toString(), logArgs.filledValueT.toString());
+      assert.equal(expectedFeeMPaid.toString(), logArgs.feeMPaid.toString());
+      assert.equal(expectedFeeTPaid.toString(), logArgs.feeTPaid.toString());
+      assert.equal(expectedTokens, logArgs.tokens);
+      assert.equal(order.params.orderHashHex, logArgs.orderHash);
+    });
+
+    it('should log 1 event with the correct arguments when order has no feeRecipient', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        feeRecipient: constants.NULL_ADDRESS,
+      });
+      const divisor = 2;
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(divisor) });
+      assert.equal(res.logs.length, 1);
+
+      const logArgs = res.logs[0].args;
+      const expectedFilledValuM = order.params.valueM.div(divisor);
+      const expectedFilledValuT = order.params.valueT.div(divisor);
+      const expectedFeeMPaid = new BigNumber(0);
+      const expectedFeeTPaid = new BigNumber(0);
+      const tokensHashBuff = crypto.solSHA3([order.params.tokenM, order.params.tokenT]);
+      const expectedTokens = ethUtil.bufferToHex(tokensHashBuff);
+
+      assert.equal(order.params.maker, logArgs.maker);
+      assert.equal(taker, logArgs.taker);
+      assert.equal(order.params.feeRecipient, logArgs.feeRecipient);
+      assert.equal(order.params.tokenM, logArgs.tokenM);
+      assert.equal(order.params.tokenT, logArgs.tokenT);
+      assert.equal(expectedFilledValuM.toString(), logArgs.filledValueM.toString());
+      assert.equal(expectedFilledValuT.toString(), logArgs.filledValueT.toString());
+      assert.equal(expectedFeeMPaid.toString(), logArgs.feeMPaid.toString());
+      assert.equal(expectedFeeTPaid.toString(), logArgs.feeTPaid.toString());
+      assert.equal(expectedTokens, logArgs.tokens);
+      assert.equal(order.params.orderHashHex, logArgs.orderHash);
     });
 
     it('should throw when taker is specified and order is claimed by other', async () => {
