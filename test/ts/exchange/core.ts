@@ -1,8 +1,10 @@
 import * as assert from 'assert';
 import ethUtil = require('ethereumjs-util');
 import * as BigNumber from 'bignumber.js';
+import { constants } from '../../../util/constants';
 import { Balances } from '../../../util/balances';
 import { BNUtil } from '../../../util/bn_util';
+import { crypto } from '../../../util/crypto';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
 import { OrderFactory } from '../../../util/order_factory';
 import { testUtil } from '../../../util/test_util';
@@ -258,9 +260,59 @@ contract('Exchange', (accounts: string[]) => {
                    add(order.params.feeM, order.params.feeT)));
     });
 
-    it('should log 1 event', async () => {
-      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(2) });
+    it('should log 1 event with the correct arguments when order has a feeRecipient', async () => {
+      const divisor = 2;
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(divisor) });
       assert.equal(res.logs.length, 1);
+
+      const logArgs = res.logs[0].args;
+      const expectedFilledValueM = order.params.valueM.div(divisor);
+      const expectedFilledValueT = order.params.valueT.div(divisor);
+      const expectedFeeMPaid = order.params.feeM.div(divisor);
+      const expectedFeeTPaid = order.params.feeT.div(divisor);
+      const tokensHashBuff = crypto.solSHA3([order.params.tokenM, order.params.tokenT]);
+      const expectedTokens = ethUtil.bufferToHex(tokensHashBuff);
+
+      assert.equal(order.params.maker, logArgs.maker);
+      assert.equal(taker, logArgs.taker);
+      assert.equal(order.params.feeRecipient, logArgs.feeRecipient);
+      assert.equal(order.params.tokenM, logArgs.tokenM);
+      assert.equal(order.params.tokenT, logArgs.tokenT);
+      assert.equal(expectedFilledValueM.toString(), logArgs.filledValueM.toString());
+      assert.equal(expectedFilledValueT.toString(), logArgs.filledValueT.toString());
+      assert.equal(expectedFeeMPaid.toString(), logArgs.feeMPaid.toString());
+      assert.equal(expectedFeeTPaid.toString(), logArgs.feeTPaid.toString());
+      assert.equal(expectedTokens, logArgs.tokens);
+      assert.equal(order.params.orderHashHex, logArgs.orderHash);
+    });
+
+    it('should log 1 event with the correct arguments when order has no feeRecipient', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        feeRecipient: constants.NULL_ADDRESS,
+      });
+      const divisor = 2;
+      const res = await exWrapper.fillAsync(order, taker, { fillValueT: order.params.valueT.div(divisor) });
+      assert.equal(res.logs.length, 1);
+
+      const logArgs = res.logs[0].args;
+      const expectedFilledValueM = order.params.valueM.div(divisor);
+      const expectedFilledValueT = order.params.valueT.div(divisor);
+      const expectedFeeMPaid = new BigNumber(0);
+      const expectedFeeTPaid = new BigNumber(0);
+      const tokensHashBuff = crypto.solSHA3([order.params.tokenM, order.params.tokenT]);
+      const expectedTokens = ethUtil.bufferToHex(tokensHashBuff);
+
+      assert.equal(order.params.maker, logArgs.maker);
+      assert.equal(taker, logArgs.taker);
+      assert.equal(order.params.feeRecipient, logArgs.feeRecipient);
+      assert.equal(order.params.tokenM, logArgs.tokenM);
+      assert.equal(order.params.tokenT, logArgs.tokenT);
+      assert.equal(expectedFilledValueM.toString(), logArgs.filledValueM.toString());
+      assert.equal(expectedFilledValueT.toString(), logArgs.filledValueT.toString());
+      assert.equal(expectedFeeMPaid.toString(), logArgs.feeMPaid.toString());
+      assert.equal(expectedFeeTPaid.toString(), logArgs.feeTPaid.toString());
+      assert.equal(expectedTokens, logArgs.tokens);
+      assert.equal(order.params.orderHashHex, logArgs.orderHash);
     });
 
     it('should throw when taker is specified and order is claimed by other', async () => {
@@ -293,7 +345,7 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if balances are too low to fill order and shouldCheckTransfer = true', async () => {
+    it('should not change balances if maker balances are too low to fill order and shouldCheckTransfer = true', async () => {
       order = await orderFactory.newSignedOrderAsync({
         valueM: toSmallestUnits(100000),
       });
@@ -303,7 +355,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if balances are too low to fill order and shouldCheckTransfer = false', async () => {
+    it('should throw if maker balances are too low to fill order and shouldCheckTransfer = false', async () => {
       order = await orderFactory.newSignedOrderAsync({
         valueM: toSmallestUnits(100000),
       });
@@ -316,22 +368,68 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if allowances are too low to fill order and shouldCheckTransfer = true',
-       async () => {
-      await rep.approve(Proxy.address, 0, { from: maker });
-      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+    it('should not change balances if taker balances are too low to fill order and shouldCheckTransfer = true', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        valueT: toSmallestUnits(100000),
+      });
 
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if allowances are too low to fill order and shouldCheckTransfer = false', async () => {
+    it('should throw if taker balances are too low to fill order and shouldCheckTransfer = false', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        valueT: toSmallestUnits(100000),
+      });
+
       try {
         await exWrapper.fillAsync(order, taker);
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
+      }
+    });
+
+    it('should not change balances if maker allowances are too low to fill order and shouldCheckTransfer = true',
+       async () => {
+      await rep.approve(Proxy.address, 0, { from: maker });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+      await rep.approve(Proxy.address, INIT_ALLOW, { from: maker });
+
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should throw if maker allowances are too low to fill order and shouldCheckTransfer = false', async () => {
+      try {
+        await rep.approve(Proxy.address, 0, { from: maker });
+        await exWrapper.fillAsync(order, taker);
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
         await rep.approve(Proxy.address, INIT_ALLOW, { from: maker });
+      }
+    });
+
+    it('should not change balances if taker allowances are too low to fill order and shouldCheckTransfer = true',
+       async () => {
+      await dgd.approve(Proxy.address, 0, { from: taker });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+      await dgd.approve(Proxy.address, INIT_ALLOW, { from: taker });
+
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should throw if taker allowances are too low to fill order and shouldCheckTransfer = false', async () => {
+      try {
+        await dgd.approve(Proxy.address, 0, { from: taker });
+        await exWrapper.fillAsync(order, taker);
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+        await dgd.approve(Proxy.address, INIT_ALLOW, { from: taker });
       }
     });
 
@@ -410,9 +508,25 @@ contract('Exchange', (accounts: string[]) => {
                    add(balances[feeRecipient][zrx.address], add(feeValueM, feeValueT)));
     });
 
-    it('should log 1 event', async () => {
-      const res = await exWrapper.cancelAsync(order, maker, { cancelValueT: order.params.valueT.div(2) });
+    it('should log 1 event with correct arguments', async () => {
+      const divisor = 2;
+      const res = await exWrapper.cancelAsync(order, maker, { cancelValueT: order.params.valueT.div(divisor) });
       assert.equal(res.logs.length, 1);
+
+      const logArgs = res.logs[0].args;
+      const expectedCancelledValueM = order.params.valueM.div(divisor);
+      const expectedCancelledValueT = order.params.valueT.div(divisor);
+      const tokensHashBuff = crypto.solSHA3([order.params.tokenM, order.params.tokenT]);
+      const expectedTokens = ethUtil.bufferToHex(tokensHashBuff);
+
+      assert.equal(order.params.maker, logArgs.maker);
+      assert.equal(order.params.feeRecipient, logArgs.feeRecipient);
+      assert.equal(order.params.tokenM, logArgs.tokenM);
+      assert.equal(order.params.tokenT, logArgs.tokenT);
+      assert.equal(expectedCancelledValueM.toString(), logArgs.cancelledValueM.toString());
+      assert.equal(expectedCancelledValueT.toString(), logArgs.cancelledValueT.toString());
+      assert.equal(expectedTokens, logArgs.tokens);
+      assert.equal(order.params.orderHashHex, logArgs.orderHash);
     });
 
     it('should not log events if no value is cancelled', async () => {
