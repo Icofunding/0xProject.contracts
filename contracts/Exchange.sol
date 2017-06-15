@@ -546,20 +546,33 @@ contract Exchange is SafeMath {
     {
         address taker = msg.sender;
         uint fillValueM = getPartialValue(order.valueT, fillValueT, order.valueM);
-        if (   getBalance(order.tokenM, order.maker) < fillValueM
-            || getAllowance(order.tokenM, order.maker) < fillValueM
-            || getBalance(order.tokenT, taker) < fillValueT
-            || getAllowance(order.tokenT, taker) < fillValueT
-        ) return false;
+
         if (order.feeRecipient != address(0)) {
+            bool isTokenMZRX = order.tokenM == ZRX;
+            bool isTokenTZRX = order.tokenT == ZRX;
             uint feeValueM = getPartialValue(order.valueT, fillValueT, order.feeM);
             uint feeValueT = getPartialValue(order.valueT, fillValueT, order.feeT);
-            if (   getBalance(ZRX, order.maker) < feeValueM
-                || getAllowance(ZRX, order.maker) < feeValueM
-                || getBalance(ZRX, taker) < feeValueT
-                || getAllowance(ZRX, taker) < feeValueT
+            uint requiredMakerZRX = isTokenMZRX ? safeAdd(fillValueM, feeValueM) : feeValueM;
+            uint requiredTakerZRX = isTokenTZRX ? safeAdd(fillValueT, feeValueT) : feeValueT;
+
+            if (   getBalance(ZRX, order.maker) < requiredMakerZRX
+                || getAllowance(ZRX, order.maker) < requiredMakerZRX
+                || getBalance(ZRX, taker) < requiredTakerZRX
+                || getAllowance(ZRX, taker) < requiredTakerZRX
             ) return false;
-        }
+
+            if (!isTokenMZRX && (   getBalance(order.tokenM, order.maker) < fillValueM
+                                 || getAllowance(order.tokenM, order.maker) < fillValueM)
+            ) return false;
+            if (!isTokenTZRX && (   getBalance(order.tokenT, taker) < fillValueT
+                                 || getAllowance(order.tokenT, taker) < fillValueT)
+            ) return false;
+        } else if (   getBalance(order.tokenM, order.maker) < fillValueM
+                   || getAllowance(order.tokenM, order.maker) < fillValueM
+                   || getBalance(order.tokenT, taker) < fillValueT
+                   || getAllowance(order.tokenT, taker) < fillValueT
+        ) return false;
+
         return true;
     }
 
