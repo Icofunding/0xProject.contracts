@@ -537,7 +537,7 @@ contract('Exchange', (accounts: string[]) => {
       const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 1);
       const errCode = res.logs[0].args.errorId.toNumber();
-      assert.equal(errCode, ExchangeContractErrs.ERROR_FILL_EXPIRED);
+      assert.equal(errCode, ExchangeContractErrs.ERROR_ORDER_EXPIRED);
     });
 
     it('should log an error event if no value is filled', async () => {
@@ -546,7 +546,7 @@ contract('Exchange', (accounts: string[]) => {
       const res = await exWrapper.fillAsync(order, taker);
       assert.equal(res.logs.length, 1);
       const errCode = res.logs[0].args.errorId.toNumber();
-      assert.equal(errCode, ExchangeContractErrs.ERROR_FILL_NO_VALUE);
+      assert.equal(errCode, ExchangeContractErrs.ERROR_ORDER_FULLY_FILLED_OR_CANCELLED);
     });
   });
 
@@ -632,7 +632,7 @@ contract('Exchange', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const errId = res.logs[0].args.errorId.toNumber();
       const errCode = res.logs[0].args.errorId.toNumber();
-      assert.equal(errCode, ExchangeContractErrs.ERROR_CANCEL_NO_VALUE);
+      assert.equal(errCode, ExchangeContractErrs.ERROR_ORDER_FULLY_FILLED_OR_CANCELLED);
     });
 
     it('should not log events if order is expired', async () => {
@@ -643,7 +643,7 @@ contract('Exchange', (accounts: string[]) => {
       const res = await exWrapper.cancelAsync(order, maker);
       assert.equal(res.logs.length, 1);
       const errCode = res.logs[0].args.errorId.toNumber();
-      assert.equal(errCode, ExchangeContractErrs.ERROR_CANCEL_EXPIRED);
+      assert.equal(errCode, ExchangeContractErrs.ERROR_ORDER_EXPIRED);
     });
   });
 });
