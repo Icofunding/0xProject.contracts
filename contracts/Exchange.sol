@@ -137,12 +137,12 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        if (isRoundingError(order.takerTokenAmount, filledTakerTokenAmount, order.makerTokenAmount)) {
+        if (isRoundingError(filledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount)) {
             LogError(ERROR_FILL_TRUNCATION, order.orderHash);
             return 0;
         }
 
-        if (shouldThrowOnInsufficientBalanceOrAllowance && !isTransferable(order, filledTakerTokenAmount)) {
+        if (!shouldThrowOnInsufficientBalanceOrAllowance && !isTransferable(order, filledTakerTokenAmount)) {
             LogError(ERROR_FILL_BALANCE_ALLOWANCE, order.orderHash);
             return 0;
         }
@@ -155,7 +155,7 @@ contract Exchange is SafeMath {
             s
         ));
 
-        uint filledMakerTokenAmount = getPartialAmount(order.takerTokenAmount, filledTakerTokenAmount, order.makerTokenAmount);
+        uint filledMakerTokenAmount = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount);
         uint makerFeePaid;
         uint takerFeePaid;
         filled[order.orderHash] = safeAdd(filled[order.orderHash], filledTakerTokenAmount);
@@ -173,7 +173,7 @@ contract Exchange is SafeMath {
         ));
         if (order.feeRecipient != address(0)) {
             if (order.makerFee > 0) {
-                makerFeePaid = getPartialAmount(order.takerTokenAmount, filledTakerTokenAmount, order.makerFee);
+                makerFeePaid = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.makerFee);
                 assert(transferViaProxy(
                     ZRX_TOKEN_CONTRACT,
                     order.maker,
@@ -182,7 +182,7 @@ contract Exchange is SafeMath {
                 ));
             }
             if (order.takerFee > 0) {
-                takerFeePaid = getPartialAmount(order.takerTokenAmount, filledTakerTokenAmount, order.takerFee);
+                takerFeePaid = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.takerFee);
                 assert(transferViaProxy(
                     ZRX_TOKEN_CONTRACT,
                     msg.sender,
@@ -254,7 +254,7 @@ contract Exchange is SafeMath {
             order.feeRecipient,
             order.makerToken,
             order.takerToken,
-            getPartialAmount(order.takerTokenAmount, cancelledTakerTokenAmount, order.makerTokenAmount),
+            getPartialAmount(cancelledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount),
             cancelledTakerTokenAmount,
             sha3(order.makerToken, order.takerToken),
             order.orderHash
@@ -298,16 +298,16 @@ contract Exchange is SafeMath {
     /// @dev Synchronously executes multiple fill orders in a single transaction.
     /// @param orderAddresses Array of address arrays containing individual order addresses.
     /// @param orderValues Array of uint arrays containing individual order values.
-    /// @param fillValuesT Array of desired amounts of takerToken to fill in orders.
+    /// @param fillTakerTokenAmounts Array of desired amounts of takerToken to fill in orders.
     /// @param shouldThrowOnInsufficientBalanceOrAllowance Test if transfers will fail before attempting.
     /// @param v Array ECDSA signature v parameters.
     /// @param r Array of ECDSA signature r parameters.
     /// @param s Array of ECDSA signature s parameters.
-    /// @return True if no fills throw.
+    /// @return Successful if no orders throw.
     function batchFillOrders(
         address[5][] orderAddresses,
         uint[6][] orderValues,
-        uint[] fillValuesT,
+        uint[] fillTakerTokenAmounts,
         bool shouldThrowOnInsufficientBalanceOrAllowance,
         uint8[] v,
         bytes32[] r,
@@ -318,7 +318,7 @@ contract Exchange is SafeMath {
             fill(
                 orderAddresses[i],
                 orderValues[i],
-                fillValuesT[i],
+                fillTakerTokenAmounts[i],
                 shouldThrowOnInsufficientBalanceOrAllowance,
                 v[i],
                 r[i],
@@ -331,25 +331,25 @@ contract Exchange is SafeMath {
     /// @dev Synchronously executes multiple fillOrKill orders in a single transaction.
     /// @param orderAddresses Array of address arrays containing individual order addresses.
     /// @param orderValues Array of uint arrays containing individual order values.
-    /// @param fillValuesT Array of desired amounts of takerToken to fill in orders.
+    /// @param fillTakerTokenAmounts Array of desired amounts of takerToken to fill in orders.
     /// @param v Array ECDSA signature v parameters.
     /// @param r Array of ECDSA signature r parameters.
     /// @param s Array of ECDSA signature s parameters.
     /// @return Success of all orders being filled with respective fillTakerTokenAmount.
     function batchFillOrKillOrders(
-      address[5][] orderAddresses,
-      uint[6][] orderValues,
-      uint[] fillValuesT,
-      uint8[] v,
-      bytes32[] r,
-      bytes32[] s)
+        address[5][] orderAddresses,
+        uint[6][] orderValues,
+        uint[] fillTakerTokenAmounts,
+        uint8[] v,
+        bytes32[] r,
+        bytes32[] s)
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
             assert(fillOrKill(
                 orderAddresses[i],
                 orderValues[i],
-                fillValuesT[i],
+                fillTakerTokenAmounts[i],
                 v[i],
                 r[i],
                 s[i]
@@ -397,19 +397,19 @@ contract Exchange is SafeMath {
     /// @dev Synchronously cancels multiple orders in a single transaction.
     /// @param orderAddresses Array of address arrays containing individual order addresses.
     /// @param orderValues Array of uint arrays containing individual order values.
-    /// @param cancelValuesT Array of desired amounts of takerToken to cancel in orders.
-    /// @return Success if no cancels throw.
+    /// @param cancelTakerTokenAmounts Array of desired amounts of takerToken to cancel in orders.
+    /// @return Successful if no cancels throw.
     function batchCancelOrders(
         address[5][] orderAddresses,
         uint[6][] orderValues,
-        uint[] cancelValuesT)
+        uint[] cancelTakerTokenAmounts)
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
             cancel(
                 orderAddresses[i],
                 orderValues[i],
-                cancelValuesT[i]
+                cancelTakerTokenAmounts[i]
             );
         }
         return true;
@@ -480,23 +480,23 @@ contract Exchange is SafeMath {
     }
 
     /// @dev Checks if rounding error > 0.1%.
-    /// @param denominator Denominator
-    /// @param numerator Numerator
+    /// @param numerator Numerator.
+    /// @param denominator Denominator.
     /// @param target Value to multiply with numerator/denominator.
-    /// @return Rounding error is present
-    function isRoundingError(uint denominator, uint numerator, uint target)
+    /// @return Rounding error is present.
+    function isRoundingError(uint numerator, uint denominator, uint target)
         constant
         returns (bool isError)
     {
         return (target < 10**3 && mulmod(target, numerator, denominator) != 0);
     }
 
-    /// @dev Calculates partial value given a fillValue and a corresponding total value.
-    /// @param denominator Amount of token specified in order.
-    /// @param numerator Amount of token to be filled.
-    /// @param target Value to calculate partial.
+    /// @dev Calculates partial value given a numerator and denominator.
+    /// @param numerator Numerator.
+    /// @param denominator Denominator.
+    /// @param target Value to calculate partial of.
     /// @return Partial value of target.
-    function getPartialAmount(uint denominator, uint numerator, uint target)
+    function getPartialAmount(uint numerator, uint denominator, uint target)
         constant
         returns (uint partialValue)
     {
@@ -545,13 +545,13 @@ contract Exchange is SafeMath {
         returns (bool isTransferable)
     {
         address taker = msg.sender;
-        uint fillMakerTokenAmount = getPartialAmount(order.takerTokenAmount, fillTakerTokenAmount, order.makerTokenAmount);
+        uint fillMakerTokenAmount = getPartialAmount(fillTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount);
 
         if (order.feeRecipient != address(0)) {
             bool isMakerTokenZRX = order.makerToken == ZRX_TOKEN_CONTRACT;
             bool isTakerTokenZRX = order.takerToken == ZRX_TOKEN_CONTRACT;
-            uint paidMakerFee = getPartialAmount(order.takerTokenAmount, fillTakerTokenAmount, order.makerFee);
-            uint paidTakerFee = getPartialAmount(order.takerTokenAmount, fillTakerTokenAmount, order.takerFee);
+            uint paidMakerFee = getPartialAmount(fillTakerTokenAmount, order.takerTokenAmount, order.makerFee);
+            uint paidTakerFee = getPartialAmount(fillTakerTokenAmount, order.takerTokenAmount, order.takerFee);
             uint requiredMakerZRX = isMakerTokenZRX ? safeAdd(fillMakerTokenAmount, paidMakerFee) : paidMakerFee;
             uint requiredTakerZRX = isTakerTokenZRX ? safeAdd(fillTakerTokenAmount, paidTakerFee) : paidTakerFee;
 
