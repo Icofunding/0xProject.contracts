@@ -44,6 +44,7 @@
     "lodash": "^4.17.4",
     "request": "^2.81.0",
     "request-promise-native": "^1.0.3",
+    "truffle": "^3.2.5",
     "tslint": "^4.5.1",
     "tslint-config-0xproject": "^0.0.2"
   }
