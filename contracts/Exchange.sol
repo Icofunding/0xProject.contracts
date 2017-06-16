@@ -15,7 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./Proxy.sol";
 import "./base/Token.sol";
@@ -123,7 +123,7 @@ contract Exchange is SafeMath {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
-        assert(order.taker == address(0) || order.taker == msg.sender);
+        require(order.taker == address(0) || order.taker == msg.sender);
 
         if (block.timestamp >= order.expiration) {
             LogError(ERROR_FILL_EXPIRED, order.orderHash);
@@ -147,7 +147,7 @@ contract Exchange is SafeMath {
             return 0;
         }
 
-        assert(isValidSignature(
+        require(isValidSignature(
             order.maker,
             order.orderHash,
             v,
@@ -233,7 +233,7 @@ contract Exchange is SafeMath {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
-        assert(order.maker == msg.sender);
+        require(order.maker == msg.sender);
 
         if (block.timestamp >= order.expiration) {
             LogError(ERROR_CANCEL_EXPIRED, order.orderHash);
@@ -379,7 +379,7 @@ contract Exchange is SafeMath {
     {
         filledValueT = 0;
         for (uint i = 0; i < orderAddresses.length; i++) {
-            assert(orderAddresses[i][3] == orderAddresses[0][3]); // tokenT must be the same for each order
+            require(orderAddresses[i][3] == orderAddresses[0][3]); // tokenT must be the same for each order
             filledValueT = safeAdd(filledValueT, fill(
                 orderAddresses[i],
                 orderValues[i],

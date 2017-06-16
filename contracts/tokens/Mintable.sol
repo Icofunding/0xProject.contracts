@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./../base/StandardToken.sol";
 import "./../base/SafeMath.sol";
@@ -9,9 +9,7 @@ import "./../base/SafeMath.sol";
  */
 contract Mintable is StandardToken, SafeMath {
     function mint(uint _value) {
-        if (_value > 100000000000000000000) {
-            throw;
-        }
+        require(_value <= 100000000000000000000);
         balances[msg.sender] = safeAdd(_value, balances[msg.sender]);
         totalSupply = safeAdd(totalSupply, _value);
     }

@@ -15,7 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./base/Token.sol";
 import "./base/Ownable.sol";
@@ -26,17 +26,17 @@ contract Proxy is Ownable {
 
     /// @dev Only authorized addresses can invoke functions with this modifier.
     modifier onlyAuthorized {
-        if (!authorized[msg.sender]) throw;
+        require(authorized[msg.sender]);
         _;
     }
 
     modifier targetAuthorized(address target) {
-        if (!authorized[target]) throw;
+        require(authorized[target]);
         _;
     }
 
     modifier targetNotAuthorized(address target) {
-        if (authorized[target]) throw;
+        require(!authorized[target]);
         _;
     }
 
@@ -98,8 +98,7 @@ contract Proxy is Ownable {
         onlyAuthorized
         returns (bool success)
     {
-        if (!Token(token).transferFrom(from, to, value)) throw;
-        return true;
+        return Token(token).transferFrom(from, to, value);
     }
 
     /*

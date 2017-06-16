@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./Exchange.sol";
 import "./tokens/EtherToken.sol";
@@ -40,17 +40,17 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     }
 
     modifier saleInitialized() {
-        assert(isInitialized);
+        require(isInitialized);
         _;
     }
 
     modifier saleNotInitialized() {
-        assert(!isInitialized);
+        require(!isInitialized);
         _;
     }
 
     modifier saleNotFinished() {
-        assert(!isFinished);
+        require(!isFinished);
         _;
     }
 
@@ -128,10 +128,10 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
-        assert(order.tokenM == PROTOCOL_TOKEN_ADDRESS);
-        assert(order.tokenT == ETH_TOKEN_ADDRESS);
+        require(order.tokenM == PROTOCOL_TOKEN_ADDRESS);
+        require(order.tokenT == ETH_TOKEN_ADDRESS);
 
-        assert(isValidSignature(
+        require(isValidSignature(
             order.maker,
             order.orderHash,
             v,
