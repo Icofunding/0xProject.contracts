@@ -345,7 +345,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if maker balances are too low to fill order and shouldCheckTransfer = true', async () => {
+    it('should not change balances if maker balances are too low to fill order and shouldCheckTransfer = true',
+       async () => {
       order = await orderFactory.newSignedOrderAsync({
         valueM: toSmallestUnits(100000),
       });
@@ -368,7 +369,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if taker balances are too low to fill order and shouldCheckTransfer = true', async () => {
+    it('should not change balances if taker balances are too low to fill order and shouldCheckTransfer = true',
+       async () => {
       order = await orderFactory.newSignedOrderAsync({
         valueT: toSmallestUnits(100000),
       });
@@ -418,6 +420,60 @@ contract('Exchange', (accounts: string[]) => {
       await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
       await dgd.approve(Proxy.address, INIT_ALLOW, { from: taker });
 
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should not change balances if tokenM is ZRX, valueM + feeM > maker balance, and shouldCheckTransfer = true',
+       async () => {
+      const makerZRXBalance = new BigNumber(balances[maker][zrx.address]);
+      order = await orderFactory.newSignedOrderAsync({
+        tokenM: zrx.address,
+        valueM: makerZRXBalance,
+        feeM: new BigNumber(1),
+      });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should not change balances if tokenM is ZRX, valueM + feeM > maker allowance, and shouldCheckTransfer = true',
+       async () => {
+      const makerZRXAllowance = await zrx.allowance(maker, Proxy.address);
+      const makerZRXAllowanceFixed = makerZRXAllowance.toFixed(); // remove scientific notation
+      order = await orderFactory.newSignedOrderAsync({
+        tokenM: zrx.address,
+        valueM: new BigNumber(makerZRXAllowanceFixed),
+        feeM: new BigNumber(1),
+      });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should not change balances if tokenT is ZRX, valueT + feeT > taker balance, and shouldCheckTransfer = true',
+       async () => {
+      const takerZRXBalance = new BigNumber(balances[taker][zrx.address]);
+      order = await orderFactory.newSignedOrderAsync({
+        tokenT: zrx.address,
+        valueT: takerZRXBalance,
+        feeT: new BigNumber(1),
+      });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
+      const newBalances = await dmyBalances.getAsync();
+      assert.deepEqual(newBalances, balances);
+    });
+
+    it('should not change balances if tokenT is ZRX, valueT + feeT > taker allowance, and shouldCheckTransfer = true',
+       async () => {
+      const takerZRXAllowance = await zrx.allowance(taker, Proxy.address);
+      const takerZRXAllowanceFixed = takerZRXAllowance.toFixed(); // remove scientific notation
+      order = await orderFactory.newSignedOrderAsync({
+        tokenT: zrx.address,
+        valueT: new BigNumber(takerZRXAllowanceFixed),
+        feeT: new BigNumber(1),
+      });
+      await exWrapper.fillAsync(order, taker, { shouldCheckTransfer: true });
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
     });
