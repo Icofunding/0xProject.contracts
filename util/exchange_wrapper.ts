@@ -9,84 +9,89 @@ export class ExchangeWrapper {
     this.exchange = exchangeContractInstance;
   }
   public fillAsync(order: Order, from: string,
-                   opts: { fillValueT?: BigNumber.BigNumber, shouldCheckTransfer?: boolean } = {}) {
-    const shouldCheckTransfer = !!opts.shouldCheckTransfer;
-    const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
+                   opts: { fillTakerTokenAmount?: BigNumber.BigNumber,
+                           shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
+    const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
+    const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmount);
     return this.exchange.fill(
       params.orderAddresses,
       params.orderValues,
-      params.fillValueT,
-      params.shouldCheckTransfer,
+      params.fillTakerTokenAmount,
+      params.shouldThrowOnInsufficientBalanceOrAllowance,
       params.v,
       params.r,
       params.s,
       { from },
     );
   }
-  public cancelAsync(order: Order, from: string, opts: { cancelValueT?: BigNumber.BigNumber } = {}) {
-    const params = order.createCancel(opts.cancelValueT);
+  public cancelAsync(order: Order, from: string, opts: { cancelTakerTokenAmount?: BigNumber.BigNumber } = {}) {
+    const params = order.createCancel(opts.cancelTakerTokenAmount);
     return this.exchange.cancel(
       params.orderAddresses,
       params.orderValues,
-      params.cancelValueT,
+      params.cancelTakerTokenAmount,
       { from },
     );
   }
-  public fillOrKillAsync(order: Order, from: string, opts: { fillValueT?: BigNumber.BigNumber } = {}) {
-    const shouldCheckTransfer = false;
-    const params = order.createFill(shouldCheckTransfer, opts.fillValueT);
+  public fillOrKillAsync(order: Order, from: string, opts: { fillTakerTokenAmount?: BigNumber.BigNumber } = {}) {
+    const shouldThrowOnInsufficientBalanceOrAllowance = true;
+    const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmount);
     return this.exchange.fillOrKill(
       params.orderAddresses,
       params.orderValues,
-      params.fillValueT,
+      params.fillTakerTokenAmount,
       params.v,
       params.r,
       params.s,
       { from },
     );
   }
-  public batchFillAsync(orders: Order[], from: string,
-                        opts: { fillValuesT?: BigNumber.BigNumber[], shouldCheckTransfer?: boolean } = {}) {
-    const shouldCheckTransfer = !!opts.shouldCheckTransfer;
-    const params = formatters.createBatchFill(orders, shouldCheckTransfer, opts.fillValuesT);
-    return this.exchange.batchFill(
+  public batchFillOrdersAsync(orders: Order[], from: string,
+                              opts: { fillValuesT?: BigNumber.BigNumber[],
+                                      shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
+    const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
+    const params = formatters.createBatchFill(orders, shouldThrowOnInsufficientBalanceOrAllowance, opts.fillValuesT);
+    return this.exchange.batchFillOrders(
       params.orderAddresses,
       params.orderValues,
-      params.fillValuesT,
-      params.shouldCheckTransfer,
+      params.fillTakerTokenAmounts,
+      params.shouldThrowOnInsufficientBalanceOrAllowance,
       params.v,
       params.r,
       params.s,
       { from },
     );
   }
-  public fillUpToAsync(orders: Order[], from: string,
-                       opts: { fillValueT?: BigNumber.BigNumber, shouldCheckTransfer?: boolean } = {}) {
-    const shouldCheckTransfer = !!opts.shouldCheckTransfer;
-    const params = formatters.createFillUpTo(orders, shouldCheckTransfer, opts.fillValueT);
-    return this.exchange.fillUpTo(
+  public fillOrdersUpToAsync(orders: Order[], from: string,
+                             opts: { fillTakerTokenAmount?: BigNumber.BigNumber,
+                                     shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
+    const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
+    const params = formatters.createFillUpTo(orders,
+                                             shouldThrowOnInsufficientBalanceOrAllowance,
+                                             opts.fillTakerTokenAmount);
+    return this.exchange.fillOrdersUpTo(
       params.orderAddresses,
       params.orderValues,
-      params.fillValueT,
-      params.shouldCheckTransfer,
+      params.fillTakerTokenAmount,
+      params.shouldThrowOnInsufficientBalanceOrAllowance,
       params.v,
       params.r,
       params.s,
       { from },
     );
   }
-  public batchCancelAsync(orders: Order[], from: string, opts: { cancelValuesT?: BigNumber.BigNumber[] } = {}) {
+  public batchCancelOrdersAsync(orders: Order[], from: string, opts: { cancelValuesT?: BigNumber.BigNumber[] } = {}) {
     const params = formatters.createBatchCancel(orders, opts.cancelValuesT);
-    return this.exchange.batchCancel(
+    return this.exchange.batchCancelOrders(
       params.orderAddresses,
       params.orderValues,
-      params.cancelValuesT,
+      params.cancelTakerTokenAmounts,
       { from },
     );
   }
   public getOrderHashAsync(order: Order) {
-    const shouldCheckTransfer = false;
-    const params = order.createFill(shouldCheckTransfer);
+    const shouldThrowOnInsufficientBalanceOrAllowance = false;
+    const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance);
     return this.exchange.getOrderHash(params.orderAddresses, params.orderValues);
   }
   public isValidSignatureAsync(order: Order) {

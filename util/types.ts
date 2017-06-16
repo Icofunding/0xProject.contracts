@@ -6,70 +6,70 @@ export interface BalancesByOwner {
   };
 }
 
-export interface BatchFill {
+export interface BatchFillOrders {
   orderAddresses: string[][];
   orderValues: BigNumber.BigNumber[][];
-  fillValuesT: BigNumber.BigNumber[];
-  shouldCheckTransfer: boolean;
+  fillTakerTokenAmounts: BigNumber.BigNumber[];
+  shouldThrowOnInsufficientBalanceOrAllowance: boolean;
   v: number[];
   r: string[];
   s: string[];
 }
 
-export interface FillUpTo {
+export interface FillOrdersUpTo {
   orderAddresses: string[][];
   orderValues: BigNumber.BigNumber[][];
-  fillValueT: BigNumber.BigNumber;
-  shouldCheckTransfer: boolean;
+  fillTakerTokenAmount: BigNumber.BigNumber;
+  shouldThrowOnInsufficientBalanceOrAllowance: boolean;
   v: number[];
   r: string[];
   s: string[];
 }
 
-export interface BatchCancel {
+export interface BatchCancelOrders {
   orderAddresses: string[][];
   orderValues: BigNumber.BigNumber[][];
-  cancelValuesT: BigNumber.BigNumber[];
+  cancelTakerTokenAmounts: BigNumber.BigNumber[];
 }
 
 export interface DefaultOrderParams {
-  exchange: string;
+  version: string;
   maker: string;
   feeRecipient: string;
-  tokenM: string;
-  tokenT: string;
-  valueM: BigNumber.BigNumber;
-  valueT: BigNumber.BigNumber;
-  feeM: BigNumber.BigNumber;
-  feeT: BigNumber.BigNumber;
+  makerToken: string;
+  takerToken: string;
+  makerTokenAmount: BigNumber.BigNumber;
+  takerTokenAmount: BigNumber.BigNumber;
+  makerFee: BigNumber.BigNumber;
+  takerFee: BigNumber.BigNumber;
 }
 
 export interface OptionalOrderParams {
-  exchange?: string;
+  version?: string;
   maker?: string;
   taker?: string;
   feeRecipient?: string;
-  tokenM?: string;
-  tokenT?: string;
-  valueM?: BigNumber.BigNumber;
-  valueT?: BigNumber.BigNumber;
-  feeM?: BigNumber.BigNumber;
-  feeT?: BigNumber.BigNumber;
-  expiration?: BigNumber.BigNumber;
+  makerToken?: string;
+  takerToken?: string;
+  makerTokenAmount?: BigNumber.BigNumber;
+  takerTokenAmount?: BigNumber.BigNumber;
+  makerFee?: BigNumber.BigNumber;
+  takerFee?: BigNumber.BigNumber;
+  expirationTimestampInSec?: BigNumber.BigNumber;
 }
 
 export interface OrderParams {
-  exchange: string;
+  version: string;
   maker: string;
   taker: string;
   feeRecipient: string;
-  tokenM: string;
-  tokenT: string;
-  valueM: BigNumber.BigNumber;
-  valueT: BigNumber.BigNumber;
-  feeM: BigNumber.BigNumber;
-  feeT: BigNumber.BigNumber;
-  expiration: BigNumber.BigNumber;
+  makerToken: string;
+  takerToken: string;
+  makerTokenAmount: BigNumber.BigNumber;
+  takerTokenAmount: BigNumber.BigNumber;
+  makerFee: BigNumber.BigNumber;
+  takerFee: BigNumber.BigNumber;
+  expirationTimestampInSec: BigNumber.BigNumber;
   salt: BigNumber.BigNumber;
   orderHashHex?: string;
   v?: number;

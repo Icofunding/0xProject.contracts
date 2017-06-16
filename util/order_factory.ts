@@ -14,7 +14,7 @@ export class OrderFactory {
   public async newSignedOrderAsync(customOrderParams: OptionalOrderParams = {}) {
     const randomExpiration = new BigNumber(Math.floor((Date.now() + (Math.random() * 100000000000)) / 1000));
     const orderParams: OrderParams = _.assign({}, {
-      expiration: randomExpiration,
+      expirationTimestampInSec: randomExpiration,
       salt: this.generateSalt(),
       taker: constants.NULL_ADDRESS,
     }, this.defaultOrderParams, customOrderParams);

@@ -65,15 +65,15 @@ Name | Data Type | Description
 version | `address` | Address of the Exchange contract. This address will change each time the protocol is updated.
 maker | `address` | Address originating the order.
 taker | `address` | Address permitted to fill the order (optional).
-tokenM | `address` | Address of an ERC20 Token contract.
-tokenT | `address` | Address of an ERC20 Token contract.
-valueM | `uint256` | Total units of tokenM offered by maker.
-valueT | `uint256` | Total units of tokenT requested by maker.
-expiration | `uint256` | Time at which the order expires (seconds since unix epoch).
+makerToken | `address` | Address of an ERC20 Token contract.
+takerToken | `address` | Address of an ERC20 Token contract.
+makerTokenAmount | `uint256` | Total units of makerToken offered by maker.
+takerTokenAmount | `uint256` | Total units of takerToken requested by maker.
+expirationTimestampInSec | `uint256` | Time at which the order expires (seconds since unix epoch).
 salt | `uint256` | Arbitrary number that allows for uniqueness of the order's Keccak SHA3 hash.
 feeRecipient | `address` | Address that recieves transaction fees (optional).
-feeM | `uint256` | Total units of ZRX paid to feeRecipient by maker.
-feeT | `uint256` | Total units of ZRX paid to feeRecipient by taker.
+makerFee | `uint256` | Total units of ZRX paid to feeRecipient by maker.
+takerFee | `uint256` | Total units of ZRX paid to feeRecipient by taker.
 v | `uint8` | ECDSA signature of the above arguments.
 r | `bytes32` | ECDSA signature of the above arguments.
 s | `bytes32` | ECDSA signature of the above arguments.
