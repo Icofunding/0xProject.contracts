@@ -62,7 +62,7 @@ Each order is a data packet containing order parameters and an associated signat
 
 Name | Data Type | Description
 --- | --- | ---
-version | `address` | Address of the Exchange contract. This address will change each time the protocol is updated.
+exchangeContractAddress | `address` | Address of the Exchange contract. This address will change each time the protocol is updated.
 maker | `address` | Address originating the order.
 taker | `address` | Address permitted to fill the order (optional).
 makerToken | `address` | Address of an ERC20 Token contract.

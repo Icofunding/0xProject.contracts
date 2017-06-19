@@ -94,7 +94,7 @@ export class Order {
   }
   private getOrderHash() {
     const orderHash = crypto.solSHA3([
-      this.params.version,
+      this.params.exchangeContractAddress,
       this.params.maker,
       this.params.taker,
       this.params.makerToken,

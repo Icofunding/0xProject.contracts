@@ -61,7 +61,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     ]);
 
     const orderParams = {
-      version: Exchange.address,
+      exchangeContractAddress: Exchange.address,
       maker,
       taker: constants.NULL_ADDRESS,
       feeRecipient: constants.NULL_ADDRESS,
@@ -142,7 +142,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
     it('should throw if called with an invalid makerToken', async () => {
       const orderParams = {
-        version: Exchange.address,
+        exchangeContractAddress: Exchange.address,
         maker,
         taker: constants.NULL_ADDRESS,
         feeRecipient: constants.NULL_ADDRESS,
@@ -175,7 +175,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
 
     it('should throw if called with an invalid takerToken', async () => {
       const orderParams = {
-        version: Exchange.address,
+        exchangeContractAddress: Exchange.address,
         maker,
         taker: constants.NULL_ADDRESS,
         feeRecipient: constants.NULL_ADDRESS,

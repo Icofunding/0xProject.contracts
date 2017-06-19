@@ -32,7 +32,7 @@ contract('Exchange', (accounts: string[]) => {
       tokenRegistry.getTokenAddressBySymbol('DGD'),
     ]);
     const defaultOrderParams = {
-      version: Exchange.address,
+      exchangeContractAddress: Exchange.address,
       maker,
       feeRecipient,
       makerToken: repAddress,

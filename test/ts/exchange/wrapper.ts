@@ -53,7 +53,7 @@ contract('Exchange', (accounts: string[]) => {
     ]);
 
     const defaultOrderParams = {
-      version: Exchange.address,
+      exchangeContractAddress: Exchange.address,
       maker,
       feeRecipient,
       makerToken: repAddress,

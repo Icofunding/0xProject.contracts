@@ -33,7 +33,7 @@ export interface BatchCancelOrders {
 }
 
 export interface DefaultOrderParams {
-  version: string;
+  exchangeContractAddress: string;
   maker: string;
   feeRecipient: string;
   makerToken: string;
@@ -45,7 +45,7 @@ export interface DefaultOrderParams {
 }
 
 export interface OptionalOrderParams {
-  version?: string;
+  exchangeContractAddress?: string;
   maker?: string;
   taker?: string;
   feeRecipient?: string;
@@ -59,7 +59,7 @@ export interface OptionalOrderParams {
 }
 
 export interface OrderParams {
-  version: string;
+  exchangeContractAddress: string;
   maker: string;
   taker: string;
   feeRecipient: string;
