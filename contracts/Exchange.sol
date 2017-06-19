@@ -98,7 +98,7 @@ contract Exchange is SafeMath {
     /// @param r CDSA signature parameters r.
     /// @param s CDSA signature parameters s.
     /// @return Total amount of takerToken filled in trade.
-    function fill(
+    function fillOrder(
           address[5] orderAddresses,
           uint[6] orderValues,
           uint fillTakerTokenAmount,
@@ -212,7 +212,7 @@ contract Exchange is SafeMath {
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param canceltakerTokenAmount Desired amount of takerToken to cancel in order.
     /// @return Amount of takerToken cancelled.
-    function cancel(
+    function cancelOrder(
         address[5] orderAddresses,
         uint[6] orderValues,
         uint canceltakerTokenAmount)
@@ -273,7 +273,7 @@ contract Exchange is SafeMath {
     /// @param r CDSA signature parameters r.
     /// @param s CDSA signature parameters s.
     /// @return Success of entire fillTakerTokenAmount being filled.
-    function fillOrKill(
+    function fillOrKillOrder(
         address[5] orderAddresses,
         uint[6] orderValues,
         uint fillTakerTokenAmount,
@@ -282,7 +282,7 @@ contract Exchange is SafeMath {
         bytes32 s)
         returns (bool success)
     {
-        assert(fill(
+        assert(fillOrder(
             orderAddresses,
             orderValues,
             fillTakerTokenAmount,
@@ -314,7 +314,7 @@ contract Exchange is SafeMath {
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
-            fill(
+            fillOrder(
                 orderAddresses[i],
                 orderValues[i],
                 fillTakerTokenAmounts[i],
@@ -345,7 +345,7 @@ contract Exchange is SafeMath {
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
-            assert(fillOrKill(
+            assert(fillOrKillOrder(
                 orderAddresses[i],
                 orderValues[i],
                 fillTakerTokenAmounts[i],
@@ -379,7 +379,7 @@ contract Exchange is SafeMath {
         filledTakerTokenAmount = 0;
         for (uint i = 0; i < orderAddresses.length; i++) {
             require(orderAddresses[i][3] == orderAddresses[0][3]); // takerToken must be the same for each order
-            filledTakerTokenAmount = safeAdd(filledTakerTokenAmount, fill(
+            filledTakerTokenAmount = safeAdd(filledTakerTokenAmount, fillOrder(
                 orderAddresses[i],
                 orderValues[i],
                 safeSub(fillTakerTokenAmount, filledTakerTokenAmount),
@@ -405,7 +405,7 @@ contract Exchange is SafeMath {
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
-            cancel(
+            cancelOrder(
                 orderAddresses[i],
                 orderValues[i],
                 cancelTakerTokenAmounts[i]

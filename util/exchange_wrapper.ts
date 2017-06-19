@@ -8,12 +8,12 @@ export class ExchangeWrapper {
   constructor(exchangeContractInstance: ContractInstance) {
     this.exchange = exchangeContractInstance;
   }
-  public fillAsync(order: Order, from: string,
+  public fillOrderAsync(order: Order, from: string,
                    opts: { fillTakerTokenAmount?: BigNumber.BigNumber,
                            shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
     const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
     const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmount);
-    return this.exchange.fill(
+    return this.exchange.fillOrder(
       params.orderAddresses,
       params.orderValues,
       params.fillTakerTokenAmount,
@@ -24,19 +24,19 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public cancelAsync(order: Order, from: string, opts: { cancelTakerTokenAmount?: BigNumber.BigNumber } = {}) {
+  public cancelOrderAsync(order: Order, from: string, opts: { cancelTakerTokenAmount?: BigNumber.BigNumber } = {}) {
     const params = order.createCancel(opts.cancelTakerTokenAmount);
-    return this.exchange.cancel(
+    return this.exchange.cancelOrder(
       params.orderAddresses,
       params.orderValues,
       params.cancelTakerTokenAmount,
       { from },
     );
   }
-  public fillOrKillAsync(order: Order, from: string, opts: { fillTakerTokenAmount?: BigNumber.BigNumber } = {}) {
+  public fillOrKillOrderAsync(order: Order, from: string, opts: { fillTakerTokenAmount?: BigNumber.BigNumber } = {}) {
     const shouldThrowOnInsufficientBalanceOrAllowance = true;
     const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmount);
-    return this.exchange.fillOrKill(
+    return this.exchange.fillOrKillOrder(
       params.orderAddresses,
       params.orderValues,
       params.fillTakerTokenAmount,

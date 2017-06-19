@@ -79,7 +79,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
         ethToken.deposit.value(ethToFill)();
-        assert(exchange.fillOrKill(
+        assert(exchange.fillOrKillOrder(
             [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
             [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
             ethToFill,

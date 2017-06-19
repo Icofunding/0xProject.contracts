@@ -87,7 +87,7 @@ contract('Exchange', (accounts: string[]) => {
     ]);
   });
 
-  describe('fillOrKill', () => {
+  describe('fillOrKillOrder', () => {
     beforeEach(async () => {
       balances = await dmyBalances.getAsync();
     });
@@ -98,7 +98,7 @@ contract('Exchange', (accounts: string[]) => {
         takerTokenAmount: toSmallestUnits(200),
       });
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrKillAsync(order, taker, { fillTakerTokenAmount });
+      await exWrapper.fillOrKillOrderAsync(order, taker, { fillTakerTokenAmount });
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -126,7 +126,7 @@ contract('Exchange', (accounts: string[]) => {
       });
 
       try {
-        await exWrapper.fillOrKillAsync(order, taker);
+        await exWrapper.fillOrKillOrderAsync(order, taker);
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -137,10 +137,10 @@ contract('Exchange', (accounts: string[]) => {
       const order = await orderFactory.newSignedOrderAsync();
 
       const from = taker;
-      await exWrapper.fillAsync(order, from, { fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });
+      await exWrapper.fillOrderAsync(order, from, { fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });
 
       try {
-        await exWrapper.fillOrKillAsync(order, taker);
+        await exWrapper.fillOrKillOrderAsync(order, taker);
         throw new Error('FillOrKill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
