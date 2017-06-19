@@ -481,10 +481,9 @@ contract('Exchange', (accounts: string[]) => {
     it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const makerZRXAllowance = await zrx.allowance(maker, Proxy.address);
-      const makerZRXAllowanceFixed = makerZRXAllowance.toFixed(); // remove scientific notation
       order = await orderFactory.newSignedOrderAsync({
         makerToken: zrx.address,
-        makerTokenAmount: new BigNumber(makerZRXAllowanceFixed),
+        makerTokenAmount: new BigNumber(makerZRXAllowance),
         makerFee: new BigNumber(1),
       });
       await exWrapper.fillAsync(order, taker);
@@ -508,10 +507,9 @@ contract('Exchange', (accounts: string[]) => {
     it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const takerZRXAllowance = await zrx.allowance(taker, Proxy.address);
-      const takerZRXAllowanceFixed = takerZRXAllowance.toFixed(); // remove scientific notation
       order = await orderFactory.newSignedOrderAsync({
         takerToken: zrx.address,
-        takerTokenAmount: new BigNumber(takerZRXAllowanceFixed),
+        takerTokenAmount: new BigNumber(takerZRXAllowance),
         takerFee: new BigNumber(1),
       });
       await exWrapper.fillAsync(order, taker);

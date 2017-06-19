@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
 import * as BigNumber from 'bignumber.js';
+import { bigNumberConfigs } from './bignumber_config';
 import { BalancesByOwner, ContractInstance } from './types';
+
+bigNumberConfigs.configure();
 
 export class Balances {
   private tokenContractInstances: ContractInstance[];
@@ -13,7 +16,8 @@ export class Balances {
     const balancesByOwner: BalancesByOwner = {};
     for (const tokenContractInstance of this.tokenContractInstances) {
       for (const ownerAddress of this.ownerAddresses) {
-        const balance = await tokenContractInstance.balanceOf(ownerAddress);
+        let balance = await tokenContractInstance.balanceOf(ownerAddress);
+        balance = new BigNumber(balance);
         if (_.isUndefined(balancesByOwner[ownerAddress])) {
           balancesByOwner[ownerAddress] = {};
         }
