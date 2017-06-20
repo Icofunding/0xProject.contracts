@@ -47,10 +47,10 @@ export class ExchangeWrapper {
     );
   }
   public batchFillOrdersAsync(orders: Order[], from: string,
-                              opts: { fillValuesT?: BigNumber.BigNumber[],
+                              opts: { fillTakerTokenAmounts?: BigNumber.BigNumber[],
                                       shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
     const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
-    const params = formatters.createBatchFill(orders, shouldThrowOnInsufficientBalanceOrAllowance, opts.fillValuesT);
+    const params = formatters.createBatchFill(orders, shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmounts);
     return this.exchange.batchFillOrders(
       params.orderAddresses,
       params.orderValues,
@@ -80,8 +80,8 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public batchCancelOrdersAsync(orders: Order[], from: string, opts: { cancelValuesT?: BigNumber.BigNumber[] } = {}) {
-    const params = formatters.createBatchCancel(orders, opts.cancelValuesT);
+  public batchCancelOrdersAsync(orders: Order[], from: string, opts: { cancelTakerTokenAmounts?: BigNumber.BigNumber[] } = {}) {
+    const params = formatters.createBatchCancel(orders, opts.cancelTakerTokenAmounts);
     return this.exchange.batchCancelOrders(
       params.orderAddresses,
       params.orderValues,

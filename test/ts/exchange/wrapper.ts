@@ -160,7 +160,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should transfer the correct amounts', async () => {
-      const fillValuesT: BigNumber.BigNumber[] = [];
+      const fillTakerTokenAmounts: BigNumber.BigNumber[] = [];
       const makerToken = rep.address;
       const takerToken = dgd.address;
       orders.forEach(order => {
@@ -169,7 +169,7 @@ contract('Exchange', (accounts: string[]) => {
                                          order.params.takerTokenAmount);
         const makerFee = div(mul(order.params.makerFee, fillMakerTokenAmount), order.params.makerTokenAmount);
         const takerFee = div(mul(order.params.takerFee, fillMakerTokenAmount), order.params.makerTokenAmount);
-        fillValuesT.push(fillTakerTokenAmount);
+        fillTakerTokenAmounts.push(fillTakerTokenAmount);
         balances[maker][makerToken] = sub(balances[maker][makerToken], fillMakerTokenAmount);
         balances[maker][takerToken] = add(balances[maker][takerToken], fillTakerTokenAmount);
         balances[maker][zrx.address] = sub(balances[maker][zrx.address], makerFee);
@@ -179,7 +179,7 @@ contract('Exchange', (accounts: string[]) => {
         balances[feeRecipient][zrx.address] = add(balances[feeRecipient][zrx.address], add(makerFee, takerFee));
       });
 
-      await exWrapper.batchFillOrdersAsync(orders, taker, { fillValuesT });
+      await exWrapper.batchFillOrdersAsync(orders, taker, { fillTakerTokenAmounts });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -266,10 +266,10 @@ contract('Exchange', (accounts: string[]) => {
         orderFactory.newSignedOrderAsync(),
         orderFactory.newSignedOrderAsync(),
       ]);
-      const cancelValuesT = _.map(orders, order => order.params.takerTokenAmount);
-      await exWrapper.batchCancelOrdersAsync(orders, maker, { cancelValuesT });
+      const cancelTakerTokenAmounts = _.map(orders, order => order.params.takerTokenAmount);
+      await exWrapper.batchCancelOrdersAsync(orders, maker, { cancelTakerTokenAmounts });
 
-      const res = await exWrapper.batchFillOrdersAsync(orders, taker, { fillValuesT: cancelValuesT });
+      const res = await exWrapper.batchFillOrdersAsync(orders, taker, { fillTakerTokenAmounts: cancelTakerTokenAmounts });
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(balances, newBalances);
     });

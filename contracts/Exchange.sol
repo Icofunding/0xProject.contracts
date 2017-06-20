@@ -123,6 +123,13 @@ contract Exchange is SafeMath {
         });
 
         require(order.taker == address(0) || order.taker == msg.sender);
+        require(isValidSignature(
+            order.maker,
+            order.orderHash,
+            v,
+            r,
+            s
+        ));
 
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(ERROR_ORDER_EXPIRED, order.orderHash);
@@ -130,7 +137,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        filledTakerTokenAmount = min(fillTakerTokenAmount, remainingTakerTokenAmount);
+        filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
         if (filledTakerTokenAmount == 0) {
             LogError(ERROR_ORDER_FULLY_FILLED_OR_CANCELLED, order.orderHash);
             return 0;
@@ -145,14 +152,6 @@ contract Exchange is SafeMath {
             LogError(ERROR_INSUFFICIENT_BALANCE_OR_ALLOWANCE, order.orderHash);
             return 0;
         }
-
-        require(isValidSignature(
-            order.maker,
-            order.orderHash,
-            v,
-            r,
-            s
-        ));
 
         uint filledMakerTokenAmount = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount);
         uint paidMakerFee;
@@ -240,7 +239,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        cancelledTakerTokenAmount = min(canceltakerTokenAmount, remainingTakerTokenAmount);
+        cancelledTakerTokenAmount = min256(canceltakerTokenAmount, remainingTakerTokenAmount);
         if (cancelledTakerTokenAmount == 0) {
             LogError(ERROR_ORDER_FULLY_FILLED_OR_CANCELLED, order.orderHash);
             return 0;
@@ -464,18 +463,6 @@ contract Exchange is SafeMath {
             r,
             s
         );
-    }
-
-    /// @dev Calculates minimum of two values.
-    /// @param a First value.
-    /// @param b Second value.
-    /// @return Minimum of values.
-    function min(uint a, uint b)
-        constant
-        returns (uint min)
-    {
-        if (a < b) return a;
-        return b;
     }
 
     /// @dev Checks if rounding error > 0.1%.
