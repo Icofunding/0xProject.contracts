@@ -4,7 +4,7 @@ export class Artifacts {
   public TokenRegistry: any;
   public MultiSigWalletWithTimeLock: any;
   public Exchange: any;
-  public ProtocolToken: any;
+  public ZRXToken: any;
   public DummyToken: any;
   public EtherToken: any;
   public SimpleCrowdsale: any;
@@ -14,7 +14,7 @@ export class Artifacts {
     this.TokenRegistry = artifacts.require('TokenRegistry');
     this.MultiSigWalletWithTimeLock = artifacts.require('MultiSigWalletWithTimeLock');
     this.Exchange = artifacts.require('Exchange');
-    this.ProtocolToken = artifacts.require('ProtocolToken');
+    this.ZRXToken = artifacts.require('ZRXToken');
     this.DummyToken = artifacts.require('DummyToken');
     this.EtherToken = artifacts.require('EtherToken');
     this.SimpleCrowdsale = artifacts.require('SimpleCrowdsale');
