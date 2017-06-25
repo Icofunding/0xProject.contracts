@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "../base/StandardTokenWithOverflowProtection.sol";
 
@@ -17,9 +17,18 @@ contract EtherToken is StandardTokenWithOverflowProtection {
     /*
      *  Read and write functions
      */
+
+    /// @dev Send ether to contract to deposit.
+    function()
+        public
+        payable
+    {
+        deposit();
+    }
+
     /// @dev Buys tokens with Ether, exchanging them 1:1.
     function deposit()
-        external
+        public
         payable
     {
         balances[msg.sender] = safeAdd(balances[msg.sender], msg.value);
@@ -29,13 +38,10 @@ contract EtherToken is StandardTokenWithOverflowProtection {
     /// @dev Sells tokens in exchange for Ether, exchanging them 1:1.
     /// @param amount Number of tokens to sell.
     function withdraw(uint amount)
-        external
+        public
     {
         balances[msg.sender] = safeSub(balances[msg.sender], amount);
         totalSupply = safeSub(totalSupply, amount);
-        if (!msg.sender.send(amount)) {
-            // Sending failed
-            throw;
-        }
+        assert(msg.sender.send(amount));
     }
 }
