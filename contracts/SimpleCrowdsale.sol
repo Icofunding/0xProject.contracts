@@ -8,6 +8,25 @@ import "./base/SafeMath.sol";
 
 contract SimpleCrowdsale is Ownable, SafeMath {
 
+    event Initialized(
+        address maker,
+        address taker,
+        address makerToken,
+        address takerToken,
+        address feeRecipient,
+        uint makerTokenAmount,
+        uint takerTokenAmount,
+        uint makerFee,
+        uint takerFee,
+        uint expirationTimestampInSec,
+        uint salt,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    );
+
+    event Finished();
+
     address public PROXY_CONTRACT;
     address public EXCHANGE_CONTRACT;
     address public PROTOCOL_TOKEN_CONTRACT;
@@ -73,26 +92,8 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     /// @dev Allows users to fill stored order by sending ETH to contract.
     function()
         payable
-        saleInitialized
-        saleNotFinished
     {
-        uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
-        uint ethToFill = min(msg.value, remainingEth);
-        ethToken.deposit.value(ethToFill)();
-        assert(exchange.fillOrKillOrder(
-            [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
-            [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
-            ethToFill,
-            order.v,
-            order.r,
-            order.s
-        ));
-        uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
-        assert(protocolToken.transfer(msg.sender, filledProtocolToken));
-        if (ethToFill < msg.value) {
-            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
-            isFinished = true;
-        }
+        fillOrderWithEth();
     }
 
     /// @dev Stores order and initializes sale.
@@ -141,8 +142,55 @@ contract SimpleCrowdsale is Ownable, SafeMath {
 
         assert(setTokenAllowance(order.takerToken, order.takerTokenAmount));
         isInitialized = true;
+
+        Initialized(
+            order.maker,
+            order.taker,
+            order.makerToken,
+            order.takerToken,
+            order.feeRecipient,
+            order.makerTokenAmount,
+            order.takerTokenAmount,
+            order.makerFee,
+            order.takerFee,
+            order.expirationTimestampInSec,
+            order.salt,
+            order.v,
+            order.r,
+            order.s
+        );
     }
 
+    /// @dev Fills order using msg.value.
+    function fillOrderWithEth()
+        payable
+        saleInitialized
+        saleNotFinished
+    {
+        uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
+        uint ethToFill = min(msg.value, remainingEth);
+        ethToken.deposit.value(ethToFill)();
+
+        assert(exchange.fillOrKillOrder(
+            [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
+            [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
+            ethToFill,
+            order.v,
+            order.r,
+            order.s
+        ));
+        uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
+        assert(protocolToken.transfer(msg.sender, filledProtocolToken));
+
+        if (ethToFill < msg.value) {
+            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
+        }
+        if (remainingEth == ethToFill) {
+            isFinished = true;
+            Finished();
+        }
+    }
+    
     function setTokenAllowance(address _token, uint _allowance)
         onlyOwner
         returns (bool success)
