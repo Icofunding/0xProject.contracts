@@ -99,11 +99,11 @@ contract CrowdsaleWithRegistry is SimpleCrowdsale {
         callerIsRegistered
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
-        uint ethToFill = min256(msg.value, remainingEth);
+        uint allowedEth = safeSub(capPerAddress, contributed[msg.sender]);
+        uint ethToFill = min256(min256(msg.value, remainingEth), allowedEth);
         ethToken.deposit.value(ethToFill)();
 
         contributed[msg.sender] = safeAdd(contributed[msg.sender], ethToFill);
-        assert(contributed[msg.sender] <= capPerAddress);
 
         assert(exchange.fillOrKillOrder(
             [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],

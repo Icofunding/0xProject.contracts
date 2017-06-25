@@ -8,6 +8,7 @@ export class Artifacts {
   public DummyToken: any;
   public EtherToken: any;
   public SimpleCrowdsale: any;
+  public CrowdsaleWithRegistry: any;
   constructor(artifacts: any) {
     this.Migrations = artifacts.require('Migrations');
     this.Proxy = artifacts.require('Proxy');
@@ -18,5 +19,6 @@ export class Artifacts {
     this.DummyToken = artifacts.require('DummyToken');
     this.EtherToken = artifacts.require('EtherToken');
     this.SimpleCrowdsale = artifacts.require('SimpleCrowdsale');
+    this.CrowdsaleWithRegistry = artifacts.require('CrowdsaleWithRegistry');
   }
 }

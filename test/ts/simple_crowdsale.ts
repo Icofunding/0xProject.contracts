@@ -49,9 +49,8 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
   const getTransactionReceipt = promisify(web3Instance.eth.getTransactionReceipt);
 
   before(async () => {
-    [tokenRegistry, simpleCrowdsale, exchange] = await Promise.all([
+    [tokenRegistry, exchange] = await Promise.all([
       TokenRegistry.deployed(),
-      SimpleCrowdsale.deployed(),
       Exchange.deployed(),
     ]);
     [zrxAddress, wEthAddress, invalidTokenAddress] = await Promise.all([
@@ -59,7 +58,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       tokenRegistry.getTokenAddressBySymbol('WETH'),
       tokenRegistry.getTokenAddressBySymbol('REP'),
     ]);
-
+    simpleCrowdsale = await SimpleCrowdsale.new(Exchange.address, Proxy.address, zrxAddress, wEthAddress);
     const orderParams = {
       exchangeContractAddress: Exchange.address,
       maker,
@@ -117,7 +116,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           params.s,
           { from: notOwner },
         );
-        throw new Error('Init succeeded when it should have thrown');
+        throw new Error('init succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -134,7 +133,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           invalidR,
           params.s,
         );
-        throw new Error('Init succeeded when it should have thrown');
+        throw new Error('init succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -167,7 +166,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           params.r,
           params.s,
         );
-        throw new Error('Init succeeded when it should have thrown');
+        throw new Error('init succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -200,7 +199,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           params.r,
           params.s,
         );
-        throw new Error('Init succeeded when it should have thrown');
+        throw new Error('init succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -223,12 +222,12 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       assert.equal(logArgs.makerToken, order.params.makerToken);
       assert.equal(logArgs.takerToken, order.params.takerToken);
       assert.equal(logArgs.feeRecipient, order.params.feeRecipient);
-      assert.equal(logArgs.makerTokenAmount.comparedTo(order.params.makerTokenAmount), 0);
-      assert.equal(logArgs.takerTokenAmount.comparedTo(order.params.takerTokenAmount), 0);
-      assert.equal(logArgs.makerFee.comparedTo(order.params.makerFee), 0);
-      assert.equal(logArgs.takerFee.comparedTo(order.params.takerFee), 0);
-      assert.equal(logArgs.expirationTimestampInSec.comparedTo(order.params.expirationTimestampInSec), 0);
-      assert.equal(logArgs.salt.comparedTo(order.params.salt), 0);
+      assert.equal(cmp(logArgs.makerTokenAmount, order.params.makerTokenAmount), 0);
+      assert.equal(cmp(logArgs.takerTokenAmount, order.params.takerTokenAmount), 0);
+      assert.equal(cmp(logArgs.makerFee, order.params.makerFee), 0);
+      assert.equal(cmp(logArgs.takerFee, order.params.takerFee), 0);
+      assert.equal(cmp(logArgs.expirationTimestampInSec, order.params.expirationTimestampInSec), 0);
+      assert.equal(cmp(logArgs.salt, order.params.salt), 0);
       assert.equal(logArgs.v, order.params.v);
       assert.equal(logArgs.r, order.params.r);
       assert.equal(logArgs.s, order.params.s);
@@ -248,7 +247,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
           params.s,
           { from: owner },
         );
-        throw new Error('Init succeeded when it should have thrown');
+        throw new Error('init succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -289,7 +288,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     it('should partial fill and end sale if sent ETH > remaining order ETH', async () => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
-      const remainingtakerTokenAmount = sub(order.params.takerTokenAmount,
+      const remainingTakerTokenAmount = sub(order.params.takerTokenAmount,
                                             await exchange.getUnavailableTakerTokenAmount(order.params.orderHashHex));
 
       const ethValueSent = web3Instance.toWei(20, 'ether');
@@ -307,7 +306,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
       const finalTakerEthBalance = await getEthBalance(taker);
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
-      const zrxValue = remainingtakerTokenAmount;
+      const zrxValue = remainingTakerTokenAmount;
       const ethValue = div(mul(zrxValue, order.params.makerTokenAmount), order.params.takerTokenAmount);
 
       assert.equal(finalBalances[maker][order.params.makerToken],
