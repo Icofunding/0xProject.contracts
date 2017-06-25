@@ -58,7 +58,7 @@ contract CrowdsaleWithRegistry is SimpleCrowdsale {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
-        require(order.taker == this);
+        require(order.taker == address(this));
         require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
         require(order.takerToken == ETH_TOKEN_CONTRACT);
 

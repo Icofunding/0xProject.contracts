@@ -426,7 +426,7 @@ contract Exchange is SafeMath {
         returns (bytes32 orderHash)
     {
         return sha3(
-            this,
+            address(this),
             orderAddresses[0], // maker
             orderAddresses[1], // taker
             orderAddresses[2], // makerToken

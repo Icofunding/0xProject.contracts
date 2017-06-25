@@ -206,9 +206,9 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       }
     });
 
-    it('should initialize the sale if called by owner with a valid order', async () => {
+    it('should initialize the sale if called by owner with a valid order and log correct args', async () => {
       const params = order.createFill();
-      await simpleCrowdsale.init(
+      const res = await simpleCrowdsale.init(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -216,6 +216,23 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
         params.s,
         { from: owner },
       );
+
+      const logArgs = res.logs[0].args;
+      assert.equal(logArgs.maker, order.params.maker);
+      assert.equal(logArgs.taker, order.params.taker);
+      assert.equal(logArgs.makerToken, order.params.makerToken);
+      assert.equal(logArgs.takerToken, order.params.takerToken);
+      assert.equal(logArgs.feeRecipient, order.params.feeRecipient);
+      assert.equal(logArgs.makerTokenAmount.comparedTo(order.params.makerTokenAmount), 0);
+      assert.equal(logArgs.takerTokenAmount.comparedTo(order.params.takerTokenAmount), 0);
+      assert.equal(logArgs.makerFee.comparedTo(order.params.makerFee), 0);
+      assert.equal(logArgs.takerFee.comparedTo(order.params.takerFee), 0);
+      assert.equal(logArgs.expirationTimestampInSec.comparedTo(order.params.expirationTimestampInSec), 0);
+      assert.equal(logArgs.salt.comparedTo(order.params.salt), 0);
+      assert.equal(logArgs.v, order.params.v);
+      assert.equal(logArgs.r, order.params.r);
+      assert.equal(logArgs.s, order.params.s);
+
       const isInitialized = await simpleCrowdsale.isInitialized.call();
       assert.equal(isInitialized, true);
     });
@@ -301,6 +318,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
                    add(initBalances[taker][order.params.makerToken], zrxValue));
       assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
 
+      assert.equal(receipt.logs.length, 5);
       const isFinished = await simpleCrowdsale.isFinished.call();
       assert.equal(isFinished, true);
     });
