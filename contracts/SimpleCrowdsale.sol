@@ -168,7 +168,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         saleNotFinished
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
-        uint ethToFill = min(msg.value, remainingEth);
+        uint ethToFill = min256(msg.value, remainingEth);
         ethToken.deposit.value(ethToFill)();
 
         assert(exchange.fillOrKillOrder(
@@ -190,7 +190,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             Finished();
         }
     }
-    
+
     function setTokenAllowance(address _token, uint _allowance)
         onlyOwner
         returns (bool success)
@@ -245,17 +245,5 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             r,
             s
         );
-    }
-
-    /// @dev Calculates minimum of two values.
-    /// @param a First value.
-    /// @param b Second value.
-    /// @return Minimum of values.
-    function min(uint a, uint b)
-        constant
-        returns (uint min)
-    {
-        if (a < b) return a;
-        return b;
     }
 }
