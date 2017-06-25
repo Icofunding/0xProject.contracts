@@ -49,7 +49,7 @@ contract Exchange is SafeMath {
         uint filledTakerTokenAmount,
         uint paidMakerFee,
         uint paidTakerFee,
-        bytes32 indexed tokens,
+        bytes32 indexed tokens, // sha3(makerToken, takerToken), allows subscribing to a token pair
         bytes32 orderHash
     );
 
@@ -547,10 +547,10 @@ contract Exchange is SafeMath {
                 || getAllowance(ZRX_TOKEN_CONTRACT, taker) < requiredTakerZRX
             ) return false;
 
-            if (!isMakerTokenZRX && (   getBalance(order.makerToken, order.maker) < fillMakerTokenAmount
+            if (!isMakerTokenZRX && (   getBalance(order.makerToken, order.maker) < fillMakerTokenAmount // Don't double check makerToken if ZRX
                                      || getAllowance(order.makerToken, order.maker) < fillMakerTokenAmount)
             ) return false;
-            if (!isTakerTokenZRX && (   getBalance(order.takerToken, taker) < fillTakerTokenAmount
+            if (!isTakerTokenZRX && (   getBalance(order.takerToken, taker) < fillTakerTokenAmount // Don't double check takerToken if ZRX
                                      || getAllowance(order.takerToken, taker) < fillTakerTokenAmount)
             ) return false;
         } else if (   getBalance(order.makerToken, order.maker) < fillMakerTokenAmount
