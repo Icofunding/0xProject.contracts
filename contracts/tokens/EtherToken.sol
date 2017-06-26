@@ -18,7 +18,7 @@ contract EtherToken is StandardTokenWithOverflowProtection {
      *  Read and write functions
      */
 
-    /// @dev Send ether to contract to deposit.
+    /// @dev Fallback to calling deposit when ether is sent directly to contract.
     function()
         public
         payable
