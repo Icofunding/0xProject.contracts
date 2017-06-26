@@ -1,8 +1,8 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./../base/StandardToken.sol";
 
-contract ProtocolToken is StandardToken {
+contract ZRXToken is StandardToken {
     uint8 constant public decimals = 18;
     string constant public name = "0x Network Token";
     string constant public symbol = "ZRX";

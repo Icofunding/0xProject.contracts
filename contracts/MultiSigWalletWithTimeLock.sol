@@ -16,7 +16,7 @@
 
 */
 
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./base/MultiSigWallet.sol";
 
@@ -31,16 +31,16 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     mapping (uint => uint) public confirmationTimes;
 
     modifier confirmationTimeNotSet(uint transactionId) {
-        if (confirmationTimes[transactionId] != 0) throw;
+        require(confirmationTimes[transactionId] == 0);
         _;
     }
 
     modifier confirmationTimeSet(uint transactionId) {
-        if (confirmationTimes[transactionId] == 0) throw;
+        require(confirmationTimes[transactionId] != 0);
         _;
     }
     modifier pastTimeLock(uint transactionId) {
-        if (block.timestamp < confirmationTimes[transactionId] + secondsTimeLocked) throw;
+        require(block.timestamp >= confirmationTimes[transactionId] + secondsTimeLocked);
         _;
     }
 

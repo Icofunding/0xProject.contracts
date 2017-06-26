@@ -61,17 +61,17 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     ]);
 
     const orderParams = {
-      exchange: Exchange.address,
+      exchangeContractAddress: Exchange.address,
       maker,
       taker: constants.NULL_ADDRESS,
       feeRecipient: constants.NULL_ADDRESS,
-      tokenM: zrxAddress,
-      tokenT: wEthAddress,
-      valueM: toSmallestUnits(10),
-      valueT: toSmallestUnits(10),
-      feeM: new BigNumber(0),
-      feeT: new BigNumber(0),
-      expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+      makerToken: zrxAddress,
+      takerToken: wEthAddress,
+      makerTokenAmount: toSmallestUnits(10),
+      takerTokenAmount: toSmallestUnits(10),
+      makerFee: new BigNumber(0),
+      takerFee: new BigNumber(0),
+      expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
       salt: new BigNumber(0),
     };
     order = new Order(orderParams);
@@ -83,8 +83,8 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
     ]);
     dmyBalances = new Balances([zrx, wEth], [maker, taker]);
     await Promise.all([
-      zrx.approve(Proxy.address, order.params.valueM, { from: maker }),
-      zrx.setBalance(maker, order.params.valueM, { from: owner }),
+      zrx.approve(Proxy.address, order.params.makerTokenAmount, { from: maker }),
+      zrx.setBalance(maker, order.params.makerTokenAmount, { from: owner }),
     ]);
   });
 
@@ -140,19 +140,19 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       }
     });
 
-    it('should throw if called with an invalid tokenM', async () => {
+    it('should throw if called with an invalid makerToken', async () => {
       const orderParams = {
-        exchange: Exchange.address,
+        exchangeContractAddress: Exchange.address,
         maker,
         taker: constants.NULL_ADDRESS,
         feeRecipient: constants.NULL_ADDRESS,
-        tokenM: invalidTokenAddress,
-        tokenT: wEthAddress,
-        valueM: toSmallestUnits(10),
-        valueT: toSmallestUnits(10),
-        feeM: new BigNumber(0),
-        feeT: new BigNumber(0),
-        expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+        makerToken: invalidTokenAddress,
+        takerToken: wEthAddress,
+        makerTokenAmount: toSmallestUnits(10),
+        takerTokenAmount: toSmallestUnits(10),
+        makerFee: new BigNumber(0),
+        takerFee: new BigNumber(0),
+        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
         salt: new BigNumber(0),
       };
       const newOrder = new Order(orderParams);
@@ -173,19 +173,19 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       }
     });
 
-    it('should throw if called with an invalid tokenT', async () => {
+    it('should throw if called with an invalid takerToken', async () => {
       const orderParams = {
-        exchange: Exchange.address,
+        exchangeContractAddress: Exchange.address,
         maker,
         taker: constants.NULL_ADDRESS,
         feeRecipient: constants.NULL_ADDRESS,
-        tokenM: zrxAddress,
-        tokenT: invalidTokenAddress,
-        valueM: toSmallestUnits(10),
-        valueT: toSmallestUnits(10),
-        feeM: new BigNumber(0),
-        feeT: new BigNumber(0),
-        expiration: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+        makerToken: zrxAddress,
+        takerToken: invalidTokenAddress,
+        makerTokenAmount: toSmallestUnits(10),
+        takerTokenAmount: toSmallestUnits(10),
+        makerFee: new BigNumber(0),
+        takerFee: new BigNumber(0),
+        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
         salt: new BigNumber(0),
       };
       const newOrder = new Order(orderParams);
@@ -244,7 +244,7 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const initTakerEthBalance = await getEthBalance(taker);
 
       const ethValue = web3Instance.toWei(1, 'ether');
-      const zrxValue = div(mul(ethValue, order.params.valueM), order.params.valueT);
+      const zrxValue = div(mul(ethValue, order.params.makerTokenAmount), order.params.takerTokenAmount);
       const gasPrice = web3Instance.toWei(20, 'gwei');
 
       const txHash = await sendTransaction({
@@ -260,19 +260,20 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const finalTakerEthBalance = await getEthBalance(taker);
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
 
-      assert.equal(finalBalances[maker][order.params.tokenM],
-                   sub(initBalances[maker][order.params.tokenM], zrxValue));
-      assert.equal(finalBalances[maker][order.params.tokenT],
-                   add(initBalances[maker][order.params.tokenT], ethValue));
-      assert.equal(finalBalances[taker][order.params.tokenM],
-                   add(initBalances[taker][order.params.tokenM], zrxValue));
+      assert.equal(finalBalances[maker][order.params.makerToken],
+                   sub(initBalances[maker][order.params.makerToken], zrxValue));
+      assert.equal(finalBalances[maker][order.params.takerToken],
+                   add(initBalances[maker][order.params.takerToken], ethValue));
+      assert.equal(finalBalances[taker][order.params.makerToken],
+                   add(initBalances[taker][order.params.makerToken], zrxValue));
       assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
     });
 
     it('should partial fill and end sale if sent ETH > remaining order ETH', async () => {
       const initBalances: BalancesByOwner = await dmyBalances.getAsync();
       const initTakerEthBalance = await getEthBalance(taker);
-      const remainingValueT = sub(order.params.valueT, await exchange.getUnavailableValueT(order.params.orderHashHex));
+      const remainingtakerTokenAmount = sub(order.params.takerTokenAmount,
+                                            await exchange.getUnavailableTakerTokenAmount(order.params.orderHashHex));
 
       const ethValueSent = web3Instance.toWei(20, 'ether');
       const gasPrice = web3Instance.toWei(20, 'gwei');
@@ -289,15 +290,15 @@ contract('SimpleCrowdsale', (accounts: string[]) => {
       const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
       const finalTakerEthBalance = await getEthBalance(taker);
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
-      const zrxValue = remainingValueT;
-      const ethValue = div(mul(zrxValue, order.params.valueM), order.params.valueT);
+      const zrxValue = remainingtakerTokenAmount;
+      const ethValue = div(mul(zrxValue, order.params.makerTokenAmount), order.params.takerTokenAmount);
 
-      assert.equal(finalBalances[maker][order.params.tokenM],
-                   sub(initBalances[maker][order.params.tokenM], zrxValue));
-      assert.equal(finalBalances[maker][order.params.tokenT],
-                   add(initBalances[maker][order.params.tokenT], ethValue));
-      assert.equal(finalBalances[taker][order.params.tokenM],
-                   add(initBalances[taker][order.params.tokenM], zrxValue));
+      assert.equal(finalBalances[maker][order.params.makerToken],
+                   sub(initBalances[maker][order.params.makerToken], zrxValue));
+      assert.equal(finalBalances[maker][order.params.takerToken],
+                   add(initBalances[maker][order.params.takerToken], ethValue));
+      assert.equal(finalBalances[taker][order.params.makerToken],
+                   add(initBalances[taker][order.params.makerToken], zrxValue));
       assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
 
       const isFinished = await simpleCrowdsale.isFinished.call();

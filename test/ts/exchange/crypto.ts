@@ -32,15 +32,15 @@ contract('Exchange', (accounts: string[]) => {
       tokenRegistry.getTokenAddressBySymbol('DGD'),
     ]);
     const defaultOrderParams = {
-      exchange: Exchange.address,
+      exchangeContractAddress: Exchange.address,
       maker,
       feeRecipient,
-      tokenM: repAddress,
-      tokenT: dgdAddress,
-      valueM: toSmallestUnits(100),
-      valueT: toSmallestUnits(200),
-      feeM: toSmallestUnits(1),
-      feeT: toSmallestUnits(1),
+      makerToken: repAddress,
+      takerToken: dgdAddress,
+      makerTokenAmount: toSmallestUnits(100),
+      takerTokenAmount: toSmallestUnits(200),
+      makerFee: toSmallestUnits(1),
+      takerFee: toSmallestUnits(1),
     };
     orderFactory = new OrderFactory(defaultOrderParams);
   });

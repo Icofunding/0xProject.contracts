@@ -5,7 +5,7 @@ import { Artifacts } from '../util/artifacts';
 const {
   DummyToken,
   EtherToken,
-  ProtocolToken,
+  ZRXToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
 import { tokenInfo } from './config/token_info';
@@ -56,7 +56,7 @@ module.exports = (deployer: any, network: string) => {
       });
     } else {
       const zrx = {
-        address: ProtocolToken.address,
+        address: ZRXToken.address,
         name: '0x Protocol Token',
         symbol: 'ZRX',
         url: 'https://www.0xproject.com/',

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "./Exchange.sol";
 import "./tokens/EtherToken.sol";
@@ -8,10 +8,10 @@ import "./base/SafeMath.sol";
 
 contract SimpleCrowdsale is Ownable, SafeMath {
 
-    address public PROXY_ADDRESS;
-    address public EXCHANGE_ADDRESS;
-    address public PROTOCOL_TOKEN_ADDRESS;
-    address public ETH_TOKEN_ADDRESS;
+    address public PROXY_CONTRACT;
+    address public EXCHANGE_CONTRACT;
+    address public PROTOCOL_TOKEN_CONTRACT;
+    address public ETH_TOKEN_CONTRACT;
 
     Exchange exchange;
     Token protocolToken;
@@ -24,14 +24,14 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     struct Order {
         address maker;
         address taker;
-        address tokenM;
-        address tokenT;
+        address makerToken;
+        address takerToken;
         address feeRecipient;
-        uint valueM;
-        uint valueT;
-        uint feeM;
-        uint feeT;
-        uint expiration;
+        uint makerTokenAmount;
+        uint takerTokenAmount;
+        uint makerFee;
+        uint takerFee;
+        uint expirationTimestampInSec;
         uint salt;
         uint8 v;
         bytes32 r;
@@ -40,17 +40,17 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     }
 
     modifier saleInitialized() {
-        assert(isInitialized);
+        require(isInitialized);
         _;
     }
 
     modifier saleNotInitialized() {
-        assert(!isInitialized);
+        require(!isInitialized);
         _;
     }
 
     modifier saleNotFinished() {
-        assert(!isFinished);
+        require(!isFinished);
         _;
     }
 
@@ -60,10 +60,10 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        PROXY_ADDRESS = _proxy;
-        EXCHANGE_ADDRESS = _exchange;
-        PROTOCOL_TOKEN_ADDRESS = _protocolToken;
-        ETH_TOKEN_ADDRESS = _ethToken;
+        PROXY_CONTRACT = _proxy;
+        EXCHANGE_CONTRACT = _exchange;
+        PROTOCOL_TOKEN_CONTRACT = _protocolToken;
+        ETH_TOKEN_CONTRACT = _ethToken;
 
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
@@ -76,18 +76,18 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         saleInitialized
         saleNotFinished
     {
-        uint remainingEth = safeSub(order.valueT, exchange.getUnavailableValueT(order.orderHash));
+        uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
         uint ethToFill = min(msg.value, remainingEth);
         ethToken.deposit.value(ethToFill)();
-        assert(exchange.fillOrKill(
-            [order.maker, order.taker, order.tokenM, order.tokenT, order.feeRecipient],
-            [order.valueM, order.valueT, order.feeM, order.feeT, order.expiration, order.salt],
+        assert(exchange.fillOrKillOrder(
+            [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
+            [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
             ethToFill,
             order.v,
             order.r,
             order.s
         ));
-        uint filledProtocolToken = safeDiv(safeMul(order.valueM, ethToFill), order.valueT);
+        uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
         assert(protocolToken.transfer(msg.sender, filledProtocolToken));
         if (ethToFill < msg.value) {
             assert(msg.sender.send(safeSub(msg.value, ethToFill)));
@@ -96,8 +96,8 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     }
 
     /// @dev Stores order and initializes sale.
-    /// @param orderAddresses Array of order's maker, taker, tokenM, tokenT, and feeRecipient.
-    /// @param orderValues Array of order's valueM, valueT, feeM, feeT, expiration, and salt.
+    /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
+    /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
     /// @param r CDSA signature parameters r.
     /// @param s CDSA signature parameters s.
@@ -113,14 +113,14 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         order = Order({
             maker: orderAddresses[0],
             taker: orderAddresses[1],
-            tokenM: orderAddresses[2],
-            tokenT: orderAddresses[3],
+            makerToken: orderAddresses[2],
+            takerToken: orderAddresses[3],
             feeRecipient: orderAddresses[4],
-            valueM: orderValues[0],
-            valueT: orderValues[1],
-            feeM: orderValues[2],
-            feeT: orderValues[3],
-            expiration: orderValues[4],
+            makerTokenAmount: orderValues[0],
+            takerTokenAmount: orderValues[1],
+            makerFee: orderValues[2],
+            takerFee: orderValues[3],
+            expirationTimestampInSec: orderValues[4],
             salt: orderValues[5],
             v: v,
             r: r,
@@ -128,10 +128,10 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
-        assert(order.tokenM == PROTOCOL_TOKEN_ADDRESS);
-        assert(order.tokenT == ETH_TOKEN_ADDRESS);
+        require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
+        require(order.takerToken == ETH_TOKEN_CONTRACT);
 
-        assert(isValidSignature(
+        require(isValidSignature(
             order.maker,
             order.orderHash,
             v,
@@ -139,7 +139,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             s
         ));
 
-        assert(setTokenAllowance(order.tokenT, order.valueT));
+        assert(setTokenAllowance(order.takerToken, order.takerTokenAmount));
         isInitialized = true;
     }
 
@@ -147,20 +147,20 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         onlyOwner
         returns (bool success)
     {
-        assert(Token(_token).approve(PROXY_ADDRESS, _allowance));
+        assert(Token(_token).approve(PROXY_CONTRACT, _allowance));
         return true;
     }
 
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
-    /// @param orderAddresses Array of order's maker, taker, tokenM, tokenT, and feeRecipient.
-    /// @param orderValues Array of order's valueM, valueT, feeM, feeT, expiration, and salt.
+    /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
+    /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @return Keccak-256 hash of order.
     function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
         constant
         returns (bytes32 orderHash)
     {
         return sha3(
-            EXCHANGE_ADDRESS,
+            EXCHANGE_CONTRACT,
             orderAddresses[0],
             orderAddresses[1],
             orderAddresses[2],
