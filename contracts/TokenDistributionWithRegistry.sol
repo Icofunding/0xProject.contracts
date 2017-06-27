@@ -6,7 +6,7 @@ import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
 
-contract CrowdsaleWithRegistry is Ownable, SafeMath {
+contract TokenDistributionWithRegistry is Ownable, SafeMath {
 
     event Initialized(
         address maker,
@@ -62,17 +62,17 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         bytes32 orderHash;
     }
 
-    modifier saleInitialized() {
+    modifier distributionInitialized() {
         assert(isInitialized);
         _;
     }
 
-    modifier saleNotInitialized() {
+    modifier distributionNotInitialized() {
         assert(!isInitialized);
         _;
     }
 
-    modifier saleNotFinished() {
+    modifier distributionNotFinished() {
         assert(!isFinished);
         _;
     }
@@ -82,7 +82,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         _;
     }
 
-    function CrowdsaleWithRegistry(
+    function TokenDistributionWithRegistry(
         address _exchange,
         address _proxy,
         address _protocolToken,
@@ -107,7 +107,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         fillOrderWithEth();
     }
 
-    /// @dev Stores order and initializes sale.
+    /// @dev Stores order and initializes distribution.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
@@ -119,7 +119,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
-        saleNotInitialized
+        distributionNotInitialized
         onlyOwner
     {
         order = Order({
@@ -176,8 +176,8 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
     /// @dev Fills order using msg.value.
     function fillOrderWithEth()
         payable
-        saleInitialized
-        saleNotFinished
+        distributionInitialized
+        distributionNotFinished
         callerIsRegistered
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));

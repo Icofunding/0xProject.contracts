@@ -7,7 +7,7 @@ export class Artifacts {
   public ZRXToken: any;
   public DummyToken: any;
   public EtherToken: any;
-  public CrowdsaleWithRegistry: any;
+  public TokenDistributionWithRegistry: any;
   constructor(artifacts: any) {
     this.Migrations = artifacts.require('Migrations');
     this.Proxy = artifacts.require('Proxy');
@@ -17,6 +17,6 @@ export class Artifacts {
     this.ZRXToken = artifacts.require('ZRXToken');
     this.DummyToken = artifacts.require('DummyToken');
     this.EtherToken = artifacts.require('EtherToken');
-    this.CrowdsaleWithRegistry = artifacts.require('CrowdsaleWithRegistry');
+    this.TokenDistributionWithRegistry = artifacts.require('TokenDistributionWithRegistry');
   }
 }
