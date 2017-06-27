@@ -17,10 +17,15 @@ const web3Instance: Web3 = web3;
 
 contract('EtherToken', (accounts: string[]) => {
   const account = accounts[0];
+  const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
 
-  const sendTransaction = promisify(web3Instance.eth.sendTransaction);
-  const getEthBalance = promisify(web3Instance.eth.getBalance);
-  const getTransactionReceipt = promisify(web3Instance.eth.getTransactionReceipt);
+  const sendTransactionAsync = promisify(web3Instance.eth.sendTransaction);
+  const getTransactionReceiptAsync = promisify(web3Instance.eth.getTransactionReceipt);
+  const getEthBalanceAsync = async (owner: string) => {
+    const balanceStr = await promisify(web3Instance.eth.getBalance)(owner);
+    const balance = new BigNumber(balanceStr);
+    return balance;
+  };
   let ethToken: ContractInstance;
 
   before(async () => {
@@ -28,12 +33,27 @@ contract('EtherToken', (accounts: string[]) => {
   });
 
   describe('deposit', () => {
-    it('should convert deposited ether to ether tokens', async () => {
-      const initEthBalance = await getEthBalance(account);
+    it('should throw if caller attempts to deposit more Ether than caller balance', async () => {
+      const initEthBalance = await getEthBalanceAsync(account);
+      const ethToDeposit = add(initEthBalance, 1);
+
+      try {
+        await ethToken.deposit({
+          from: account,
+          value: ethToDeposit,
+          gasPrice,
+        });
+        throw new Error('deposit succeeded when it should have failed');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should convert deposited Ether to wrapped Ether tokens', async () => {
+      const initEthBalance = await getEthBalanceAsync(account);
       const initEthTokenBalance = await ethToken.balanceOf(account);
 
       const ethToDeposit = new BigNumber(web3Instance.toWei(1, 'ether'));
-      const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
 
       const res = await ethToken.deposit({
         from: account,
@@ -42,7 +62,7 @@ contract('EtherToken', (accounts: string[]) => {
       });
 
       const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-      const finalEthBalance = await getEthBalance(account);
+      const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await ethToken.balanceOf(account);
 
       assert.equal(finalEthBalance, sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
@@ -64,15 +84,14 @@ contract('EtherToken', (accounts: string[]) => {
 
     it('should convert ether tokens to ether with sufficient balance', async () => {
       const initEthTokenBalance = await ethToken.balanceOf(account);
-      const initEthBalance = await getEthBalance(account);
+      const initEthBalance = await getEthBalanceAsync(account);
       const ethTokensToWithdraw = initEthTokenBalance;
-      assert.equal(cmp(ethTokensToWithdraw, 0), 1);
+      assert.equal(!ethTokensToWithdraw.toNumber(), 0);
 
-      const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
       const res = await ethToken.withdraw(ethTokensToWithdraw, { from: account, gasPrice });
 
       const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-      const finalEthBalance = await getEthBalance(account);
+      const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await ethToken.balanceOf(account);
 
       assert.equal(finalEthBalance, add(initEthBalance, sub(ethTokensToWithdraw, ethSpentOnGas)));
@@ -82,23 +101,22 @@ contract('EtherToken', (accounts: string[]) => {
 
   describe('fallback', () => {
     it('should convert sent ether to ether tokens', async () => {
-      const initEthBalance = await getEthBalance(account);
+      const initEthBalance = await getEthBalanceAsync(account);
       const initEthTokenBalance = await ethToken.balanceOf(account);
 
       const ethToDeposit = new BigNumber(web3Instance.toWei(1, 'ether'));
-      const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
 
-      const txHash = await sendTransaction({
+      const txHash = await sendTransactionAsync({
         from: account,
         to: ethToken.address,
         value: ethToDeposit,
         gasPrice,
       });
 
-      const receipt = await getTransactionReceipt(txHash);
+      const receipt = await getTransactionReceiptAsync(txHash);
 
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
-      const finalEthBalance = await getEthBalance(account);
+      const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await ethToken.balanceOf(account);
 
       assert.equal(finalEthBalance, sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
