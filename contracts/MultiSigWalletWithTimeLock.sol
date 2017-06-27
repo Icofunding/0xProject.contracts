@@ -28,6 +28,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     event TimeLockChange(uint secondsTimeLocked);
 
     uint public secondsTimeLocked;
+
     mapping (uint => uint) public confirmationTimes;
 
     modifier confirmationTimeNotSet(uint transactionId) {
@@ -39,6 +40,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         require(confirmationTimes[transactionId] != 0);
         _;
     }
+
     modifier pastTimeLock(uint transactionId) {
         require(block.timestamp >= confirmationTimes[transactionId] + secondsTimeLocked);
         _;
