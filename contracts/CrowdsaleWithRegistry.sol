@@ -41,7 +41,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
 
     bool public isInitialized;
     bool public isFinished;
-    uint public capPerAddress;
+    uint public ethCapPerAddress;
     Order order;
 
     struct Order {
@@ -93,7 +93,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
-        capPerAddress = _capPerAddress;
+        ethCapPerAddress = _capPerAddress;
 
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
@@ -181,7 +181,7 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
         callerIsRegistered
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
-        uint allowedEth = safeSub(capPerAddress, contributed[msg.sender]);
+        uint allowedEth = safeSub(ethCapPerAddress, contributed[msg.sender]);
         uint ethToFill = min256(min256(msg.value, remainingEth), allowedEth);
         ethToken.deposit.value(ethToFill)();
 
@@ -224,42 +224,26 @@ contract CrowdsaleWithRegistry is Ownable, SafeMath {
     function setCapPerAddress(uint _newCapPerAddress)
         onlyOwner
     {
-        capPerAddress = _newCapPerAddress;
+        ethCapPerAddress = _newCapPerAddress;
     }
 
-    /// @dev Registers an address for participation.
-    /// @param addressToRegister Address that will be registered.
-    function registerAddress(address addressToRegister)
+    /// @dev Changes registration status of an address for participation.
+    /// @param target Address that will be registered/deregistered.
+    /// @param isRegistered New registration status of address.
+    function changeRegistrationStatus(address target, bool isRegistered)
         onlyOwner
     {
-        registered[addressToRegister] = true;
+        registered[target] = isRegistered;
     }
 
-    /// @dev Registers addresses for participation.
-    /// @param addressesToRegister Addresses that will be registered.
-    function registerAddresses(address[] addressesToRegister)
+    /// @dev Changes registration statuses of addresses for participation.
+    /// @param targets Addresses that will be registered/deregistered.
+    /// @param isRegistered New registration status of addresss.
+    function changeRegistrationStatuses(address[] targets, bool isRegistered)
         onlyOwner
     {
-        for (uint i = 0; i < addressesToRegister.length; i++) {
-            registerAddress(addressesToRegister[i]);
-        }
-    }
-
-    /// @dev Deregisters an address from participation.
-    /// @param addressToDeregister Address that will be deregistered.
-    function deregisterAddress(address addressToDeregister)
-        onlyOwner
-    {
-        registered[addressToDeregister] = false;
-    }
-
-    /// @dev Deregisters addresses from participation.
-    /// @param addressesToDeregister Addresses that will be deregistered.
-    function deregisterAddresses(address[] addressesToDeregister)
-        onlyOwner
-    {
-        for (uint i = 0; i < addressesToDeregister.length; i++) {
-            deregisterAddress(addressesToDeregister[i]);
+        for (uint i = 0; i < targets.length; i++) {
+            changeRegistrationStatus(targets[i], isRegistered);
         }
     }
 

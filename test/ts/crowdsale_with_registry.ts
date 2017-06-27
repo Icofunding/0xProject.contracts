@@ -1,13 +1,15 @@
 import * as assert from 'assert';
 import Web3 = require('web3');
 import * as BigNumber from 'bignumber.js';
+import * as _ from 'lodash';
 import promisify = require('es6-promisify');
 import ethUtil = require('ethereumjs-util');
 import { Balances } from '../../util/balances';
+import { crypto } from '../../util/crypto';
 import { BNUtil } from '../../util/bn_util';
 import { testUtil } from '../../util/test_util';
 import { Order } from '../../util/order';
-import { BalancesByOwner, ContractInstance } from '../../util/types';
+import { BalancesByOwner, ContractInstance, OrderParams } from '../../util/types';
 import { Artifacts } from '../../util/artifacts';
 import { constants } from '../../util/constants';
 
@@ -21,7 +23,7 @@ const {
 
 const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
 
-// In validOrder to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
+// In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
 const web3Instance: Web3 = web3;
 
@@ -31,7 +33,8 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  let capPerAddress = new BigNumber(web3Instance.toWei(1, 'ether'));
+  let ethCapPerAddress = new BigNumber(web3Instance.toWei(1, 'ether'));
+  const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
 
   let tokenRegistry: ContractInstance;
   let crowdsaleWithRegistry: ContractInstance;
@@ -43,14 +46,13 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
   let zrxAddress: string;
   let wEthAddress: string;
 
-
   let validOrder: Order;
-  let validOrderParams: any;
+  let validOrderParams: OrderParams;
   let dmyBalances: Balances;
 
-  const sendTransaction = promisify(web3Instance.eth.sendTransaction);
-  const getEthBalance = promisify(web3Instance.eth.getBalance);
-  const getTransactionReceipt = promisify(web3Instance.eth.getTransactionReceipt);
+  const sendTransactionAsync = promisify(web3Instance.eth.sendTransaction);
+  const getEthBalanceAsync = promisify(web3Instance.eth.getBalance);
+  const getTransactionReceiptAsync = promisify(web3Instance.eth.getTransactionReceipt);
 
   before(async () => {
     [exchange, tokenRegistry] = await Promise.all([
@@ -67,8 +69,10 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       Proxy.address,
       zrxAddress,
       wEthAddress,
-      capPerAddress,
+      ethCapPerAddress,
     );
+
+    const expirationInFuture = new BigNumber(Math.floor(Date.now() / 1000) + 1000000000);
 
     validOrderParams = {
       exchangeContractAddress: Exchange.address,
@@ -81,7 +85,7 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       takerTokenAmount: toSmallestUnits(2),
       makerFee: new BigNumber(0),
       takerFee: new BigNumber(0),
-      expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
+      expirationTimestampInSec: expirationInFuture,
       salt: new BigNumber(0),
     };
     validOrder = new Order(validOrderParams);
@@ -133,21 +137,8 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       }
     });
 
-    it('should throw if called with an invalid makerToken', async () => {
-      const invalidOrderParams = {
-        exchangeContractAddress: Exchange.address,
-        maker,
-        taker: constants.NULL_ADDRESS,
-        feeRecipient: constants.NULL_ADDRESS,
-        makerToken: invalidTokenAddress,
-        takerToken: wEthAddress,
-        makerTokenAmount: toSmallestUnits(5),
-        takerTokenAmount: toSmallestUnits(5),
-        makerFee: new BigNumber(0),
-        takerFee: new BigNumber(0),
-        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
-        salt: new BigNumber(0),
-      };
+    it('should throw without the makerToken set to the protocol token', async () => {
+      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { makerToken: invalidTokenAddress });
       const newOrder = new Order(invalidOrderParams);
       await newOrder.signAsync();
       const params = newOrder.createFill();
@@ -166,21 +157,8 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       }
     });
 
-    it('should throw if called with an invalid takerToken', async () => {
-      const invalidOrderParams = {
-        exchangeContractAddress: Exchange.address,
-        maker,
-        taker: constants.NULL_ADDRESS,
-        feeRecipient: constants.NULL_ADDRESS,
-        makerToken: zrxAddress,
-        takerToken: invalidTokenAddress,
-        makerTokenAmount: toSmallestUnits(5),
-        takerTokenAmount: toSmallestUnits(5),
-        makerFee: new BigNumber(0),
-        takerFee: new BigNumber(0),
-        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
-        salt: new BigNumber(0),
-      };
+    it('should throw if called without the takerToken set to the wrapped ETH token', async () => {
+      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { takerToken: invalidTokenAddress });
       const newOrder = new Order(invalidOrderParams);
       await newOrder.signAsync();
       const params = newOrder.createFill();
@@ -200,20 +178,7 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
     });
 
     it('should throw if the order taker is not the crowdsale contract address', async () => {
-      const invalidOrderParams = {
-        exchangeContractAddress: Exchange.address,
-        maker,
-        taker: constants.NULL_ADDRESS,
-        feeRecipient: constants.NULL_ADDRESS,
-        makerToken: zrxAddress,
-        takerToken: wEthAddress,
-        makerTokenAmount: toSmallestUnits(5),
-        takerTokenAmount: toSmallestUnits(5),
-        makerFee: new BigNumber(0),
-        takerFee: new BigNumber(0),
-        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
-        salt: new BigNumber(0),
-      };
+      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { taker: constants.NULL_ADDRESS });
       const invalidOrder = new Order(invalidOrderParams);
       await invalidOrder.signAsync();
       const params = invalidOrder.createFill();
@@ -243,6 +208,7 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
         { from: owner },
       );
 
+      assert.equal(res.logs.length, 1, 'Expected a single event to fire when the sale is successfully initialized');
       const logArgs = res.logs[0].args;
       assert.equal(logArgs.maker, validOrder.params.maker);
       assert.equal(logArgs.taker, validOrder.params.taker);
@@ -281,90 +247,51 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
     });
   });
 
-  describe('registerAddress', () => {
+  describe('changeRegistrationStatus', () => {
     it('should throw if not called by owner', async () => {
       try {
-        await crowdsaleWithRegistry.registerAddress(taker, { from: notOwner });
-        throw new Error('registerAddress succeeded when it should have thrown');
+        const isRegistered = true;
+        await crowdsaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: notOwner });
+        throw new Error('changeRegistrationStatus succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
     });
 
-    it('should register an address if called by owner', async () => {
-      await crowdsaleWithRegistry.registerAddress(taker, { from: owner });
+    it('should change registration status of an address if called by owner', async () => {
+      let isRegistered = true;
+      await crowdsaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
       let isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
       assert.equal(isTakerRegistered, true);
 
-      await crowdsaleWithRegistry.deregisterAddress(taker, { from: owner });
+      isRegistered = false;
+      await crowdsaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
       isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
       assert.equal(isTakerRegistered, false);
     });
   });
 
-  describe('registerAddresses', () => {
+  describe('changeRegistrationStatuses', () => {
     it('should throw if not called by owner', async () => {
+      const isRegistered = true;
       try {
-        await crowdsaleWithRegistry.registerAddresses([taker], { from: notOwner });
-        throw new Error('registerAddresses succeeded when it should have thrown');
+        await crowdsaleWithRegistry.changeRegistrationStatuses([taker], isRegistered, { from: notOwner });
+        throw new Error('changeRegistrationStatuses succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
     });
 
-    it('should register addresses if called by owner', async () => {
-      await crowdsaleWithRegistry.registerAddresses([maker, taker], { from: owner });
+    it('should change registration statuses of addresses if called by owner', async () => {
+      let isRegistered = true;
+      await crowdsaleWithRegistry.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
       let isMakerRegistered = await crowdsaleWithRegistry.registered.call(maker);
       let isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
       assert.equal(isMakerRegistered, true);
       assert.equal(isTakerRegistered, true);
 
-      await crowdsaleWithRegistry.deregisterAddresses([maker, taker], { from: owner });
-      isMakerRegistered = await crowdsaleWithRegistry.registered.call(maker);
-      isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
-      assert.equal(isMakerRegistered, false);
-      assert.equal(isTakerRegistered, false);
-    });
-  });
-
-  describe('deregisterAddress', () => {
-    it('should throw if not called by owner', async () => {
-      try {
-        await crowdsaleWithRegistry.deregisterAddress(taker, { from: notOwner });
-        throw new Error('deregisterAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
-    });
-
-    it('should deregister an address if called by owner', async () => {
-      await crowdsaleWithRegistry.registerAddress(taker, { from: owner });
-      let isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
-      assert.equal(isTakerRegistered, true);
-      await crowdsaleWithRegistry.deregisterAddress(taker, { from: owner });
-      isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
-      assert.equal(isTakerRegistered, false);
-    });
-  });
-
-  describe('deregisterAddresses', () => {
-    it('should throw if not called by owner', async () => {
-      try {
-        await crowdsaleWithRegistry.deregisterAddresses([taker], { from: notOwner });
-        throw new Error('deregisterAddresses succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
-    });
-
-    it('should deregister addresses if called by owner', async () => {
-      await crowdsaleWithRegistry.registerAddresses([maker, taker], { from: owner });
-      let isMakerRegistered = await crowdsaleWithRegistry.registered.call(maker);
-      let isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
-      assert.equal(isMakerRegistered, true);
-      assert.equal(isTakerRegistered, true);
-
-      await crowdsaleWithRegistry.deregisterAddresses([maker, taker], { from: owner });
+      isRegistered = false;
+      await crowdsaleWithRegistry.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
       isMakerRegistered = await crowdsaleWithRegistry.registered.call(maker);
       isTakerRegistered = await crowdsaleWithRegistry.registered.call(taker);
       assert.equal(isMakerRegistered, false);
@@ -383,40 +310,28 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       }
     });
 
-    it('should set a new capPerAddress if called by owner', async () => {
+    it('should set a new ethCapPerAddress if called by owner', async () => {
       const newCapPerAddress = new BigNumber(web3Instance.toWei(1.1, 'ether'));
       await crowdsaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
-      capPerAddress = await crowdsaleWithRegistry.capPerAddress.call();
-      assert.equal(cmp(newCapPerAddress, capPerAddress), 0);
+      ethCapPerAddress = await crowdsaleWithRegistry.ethCapPerAddress.call();
+      assert.equal(cmp(newCapPerAddress, ethCapPerAddress), 0);
     });
   });
 
-  describe('fillOrderWithEth', () => {
+  describe('contributing', () => {
     beforeEach(async () => {
       crowdsaleWithRegistry = await CrowdsaleWithRegistry.new(
         Exchange.address,
         Proxy.address,
         zrxAddress,
         wEthAddress,
-        capPerAddress,
+        ethCapPerAddress,
         { from: owner },
       );
-      await crowdsaleWithRegistry.registerAddress(taker, { from: owner });
+      const isRegistered = true;
+      await crowdsaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
 
-      validOrderParams = {
-        exchangeContractAddress: Exchange.address,
-        maker,
-        taker: crowdsaleWithRegistry.address,
-        feeRecipient: constants.NULL_ADDRESS,
-        makerToken: zrxAddress,
-        takerToken: wEthAddress,
-        makerTokenAmount: toSmallestUnits(5),
-        takerTokenAmount: toSmallestUnits(5),
-        makerFee: new BigNumber(0),
-        takerFee: new BigNumber(0),
-        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
-        salt: new BigNumber(0),
-      };
+      validOrderParams = _.assign({}, validOrderParams, { taker: crowdsaleWithRegistry.address });
       validOrder = new Order(validOrderParams);
       await validOrder.signAsync();
       const params = validOrder.createFill();
@@ -431,216 +346,194 @@ contract('CrowdsaleWithRegistry', (accounts: string[]) => {
       );
     });
 
-    it('should throw if sale not initialized', async () => {
-      crowdsaleWithRegistry = await CrowdsaleWithRegistry.new(
-        Exchange.address,
-        Proxy.address,
-        zrxAddress,
-        wEthAddress,
-        capPerAddress,
-        { from: owner },
-      );
-      await crowdsaleWithRegistry.registerAddress(taker, { from: owner });
-      try {
-        const ethValue = new BigNumber(1);
-        await crowdsaleWithRegistry.fillOrderWithEth({
-          from: taker,
-          value: ethValue,
-        });
-        throw new Error('Fallback succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
-    });
-
-    it('should throw if the caller is not registered', async () => {
-      await crowdsaleWithRegistry.deregisterAddress(taker, { from: owner });
-      try {
-        const ethValue = new BigNumber(1);
-        await crowdsaleWithRegistry.fillOrderWithEth({
-          from: taker,
-          value: ethValue,
-        });
-        throw new Error('Fallback succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
-    });
-
-    it('should trade sent ETH for protocol tokens if sender is registered, ETH <= remaining order ETH and capPerAddress', async () => {
-      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const initTakerEthBalance = await getEthBalance(taker);
-
-      const ethValue = web3Instance.toWei(1, 'ether');
-      const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
-      const gasPrice = web3Instance.toWei(20, 'gwei');
-
-      const res = await crowdsaleWithRegistry.fillOrderWithEth({
-        from: taker,
-        value: ethValue,
-        gas: 300000,
-        gasPrice,
+    describe('fillOrderWithEth', () => {
+      it('should throw if sale not initialized', async () => {
+        crowdsaleWithRegistry = await CrowdsaleWithRegistry.new(
+          Exchange.address,
+          Proxy.address,
+          zrxAddress,
+          wEthAddress,
+          ethCapPerAddress,
+          { from: owner },
+        );
+        try {
+          const ethValue = new BigNumber(1);
+          await crowdsaleWithRegistry.fillOrderWithEth({
+            from: taker,
+            value: ethValue,
+          });
+          throw new Error('Fallback succeeded when it should have thrown');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
       });
 
-      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const finalTakerEthBalance = await getEthBalance(taker);
-      const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-
-      assert.equal(finalBalances[maker][validOrder.params.makerToken],
-                   sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
-      assert.equal(finalBalances[maker][validOrder.params.takerToken],
-                   add(initBalances[maker][validOrder.params.takerToken], ethValue));
-      assert.equal(finalBalances[taker][validOrder.params.makerToken],
-                   add(initBalances[taker][validOrder.params.makerToken], zrxValue));
-      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
-    });
-
-    it('should fill the remaining capPerAddress if sender is registered and sent > than the remaining capPerAddress',
-       async () => {
-      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const initTakerEthBalance = await getEthBalance(taker);
-      const ethValue = add(capPerAddress, 1);
-      const gasPrice = web3Instance.toWei(20, 'gwei');
-
-      const res = await crowdsaleWithRegistry.fillOrderWithEth({
-        from: taker,
-        value: ethValue,
-        gas: 300000,
-        gasPrice,
+      it('should throw if the caller is not registered', async () => {
+        const isRegistered = false;
+        await crowdsaleWithRegistry.changeRegistrationStatus(taker, false, { from: owner });
+        try {
+          const ethValue = new BigNumber(1);
+          await crowdsaleWithRegistry.fillOrderWithEth({
+            from: taker,
+            value: ethValue,
+          });
+          throw new Error('Fallback succeeded when it should have thrown');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
       });
 
-      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const finalTakerEthBalance = await getEthBalance(taker);
-      const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-      const filledZrxValue = capPerAddress;
-      const filledEthValue = capPerAddress;
+      it('should trade sent ETH for protocol tokens if ETH <= remaining order ETH and ethCapPerAddress',
+         async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
 
-      assert.equal(finalBalances[maker][validOrder.params.makerToken],
-                   sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
-      assert.equal(finalBalances[maker][validOrder.params.takerToken],
-                   add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
-      assert.equal(finalBalances[taker][validOrder.params.makerToken],
-                   add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
-    });
-
-    it('should partial fill and end sale if sender is registered and sent ETH > remaining order ETH', async () => {
-      const newCapPerAddress = mul(validOrder.params.makerTokenAmount, 2);
-      await crowdsaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
-      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const initTakerEthBalance = await getEthBalance(taker);
-      const remainingTakerTokenAmount = sub(validOrder.params.takerTokenAmount,
-                                            await exchange.getUnavailableTakerTokenAmount(validOrder.params.orderHashHex));
-
-      const ethValue = web3Instance.toWei(6, 'ether');
-      const gasPrice = web3Instance.toWei(6, 'gwei');
-
-      const res = await crowdsaleWithRegistry.fillOrderWithEth({
-        from: taker,
-        value: ethValue,
-        gas: 300000,
-        gasPrice,
-      });
-      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const finalTakerEthBalance = await getEthBalance(taker);
-      const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-      const filledZrxValue = remainingTakerTokenAmount;
-      const filledEthValue = div(mul(filledZrxValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
-
-      assert.equal(finalBalances[maker][validOrder.params.makerToken],
-                   sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
-      assert.equal(finalBalances[maker][validOrder.params.takerToken],
-                   add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
-      assert.equal(finalBalances[taker][validOrder.params.makerToken],
-                   add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
-
-      assert.equal(res.receipt.logs.length, 5);
-      const isFinished = await crowdsaleWithRegistry.isFinished.call();
-      assert.equal(isFinished, true);
-
-      try {
         const ethValue = web3Instance.toWei(1, 'ether');
+        const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
+
+        const res = await crowdsaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const finalTakerEthBalance = await getEthBalanceAsync(taker);
+        const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], ethValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], zrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+      });
+
+      it('should fill the remaining ethCapPerAddress if sent > than the remaining ethCapPerAddress',
+         async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
+        const ethValue = add(ethCapPerAddress, 1);
+
+        const res = await crowdsaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const finalTakerEthBalance = await getEthBalanceAsync(taker);
+        const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        const filledZrxValue = ethCapPerAddress;
+        const filledEthValue = ethCapPerAddress;
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+      });
+
+      it('should partial fill and end sale if sender is registered and sent ETH > remaining order ETH', async () => {
+        const newCapPerAddress = mul(validOrder.params.makerTokenAmount, 2);
+        await crowdsaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
+
+        const ethValue = add(validOrder.params.takerTokenAmount, 1);
+
+        const res = await crowdsaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const finalTakerEthBalance = await getEthBalanceAsync(taker);
+        const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        const filledZrxValue = validOrder.params.makerTokenAmount;
+        const filledEthValue = validOrder.params.takerTokenAmount;
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+
+        assert.equal(res.receipt.logs.length, 5, 'Expected 5 events to fire when the sale is successfully initialized');
+        const finishedLog = res.receipt.logs[4];
+        const funcSig = finishedLog.topics[0].slice(2, 10);
+        const expectedFuncSig = crypto.solSHA3(['Finished()']).slice(0, 4).toString('hex');
+        assert.equal(funcSig, expectedFuncSig);
+
+        const isFinished = await crowdsaleWithRegistry.isFinished.call();
+        assert.equal(isFinished, true);
+      });
+
+      it('should throw if sale has ended', async () => {
+        const newCapPerAddress = mul(validOrder.params.makerTokenAmount, 2);
+        await crowdsaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
+
+        const ethValue = add(validOrder.params.takerTokenAmount, 1);
+
         await crowdsaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
-          gas: 300000,
+          gasPrice,
         });
-        throw new Error('Fallback succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
-    });
-  });
 
-  describe('fallback', () => {
-    beforeEach(async () => {
-      crowdsaleWithRegistry = await CrowdsaleWithRegistry.new(
-        Exchange.address,
-        Proxy.address,
-        zrxAddress,
-        wEthAddress,
-        capPerAddress,
-        { from: owner },
-      );
-      await crowdsaleWithRegistry.registerAddress(taker, { from: owner });
+        const isFinished = await crowdsaleWithRegistry.isFinished.call();
+        assert.equal(isFinished, true);
 
-      validOrderParams = {
-        exchangeContractAddress: Exchange.address,
-        maker,
-        taker: crowdsaleWithRegistry.address,
-        feeRecipient: constants.NULL_ADDRESS,
-        makerToken: zrxAddress,
-        takerToken: wEthAddress,
-        makerTokenAmount: toSmallestUnits(5),
-        takerTokenAmount: toSmallestUnits(5),
-        makerFee: new BigNumber(0),
-        takerFee: new BigNumber(0),
-        expirationTimestampInSec: new BigNumber(Math.floor(Date.now() / 1000) + 1000000000),
-        salt: new BigNumber(0),
-      };
-      validOrder = new Order(validOrderParams);
-      await validOrder.signAsync();
-      const params = validOrder.createFill();
-
-      await crowdsaleWithRegistry.init(
-        params.orderAddresses,
-        params.orderValues,
-        params.v,
-        params.r,
-        params.s,
-        { from: owner },
-      );
-    });
-
-    it('should trade sent ETH for protocol tokens if sender is registered, ETH <= remaining order ETH and capPerAddress', async () => {
-      const initBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const initTakerEthBalance = await getEthBalance(taker);
-
-      const ethValue = web3Instance.toWei(1, 'ether');
-      const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
-      const gasPrice = web3Instance.toWei(20, 'gwei');
-
-      const txHash = await sendTransaction({
-        from: taker,
-        to: crowdsaleWithRegistry.address,
-        value: ethValue,
-        gas: 300000,
-        gasPrice,
+        try {
+          const newEthValue = new BigNumber(1);
+          await crowdsaleWithRegistry.fillOrderWithEth({
+            from: taker,
+            value: newEthValue,
+          });
+          throw new Error('Fallback succeeded when it should have thrown');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
       });
-      const receipt = await getTransactionReceipt(txHash);
+    });
 
-      const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
-      const finalTakerEthBalance = await getEthBalance(taker);
-      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+    describe('fallback', () => {
+      it('should trade sent ETH for protocol tokens if ETH <= remaining order ETH and ethCapPerAddress',
+         async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
 
-      assert.equal(finalBalances[maker][validOrder.params.makerToken],
-                   sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
-      assert.equal(finalBalances[maker][validOrder.params.takerToken],
-                   add(initBalances[maker][validOrder.params.takerToken], ethValue));
-      assert.equal(finalBalances[taker][validOrder.params.makerToken],
-                   add(initBalances[taker][validOrder.params.makerToken], zrxValue));
-      assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+        const ethValue = web3Instance.toWei(1, 'ether');
+        const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
+
+        const gas = 300000;
+
+        const txHash = await sendTransactionAsync({
+          from: taker,
+          to: crowdsaleWithRegistry.address,
+          value: ethValue,
+          gas,
+          gasPrice,
+        });
+        const receipt = await getTransactionReceiptAsync(txHash);
+
+        const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const finalTakerEthBalance = await getEthBalanceAsync(taker);
+        const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], ethValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], zrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+      });
     });
   });
 });
