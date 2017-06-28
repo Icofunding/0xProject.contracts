@@ -2,18 +2,23 @@ pragma solidity ^0.4.11;
 
 import "./MultiSigWalletWithTimeLock.sol";
 
-contract ProxyOwner is MultiSigWalletWithTimeLock {
+contract MultiSigWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
 
     address public PROXY_CONTRACT;
 
-    modifier validTxData(uint transactionId) {
+    modifier validRemoveAuthorizedAddressTx(uint transactionId) {
         Transaction tx = transactions[transactionId];
         assert(tx.destination == PROXY_CONTRACT);
         assert(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
     }
 
-    function ProxyOwner(
+    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and proxy address.
+    /// @param _owners List of initial owners.
+    /// @param _required Number of required confirmations.
+    /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
+    /// @param _proxy Address of Proxy contract.
+    function MultiSigWithTimeLockExceptRemoveAuthorizedAddress(
         address[] _owners,
         uint _required,
         uint _secondsTimeLocked,
@@ -24,11 +29,13 @@ contract ProxyOwner is MultiSigWalletWithTimeLock {
         PROXY_CONTRACT = _proxy;
     }
 
+    /// @dev Allows execution of removeAuthorizedAddress without time lock.
+    /// @param transactionId Transaction ID.
     function executeRemoveAuthorizedAddress(uint transactionId)
         public
         notExecuted(transactionId)
         confirmationTimeSet(transactionId)
-        validTxData(transactionId)
+        validRemoveAuthorizedAddressTx(transactionId)
     {
         Transaction tx = transactions[transactionId];
         tx.executed = true;
@@ -40,6 +47,9 @@ contract ProxyOwner is MultiSigWalletWithTimeLock {
         }
     }
 
+    /// @dev Compares first 4 bytes of byte array to removeAuthorizedAddress function signature.
+    /// @param data Transaction data.
+    /// @return Successful if data is a call to removeAuthorizedAddress.
     function isFunctionRemoveAuthorizedAddress(bytes data)
         public
         constant

@@ -5,18 +5,20 @@ import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { ContractInstance, TransactionDataParams } from '../../util/types';
 import { testUtil } from '../../util/test_util';
 import * as proxyJSON from '../../build/contracts/Proxy.json';
-const { Proxy, ProxyOwner } = new Artifacts(artifacts);
+const { Proxy, MultiSigWithTimeLockExceptRemoveAuthorizedAddress } = new Artifacts(artifacts);
 const PROXY_ABI = (proxyJSON as any).abi;
 
-contract('ProxyOwner', (accounts: string[]) => {
+contract('MultiSigWithTimeLockExceptRemoveAuthorizedAddress', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
-  const authorizedAddress = accounts[0];
-  const unauthorizedAddress = accounts[1];
-  const required = 2;
+  const requiredApprovals = 2;
   const SECONDS_TIME_LOCKED = 1000000;
 
+  // initialize fake addresses
+  const authorizedAddress = `0x${crypto.solSHA3([accounts[0]]).slice(0, 20).toString('hex')}`;
+  const unauthorizedAddress = `0x${crypto.solSHA3([accounts[1]]).slice(0, 20).toString('hex')}`;
+
   let proxy: ContractInstance;
-  let proxyOwner: ContractInstance;
+  let multiSig: ContractInstance;
   let multiSigWrapper: MultiSigWrapper;
 
   let validDestination: string;
@@ -25,9 +27,9 @@ contract('ProxyOwner', (accounts: string[]) => {
     const initialOwner = accounts[0];
     proxy = await Proxy.new({ from: initialOwner });
     await proxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
-    proxyOwner = await ProxyOwner.new(owners, required, SECONDS_TIME_LOCKED, proxy.address);
-    await proxy.transferOwnership(proxyOwner.address, { from: initialOwner });
-    multiSigWrapper = new MultiSigWrapper(proxyOwner);
+    multiSig = await MultiSigWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, proxy.address);
+    await proxy.transferOwnership(multiSig.address, { from: initialOwner });
+    multiSigWrapper = new MultiSigWrapper(multiSig);
     validDestination = proxy.address;
   });
 
@@ -35,7 +37,7 @@ contract('ProxyOwner', (accounts: string[]) => {
     it('should throw if data is not for removeAuthorizedAddress', async () => {
       const data = multiSigWrapper.encodeFnArgs('addAuthorizedAddress', PROXY_ABI, [owners[0]]);
       try {
-        await proxyOwner.isFunctionRemoveAuthorizedAddress.call(data);
+        await multiSig.isFunctionRemoveAuthorizedAddress.call(data);
         throw new Error('isFunctionRemoveAuthorizedAddress succeeded when it should have failed');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -44,7 +46,7 @@ contract('ProxyOwner', (accounts: string[]) => {
 
     it('should return true if data is for removeAuthorizedAddress', async () => {
       const data = multiSigWrapper.encodeFnArgs('removeAuthorizedAddress', PROXY_ABI, [owners[0]]);
-      const isFunctionRemoveAuthorizedAddress = await proxyOwner.isFunctionRemoveAuthorizedAddress.call(data);
+      const isFunctionRemoveAuthorizedAddress = await multiSig.isFunctionRemoveAuthorizedAddress.call(data);
       assert.equal(isFunctionRemoveAuthorizedAddress, true);
     });
   });
@@ -60,7 +62,7 @@ contract('ProxyOwner', (accounts: string[]) => {
       const txId = res.logs[0].args.transactionId.toString();
 
       try {
-        await proxyOwner.executeRemoveAuthorizedAddress(txId);
+        await multiSig.executeRemoveAuthorizedAddress(txId);
         throw new Error('executeRemoveAuthorizedAddress succeeded when it should have failed');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -77,12 +79,12 @@ contract('ProxyOwner', (accounts: string[]) => {
       };
       const res = await multiSigWrapper.submitTransactionAsync(invalidDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await proxyOwner.confirmTransaction(txId, { from: owners[1] });
-      const isConfirmed = await proxyOwner.isConfirmed.call(txId);
+      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const isConfirmed = await multiSig.isConfirmed.call(txId);
       assert.equal(isConfirmed, true);
 
       try {
-        await proxyOwner.executeRemoveAuthorizedAddress(txId);
+        await multiSig.executeRemoveAuthorizedAddress(txId);
         throw new Error('executeRemoveAuthorizedAddress succeeded when it should have failed');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -97,12 +99,12 @@ contract('ProxyOwner', (accounts: string[]) => {
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await proxyOwner.confirmTransaction(txId, { from: owners[1] });
-      const isConfirmed = await proxyOwner.isConfirmed.call(txId);
+      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const isConfirmed = await multiSig.isConfirmed.call(txId);
       assert.equal(isConfirmed, true);
 
       try {
-        await proxyOwner.executeRemoveAuthorizedAddress(txId);
+        await multiSig.executeRemoveAuthorizedAddress(txId);
         throw new Error('executeRemoveAuthorizedAddress succeeded when it should have failed');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -117,10 +119,10 @@ contract('ProxyOwner', (accounts: string[]) => {
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await proxyOwner.confirmTransaction(txId, { from: owners[1] });
-      const isConfirmed = await proxyOwner.isConfirmed.call(txId);
+      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const isConfirmed = await multiSig.isConfirmed.call(txId);
       assert.equal(isConfirmed, true);
-      await proxyOwner.executeRemoveAuthorizedAddress(txId);
+      await multiSig.executeRemoveAuthorizedAddress(txId);
 
       const isAuthorized = await proxy.authorized.call(authorizedAddress);
       assert.equal(isAuthorized, false);
@@ -134,16 +136,16 @@ contract('ProxyOwner', (accounts: string[]) => {
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await proxyOwner.confirmTransaction(txId, { from: owners[1] });
-      const isConfirmed = await proxyOwner.isConfirmed.call(txId);
+      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const isConfirmed = await multiSig.isConfirmed.call(txId);
       assert.equal(isConfirmed, true);
-      await proxyOwner.executeRemoveAuthorizedAddress(txId);
-      const tx = await proxyOwner.transactions.call(txId);
+      await multiSig.executeRemoveAuthorizedAddress(txId);
+      const tx = await multiSig.transactions.call(txId);
       const isExecuted = tx[3];
       assert.equal(isExecuted, true);
 
       try {
-        await proxyOwner.executeRemoveAuthorizedAddress(txId);
+        await multiSig.executeRemoveAuthorizedAddress(txId);
         throw new Error('executeRemoveAuthorizedAddress succeeded when it should have failed');
       } catch (err) {
         testUtil.assertThrow(err);
