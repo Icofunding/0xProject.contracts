@@ -6,7 +6,26 @@ import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
 
-contract SimpleCrowdsale is Ownable, SafeMath {
+contract TokenDistributionWithRegistry is Ownable, SafeMath {
+
+    event Initialized(
+        address maker,
+        address taker,
+        address makerToken,
+        address takerToken,
+        address feeRecipient,
+        uint makerTokenAmount,
+        uint takerTokenAmount,
+        uint makerFee,
+        uint takerFee,
+        uint expirationTimestampInSec,
+        uint salt,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    );
+
+    event Finished();
 
     address public PROXY_CONTRACT;
     address public EXCHANGE_CONTRACT;
@@ -17,8 +36,12 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     Token protocolToken;
     EtherToken ethToken;
 
+    mapping (address => bool) public registered;
+    mapping (address => uint) public contributed;
+
     bool public isInitialized;
     bool public isFinished;
+    uint public ethCapPerAddress;
     Order order;
 
     struct Order {
@@ -39,31 +62,38 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         bytes32 orderHash;
     }
 
-    modifier saleInitialized() {
-        require(isInitialized);
+    modifier distributionInitialized() {
+        assert(isInitialized);
         _;
     }
 
-    modifier saleNotInitialized() {
-        require(!isInitialized);
+    modifier distributionNotInitialized() {
+        assert(!isInitialized);
         _;
     }
 
-    modifier saleNotFinished() {
-        require(!isFinished);
+    modifier distributionNotFinished() {
+        assert(!isFinished);
         _;
     }
 
-    function SimpleCrowdsale(
+    modifier callerIsRegistered() {
+        require(registered[msg.sender]);
+        _;
+    }
+
+    function TokenDistributionWithRegistry(
         address _exchange,
         address _proxy,
         address _protocolToken,
-        address _ethToken)
+        address _ethToken,
+        uint _capPerAddress)
     {
         PROXY_CONTRACT = _proxy;
         EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
+        ethCapPerAddress = _capPerAddress;
 
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
@@ -73,29 +103,11 @@ contract SimpleCrowdsale is Ownable, SafeMath {
     /// @dev Allows users to fill stored order by sending ETH to contract.
     function()
         payable
-        saleInitialized
-        saleNotFinished
     {
-        uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
-        uint ethToFill = min(msg.value, remainingEth);
-        ethToken.deposit.value(ethToFill)();
-        assert(exchange.fillOrKillOrder(
-            [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
-            [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
-            ethToFill,
-            order.v,
-            order.r,
-            order.s
-        ));
-        uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
-        assert(protocolToken.transfer(msg.sender, filledProtocolToken));
-        if (ethToFill < msg.value) {
-            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
-            isFinished = true;
-        }
+        fillOrderWithEth();
     }
 
-    /// @dev Stores order and initializes sale.
+    /// @dev Stores order and initializes distribution.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
@@ -107,7 +119,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
-        saleNotInitialized
+        distributionNotInitialized
         onlyOwner
     {
         order = Order({
@@ -128,6 +140,7 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             orderHash: getOrderHash(orderAddresses, orderValues)
         });
 
+        require(order.taker == address(this));
         require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
         require(order.takerToken == ETH_TOKEN_CONTRACT);
 
@@ -141,14 +154,97 @@ contract SimpleCrowdsale is Ownable, SafeMath {
 
         assert(setTokenAllowance(order.takerToken, order.takerTokenAmount));
         isInitialized = true;
+
+        Initialized(
+            order.maker,
+            order.taker,
+            order.makerToken,
+            order.takerToken,
+            order.feeRecipient,
+            order.makerTokenAmount,
+            order.takerTokenAmount,
+            order.makerFee,
+            order.takerFee,
+            order.expirationTimestampInSec,
+            order.salt,
+            order.v,
+            order.r,
+            order.s
+        );
     }
 
+    /// @dev Fills order using msg.value.
+    function fillOrderWithEth()
+        payable
+        distributionInitialized
+        distributionNotFinished
+        callerIsRegistered
+    {
+        uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
+        uint allowedEth = safeSub(ethCapPerAddress, contributed[msg.sender]);
+        uint ethToFill = min256(min256(msg.value, remainingEth), allowedEth);
+        ethToken.deposit.value(ethToFill)();
+
+        contributed[msg.sender] = safeAdd(contributed[msg.sender], ethToFill);
+
+        assert(exchange.fillOrKillOrder(
+            [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
+            [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
+            ethToFill,
+            order.v,
+            order.r,
+            order.s
+        ));
+        uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
+        assert(protocolToken.transfer(msg.sender, filledProtocolToken));
+
+        if (ethToFill < msg.value) {
+            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
+        }
+        if (remainingEth == ethToFill) {
+            isFinished = true;
+            Finished();
+        }
+    }
+
+    /// @dev Approves proxy to transfer a token.
+    /// @param _token Address of the token to approve.
+    /// @param _allowance Amount of token proxy can transfer.
+    /// @return Success of approval.
     function setTokenAllowance(address _token, uint _allowance)
         onlyOwner
         returns (bool success)
     {
         assert(Token(_token).approve(PROXY_CONTRACT, _allowance));
         return true;
+    }
+
+    /// @dev Sets the cap per address to a new value.
+    /// @param _newCapPerAddress New value of the cap per address.
+    function setCapPerAddress(uint _newCapPerAddress)
+        onlyOwner
+    {
+        ethCapPerAddress = _newCapPerAddress;
+    }
+
+    /// @dev Changes registration status of an address for participation.
+    /// @param target Address that will be registered/deregistered.
+    /// @param isRegistered New registration status of address.
+    function changeRegistrationStatus(address target, bool isRegistered)
+        onlyOwner
+    {
+        registered[target] = isRegistered;
+    }
+
+    /// @dev Changes registration statuses of addresses for participation.
+    /// @param targets Addresses that will be registered/deregistered.
+    /// @param isRegistered New registration status of addresss.
+    function changeRegistrationStatuses(address[] targets, bool isRegistered)
+        onlyOwner
+    {
+        for (uint i = 0; i < targets.length; i++) {
+            changeRegistrationStatus(targets[i], isRegistered);
+        }
     }
 
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
@@ -197,17 +293,5 @@ contract SimpleCrowdsale is Ownable, SafeMath {
             r,
             s
         );
-    }
-
-    /// @dev Calculates minimum of two values.
-    /// @param a First value.
-    /// @param b Second value.
-    /// @return Minimum of values.
-    function min(uint a, uint b)
-        constant
-        returns (uint min)
-    {
-        if (a < b) return a;
-        return b;
     }
 }
