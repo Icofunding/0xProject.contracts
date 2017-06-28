@@ -15,7 +15,7 @@ export class MultiSigWrapper {
     const encoded = this.encodeFnArgs(name, abi, args);
     return this.multiSig.submitTransaction(destination, value, encoded, { from });
   }
-  private encodeFnArgs(name: string, abi: ABIEntity[], args: any[]) {
+  public encodeFnArgs(name: string, abi: ABIEntity[], args: any[]) {
     const abiEntity = _.find(abi, { name });
     if (_.isUndefined(abiEntity)) {
       throw new Error(`Did not find abi entry for name: ${name}`);
