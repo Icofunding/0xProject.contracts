@@ -28,6 +28,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     event TimeLockChange(uint secondsTimeLocked);
 
     uint public secondsTimeLocked;
+
     mapping (uint => uint) public confirmationTimes;
 
     modifier confirmationTimeNotSet(uint transactionId) {
@@ -39,6 +40,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         require(confirmationTimes[transactionId] != 0);
         _;
     }
+
     modifier pastTimeLock(uint transactionId) {
         require(block.timestamp >= confirmationTimes[transactionId] + secondsTimeLocked);
         _;
@@ -48,7 +50,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
      * Public functions
      */
 
-    /// @dev Contract constructor sets initial owners and required number of confirmations.
+    /// @dev Contract constructor sets initial owners, required number of confirmations, and time lock.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
