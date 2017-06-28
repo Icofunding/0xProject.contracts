@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 
 import "./MultiSigWalletWithTimeLock.sol";
 
-contract MultiSigWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
+contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
 
     address public PROXY_CONTRACT;
 
@@ -18,7 +18,7 @@ contract MultiSigWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWith
     /// @param _required Number of required confirmations.
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
     /// @param _proxy Address of Proxy contract.
-    function MultiSigWithTimeLockExceptRemoveAuthorizedAddress(
+    function MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress(
         address[] _owners,
         uint _required,
         uint _secondsTimeLocked,

@@ -5,10 +5,10 @@ import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { ContractInstance, TransactionDataParams } from '../../util/types';
 import { testUtil } from '../../util/test_util';
 import * as proxyJSON from '../../build/contracts/Proxy.json';
-const { Proxy, MultiSigWithTimeLockExceptRemoveAuthorizedAddress } = new Artifacts(artifacts);
+const { Proxy, MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress } = new Artifacts(artifacts);
 const PROXY_ABI = (proxyJSON as any).abi;
 
-contract('MultiSigWithTimeLockExceptRemoveAuthorizedAddress', (accounts: string[]) => {
+contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
   const requiredApprovals = 2;
   const SECONDS_TIME_LOCKED = 1000000;
@@ -27,7 +27,7 @@ contract('MultiSigWithTimeLockExceptRemoveAuthorizedAddress', (accounts: string[
     const initialOwner = accounts[0];
     proxy = await Proxy.new({ from: initialOwner });
     await proxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
-    multiSig = await MultiSigWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, proxy.address);
+    multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, proxy.address);
     await proxy.transferOwnership(multiSig.address, { from: initialOwner });
     multiSigWrapper = new MultiSigWrapper(multiSig);
     validDestination = proxy.address;
