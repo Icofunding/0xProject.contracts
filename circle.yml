@@ -5,11 +5,9 @@ machine:
 dependencies:
   pre:
     - npm install -g npm@5.1.0
-    - npm install ethereumjs-testrpc@4.0.1
-    - npm install -g truffle@3.4.3
 
 test:
   override:
-    - node node_modules/ethereumjs-testrpc/build/cli.node.js:
+    - npm run testrpc:
         background: true
     - npm run test
