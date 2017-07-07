@@ -29,8 +29,8 @@ contract TokenRegistry is Ownable {
         string symbol,
         string url,
         uint8 decimals,
-        bytes32 ipfsHash,
-        bytes32 swarmHash
+        bytes ipfsHash,
+        bytes swarmHash
     );
 
     event LogRemoveToken(
@@ -39,15 +39,15 @@ contract TokenRegistry is Ownable {
         string symbol,
         string url,
         uint8 decimals,
-        bytes32 ipfsHash,
-        bytes32 swarmHash
+        bytes ipfsHash,
+        bytes swarmHash
     );
 
     event LogTokenNameChange(address token, string oldName, string newName);
     event LogTokenSymbolChange(address token, string oldSymbol, string newSymbol);
     event LogTokenUrlChange(address token, string oldUrl, string newUrl);
-    event LogTokenIpfsHashChange(address token, bytes32 oldIpfsHash, bytes32 newIpfsHash);
-    event LogTokenSwarmHashChange(address token, bytes32 oldSwarmHash, bytes32 newSwarmHash);
+    event LogTokenIpfsHashChange(address token, bytes oldIpfsHash, bytes newIpfsHash);
+    event LogTokenSwarmHashChange(address token, bytes oldSwarmHash, bytes newSwarmHash);
 
     mapping (address => TokenMetadata) public tokens;
     mapping (string => address) tokenBySymbol;
@@ -61,20 +61,18 @@ contract TokenRegistry is Ownable {
         string symbol;
         string url;
         uint8 decimals;
-        bytes32 ipfsHash;
-        bytes32 swarmHash;
+        bytes ipfsHash;
+        bytes swarmHash;
     }
 
     modifier tokenExists(address _token) {
-        if (tokens[_token].token != address(0)) {
-            _;
-        }
+        require(tokens[_token].token != address(0));
+        _;
     }
 
     modifier tokenDoesNotExist(address _token) {
-        if (tokens[_token].token == address(0)) {
-            _;
-        }
+        require(tokens[_token].token == address(0));
+        _;
     }
 
     /// @dev Allows owner to add a new token to the registry.
@@ -91,8 +89,8 @@ contract TokenRegistry is Ownable {
         string _symbol,
         string _url,
         uint8 _decimals,
-        bytes32 _ipfsHash,
-        bytes32 _swarmHash)
+        bytes _ipfsHash,
+        bytes _swarmHash)
         public
         onlyOwner
         tokenDoesNotExist(_token)
@@ -182,7 +180,7 @@ contract TokenRegistry is Ownable {
     /// @dev Allows owner to modify an existing token's IPFS hash.
     /// @param _token Address of existing token.
     /// @param _ipfsHash New IPFS hash.
-    function setTokenIpfsHash(address _token, bytes32 _ipfsHash)
+    function setTokenIpfsHash(address _token, bytes _ipfsHash)
         public
         onlyOwner
         tokenExists(_token)
@@ -195,7 +193,7 @@ contract TokenRegistry is Ownable {
     /// @dev Allows owner to modify an existing token's Swarm hash.
     /// @param _token Address of existing token.
     /// @param _swarmHash New Swarm hash.
-    function setTokenSwarmHash(address _token, bytes32 _swarmHash)
+    function setTokenSwarmHash(address _token, bytes _swarmHash)
       public
       onlyOwner
       tokenExists(_token)
@@ -247,8 +245,8 @@ contract TokenRegistry is Ownable {
             string symbol,
             string url,
             uint8 decimals,
-            bytes32 ipfsHash,
-            bytes32 swarmHash
+            bytes ipfsHash,
+            bytes swarmHash
         )
     {
         TokenMetadata memory token = tokens[_token];
@@ -274,8 +272,8 @@ contract TokenRegistry is Ownable {
             string symbol,
             string url,
             uint8 decimals,
-            bytes32 ipfsHash,
-            bytes32 swarmHash
+            bytes ipfsHash,
+            bytes swarmHash
         )
     {
         address _token = tokenByName[_name];
@@ -293,8 +291,8 @@ contract TokenRegistry is Ownable {
             string symbol,
             string url,
             uint8 decimals,
-            bytes32 ipfsHash,
-            bytes32 swarmHash
+            bytes ipfsHash,
+            bytes swarmHash
         )
     {
         address _token = tokenBySymbol[_symbol];
