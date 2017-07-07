@@ -84,12 +84,6 @@ s | `bytes32` | ECDSA signature of the above arguments.
 
 Install [Node v6.9.1](https://nodejs.org/en/download/releases/)
 
-Install ethereumjs-testrpc
-
-```
-npm i -g ethereumjs-testrpc@^4.0.1
-```
-
 Install project dependencies:
 
 ```
@@ -101,7 +95,7 @@ npm install
 Start Testrpc
 
 ```
-testrpc --networkId 50
+npm run testrpc
 ```
 
 Compile contracts

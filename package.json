@@ -12,7 +12,7 @@
     "compile": "rm -rf build/contracts; truffle compile",
     "migrate": "npm run transpile; truffle migrate",
     "deploy": "npm run transpile; truffle migrate --network kovan",
-    "testrpc": "node node_modules/ethereumjs-testrpc/build/cli.node.js --networkId 50"
+    "testrpc": "testrpc --networkId 50"
   },
   "repository": {
     "type": "git",
