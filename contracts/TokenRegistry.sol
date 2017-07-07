@@ -27,7 +27,6 @@ contract TokenRegistry is Ownable {
         address token,
         string name,
         string symbol,
-        string url,
         uint8 decimals,
         bytes ipfsHash,
         bytes swarmHash
@@ -37,7 +36,6 @@ contract TokenRegistry is Ownable {
         address token,
         string name,
         string symbol,
-        string url,
         uint8 decimals,
         bytes ipfsHash,
         bytes swarmHash
@@ -45,7 +43,6 @@ contract TokenRegistry is Ownable {
 
     event LogTokenNameChange(address token, string oldName, string newName);
     event LogTokenSymbolChange(address token, string oldSymbol, string newSymbol);
-    event LogTokenUrlChange(address token, string oldUrl, string newUrl);
     event LogTokenIpfsHashChange(address token, bytes oldIpfsHash, bytes newIpfsHash);
     event LogTokenSwarmHashChange(address token, bytes oldSwarmHash, bytes newSwarmHash);
 
@@ -59,7 +56,6 @@ contract TokenRegistry is Ownable {
         address token;
         string name;
         string symbol;
-        string url;
         uint8 decimals;
         bytes ipfsHash;
         bytes swarmHash;
@@ -79,7 +75,6 @@ contract TokenRegistry is Ownable {
     /// @param _token Address of new token.
     /// @param _name Name of new token.
     /// @param _symbol Symbol for new token.
-    /// @param _url Token's project URL.
     /// @param _decimals Number of decimals, divisibility of new token.
     /// @param _ipfsHash IPFS hash of token icon.
     /// @param _swarmHash Swarm hash of token icon.
@@ -87,7 +82,6 @@ contract TokenRegistry is Ownable {
         address _token,
         string _name,
         string _symbol,
-        string _url,
         uint8 _decimals,
         bytes _ipfsHash,
         bytes _swarmHash)
@@ -99,7 +93,6 @@ contract TokenRegistry is Ownable {
             token: _token,
             name: _name,
             symbol: _symbol,
-            url: _url,
             decimals: _decimals,
             ipfsHash: _ipfsHash,
             swarmHash: _swarmHash
@@ -111,7 +104,6 @@ contract TokenRegistry is Ownable {
             _token,
             _name,
             _symbol,
-            _url,
             _decimals,
             _ipfsHash,
             _swarmHash
@@ -137,7 +129,6 @@ contract TokenRegistry is Ownable {
             token.token,
             token.name,
             token.symbol,
-            token.url,
             token.decimals,
             token.ipfsHash,
             token.swarmHash
@@ -203,19 +194,6 @@ contract TokenRegistry is Ownable {
         token.swarmHash = _swarmHash;
     }
 
-    /// @dev Allows owner to modify an existing token's URL.
-    /// @param _token Address of existing token.
-    /// @param _url New URL.
-    function setTokenUrl(address _token, string _url)
-        public
-        onlyOwner
-        tokenExists(_token)
-    {
-        TokenMetadata token = tokens[_token];
-        LogTokenUrlChange(_token, token.url, _url);
-        token.url = _url;
-    }
-
     /*
      * Web3 call functions
      */
@@ -243,7 +221,6 @@ contract TokenRegistry is Ownable {
             address tokenAddress,
             string name,
             string symbol,
-            string url,
             uint8 decimals,
             bytes ipfsHash,
             bytes swarmHash
@@ -254,7 +231,6 @@ contract TokenRegistry is Ownable {
             token.token,
             token.name,
             token.symbol,
-            token.url,
             token.decimals,
             token.ipfsHash,
             token.swarmHash
@@ -270,7 +246,6 @@ contract TokenRegistry is Ownable {
             address tokenAddress,
             string name,
             string symbol,
-            string url,
             uint8 decimals,
             bytes ipfsHash,
             bytes swarmHash
@@ -289,7 +264,6 @@ contract TokenRegistry is Ownable {
             address tokenAddress,
             string name,
             string symbol,
-            string url,
             uint8 decimals,
             bytes ipfsHash,
             bytes swarmHash
