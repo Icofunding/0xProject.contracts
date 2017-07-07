@@ -10,6 +10,6 @@ dependencies:
 
 test:
   override:
-    - node node_modules/ethereumjs-testrpc/bin/testrpc:
+    - node node_modules/ethereumjs-testrpc/build/cli.node.js:
         background: true
     - npm run test
