@@ -36,8 +36,7 @@ export class Order {
     // the personal message header before sending the request, whereas testrpc does not.
     // TODO: In order to run the tests against any client, add client detection and conditionally add the
     // personal message header when needed.
-    const msgHash = ethUtil.hashPersonalMessage(orderHash);
-    const signature = await promisify(web3Instance.eth.sign)(this.params.maker, ethUtil.bufferToHex(msgHash));
+    const signature = await promisify(web3Instance.eth.sign)(this.params.maker, ethUtil.bufferToHex(orderHash));
     const { v, r, s } = ethUtil.fromRpcSig(signature);
     this.params = _.assign(this.params, {
       orderHashHex: ethUtil.bufferToHex(orderHash),
