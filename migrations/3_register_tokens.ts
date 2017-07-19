@@ -30,8 +30,8 @@ module.exports = (deployer: any, network: string) => {
           symbol: 'WETH',
           url: '',
           decimals: 18,
-          ipfsHash: constants.NULL_HASH,
-          swarmHash: constants.NULL_HASH,
+          ipfsHash: constants.NULL_BYTES,
+          swarmHash: constants.NULL_BYTES,
         };
         return Bluebird.each(dummyTokens.map((tokenContract: ContractInstance, i: number) => {
           const token = tokens[i];
@@ -59,8 +59,8 @@ module.exports = (deployer: any, network: string) => {
         symbol: 'ZRX',
         url: 'https://www.0xproject.com/',
         decimals: 18,
-        ipfsHash: constants.NULL_HASH,
-        swarmHash: constants.NULL_HASH,
+        ipfsHash: constants.NULL_BYTES,
+        swarmHash: constants.NULL_BYTES,
       };
       return Bluebird.each(tokens.map((token: Token) => {
         return tokenRegistry.addToken(
