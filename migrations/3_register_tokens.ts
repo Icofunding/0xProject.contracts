@@ -30,8 +30,8 @@ module.exports = (deployer: any, network: string) => {
           symbol: 'WETH',
           url: '',
           decimals: 18,
-          ipfsHash: constants.NULL_HASH,
-          swarmHash: constants.NULL_HASH,
+          ipfsHash: constants.NULL_BYTES,
+          swarmHash: constants.NULL_BYTES,
         };
         return Bluebird.each(dummyTokens.map((tokenContract: ContractInstance, i: number) => {
           const token = tokens[i];
@@ -39,7 +39,6 @@ module.exports = (deployer: any, network: string) => {
             tokenContract.address,
             token.name,
             token.symbol,
-            token.url,
             token.decimals,
             token.ipfsHash,
             token.swarmHash,
@@ -48,7 +47,6 @@ module.exports = (deployer: any, network: string) => {
           weth.address,
           weth.name,
           weth.symbol,
-          weth.url,
           weth.decimals,
           weth.ipfsHash,
           weth.swarmHash,
@@ -61,15 +59,14 @@ module.exports = (deployer: any, network: string) => {
         symbol: 'ZRX',
         url: 'https://www.0xproject.com/',
         decimals: 18,
-        ipfsHash: constants.NULL_HASH,
-        swarmHash: constants.NULL_HASH,
+        ipfsHash: constants.NULL_BYTES,
+        swarmHash: constants.NULL_BYTES,
       };
       return Bluebird.each(tokens.map((token: Token) => {
         return tokenRegistry.addToken(
           token.address,
           token.name,
           token.symbol,
-          token.url,
           token.decimals,
           token.ipfsHash,
           token.swarmHash,
@@ -78,7 +75,6 @@ module.exports = (deployer: any, network: string) => {
         zrx.address,
         zrx.name,
         zrx.symbol,
-        zrx.url,
         zrx.decimals,
         zrx.ipfsHash,
         zrx.swarmHash,

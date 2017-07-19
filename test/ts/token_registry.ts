@@ -17,7 +17,6 @@ contract('TokenRegistry', (accounts: string[]) => {
     address: `0x${ethUtil.setLength(ethUtil.toBuffer('0x1'), 20).toString('hex')}`,
     name: 'testToken',
     symbol: 'TT',
-    url: 'www.test.com',
     decimals: 18,
     ipfsHash: `0x${ethUtil.sha3('test1').toString('hex')}`,
     swarmHash: `0x${ethUtil.sha3('test2').toString('hex')}`,
@@ -27,10 +26,9 @@ contract('TokenRegistry', (accounts: string[]) => {
     address: constants.NULL_ADDRESS,
     name: '',
     symbol: '',
-    url: '',
     decimals: 0,
-    ipfsHash: constants.NULL_HASH,
-    swarmHash: constants.NULL_HASH,
+    ipfsHash: constants.NULL_BYTES,
+    swarmHash: constants.NULL_BYTES,
   };
 
   let tokenReg: ContractInstance;
@@ -55,6 +53,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       await tokenRegWrapper.addTokenAsync(token, owner);
       const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.address);
       assert.deepEqual(tokenData, token);
+    });
+
+    it('should throw if token already exists', async () => {
+      try {
+        await tokenRegWrapper.addTokenAsync(token, owner);
+        throw new Error('addToken succeeded when it should have failed');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
   });
 
@@ -93,6 +100,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       assert.deepEqual(newData, newNameToken);
       assert.deepEqual(oldData, nullToken);
     });
+
+    it('should throw if token does not exist', async () => {
+      try {
+        await tokenReg.setTokenName(nullToken.address, newNameToken.name, { from: owner });
+        throw new Error('setTokenName succeeded when it should have failed');
+      } catch(err) {
+        testUtil.assertThrow(err);
+      }
+    });
   });
 
   const newSymbolToken = _.assign({}, newNameToken, { symbol: 'newSymbol' });
@@ -116,6 +132,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       assert.deepEqual(newData, newSymbolToken);
       assert.deepEqual(oldData, nullToken);
     });
+
+    it('should throw if token does not exist', async () => {
+      try {
+        await tokenReg.setTokenSymbol(nullToken.address, newSymbolToken.symbol, { from: owner });
+        throw new Error('setTokenSymbol succeeded when it should have failed');
+      } catch(err) {
+        testUtil.assertThrow(err);
+      }
+    });
   });
 
   describe('removeToken', () => {
@@ -133,6 +158,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       assert.equal(res.logs.length, 1);
       const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token.address);
       assert.deepEqual(tokenData, nullToken);
+    });
+
+    it('should throw if token does not exist', async () => {
+      try {
+        await tokenReg.removeToken(nullToken.address, { from: owner });
+        throw new Error('removeToken succeeded when it should have failed');
+      } catch(err) {
+        testUtil.assertThrow(err);
+      }
     });
   });
 });
