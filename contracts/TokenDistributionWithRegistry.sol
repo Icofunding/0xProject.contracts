@@ -232,6 +232,7 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
     /// @param isRegistered New registration status of address.
     function changeRegistrationStatus(address target, bool isRegistered)
         onlyOwner
+        distributionNotInitialized
     {
         registered[target] = isRegistered;
     }
@@ -241,6 +242,7 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
     /// @param isRegistered New registration status of addresss.
     function changeRegistrationStatuses(address[] targets, bool isRegistered)
         onlyOwner
+        distributionNotInitialized
     {
         for (uint i = 0; i < targets.length; i++) {
             changeRegistrationStatus(targets[i], isRegistered);
