@@ -7,7 +7,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
     address public PROXY_CONTRACT;
 
     modifier validRemoveAuthorizedAddressTx(uint transactionId) {
-        Transaction tx = transactions[transactionId];
+        Transaction storage tx = transactions[transactionId];
         assert(tx.destination == PROXY_CONTRACT);
         assert(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
@@ -37,7 +37,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
         confirmationTimeSet(transactionId)
         validRemoveAuthorizedAddressTx(transactionId)
     {
-        Transaction tx = transactions[transactionId];
+        Transaction storage tx = transactions[transactionId];
         tx.executed = true;
         if (tx.destination.call.value(tx.value)(tx.data))
             Execution(transactionId);

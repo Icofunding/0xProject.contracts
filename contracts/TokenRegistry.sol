@@ -124,7 +124,7 @@ contract TokenRegistry is Ownable {
                 break;
             }
         }
-        TokenMetadata token = tokens[_token];
+        TokenMetadata storage token = tokens[_token];
         LogRemoveToken(
             token.token,
             token.name,
@@ -146,7 +146,7 @@ contract TokenRegistry is Ownable {
         onlyOwner
         tokenExists(_token)
     {
-        TokenMetadata token = tokens[_token];
+        TokenMetadata storage token = tokens[_token];
         LogTokenNameChange(_token, token.name, _name);
         delete tokenByName[token.name];
         tokenByName[_name] = _token;
@@ -161,7 +161,7 @@ contract TokenRegistry is Ownable {
         onlyOwner
         tokenExists(_token)
     {
-        TokenMetadata token = tokens[_token];
+        TokenMetadata storage token = tokens[_token];
         LogTokenSymbolChange(_token, token.symbol, _symbol);
         delete tokenBySymbol[token.symbol];
         tokenBySymbol[_symbol] = _token;
@@ -176,7 +176,7 @@ contract TokenRegistry is Ownable {
         onlyOwner
         tokenExists(_token)
     {
-        TokenMetadata token = tokens[_token];
+        TokenMetadata storage token = tokens[_token];
         LogTokenIpfsHashChange(_token, token.ipfsHash, _ipfsHash);
         token.ipfsHash = _ipfsHash;
     }
@@ -185,11 +185,11 @@ contract TokenRegistry is Ownable {
     /// @param _token Address of existing token.
     /// @param _swarmHash New Swarm hash.
     function setTokenSwarmHash(address _token, bytes _swarmHash)
-      public
-      onlyOwner
-      tokenExists(_token)
+        public
+        onlyOwner
+        tokenExists(_token)
     {
-        TokenMetadata token = tokens[_token];
+        TokenMetadata storage token = tokens[_token];
         LogTokenSwarmHashChange(_token, token.swarmHash, _swarmHash);
         token.swarmHash = _swarmHash;
     }
@@ -216,6 +216,7 @@ contract TokenRegistry is Ownable {
     /// @param _token Address of registered token.
     /// @return Token metadata.
     function getTokenMetaData(address _token)
+        public
         constant
         returns (
             address tokenAddress,
@@ -241,6 +242,7 @@ contract TokenRegistry is Ownable {
     /// @param _name Name of registered token.
     /// @return Token metadata.
     function getTokenByName(string _name)
+        public
         constant
         returns (
             address tokenAddress,
@@ -259,6 +261,7 @@ contract TokenRegistry is Ownable {
     /// @param _symbol Symbol of registered token.
     /// @return Token metadata.
     function getTokenBySymbol(string _symbol)
+        public
         constant
         returns (
             address tokenAddress,
@@ -275,7 +278,11 @@ contract TokenRegistry is Ownable {
 
     /// @dev Returns an array containing all token addresses.
     /// @return Array of token addresses.
-    function getTokenAddresses() constant returns (address[]) {
+    function getTokenAddresses()
+        public
+        constant
+        returns (address[])
+    {
         return tokenAddresses;
     }
 }
