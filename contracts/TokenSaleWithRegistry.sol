@@ -8,7 +8,7 @@ import "./base/SafeMath.sol";
 
 contract TokenSaleWithRegistry is Ownable, SafeMath {
 
-    event Initialized(
+    event SaleInitialized(
         address maker,
         address taker,
         address makerToken,
@@ -25,7 +25,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         bytes32 s
     );
 
-    event Finished();
+    event SaleFinished();
 
     address public PROXY_CONTRACT;
     address public EXCHANGE_CONTRACT;
@@ -39,9 +39,10 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     mapping (address => bool) public registered;
     mapping (address => uint) public contributed;
 
-    bool public isInitialized;
-    bool public isFinished;
+    bool public isSaleInitialized;
+    bool public isSaleFinished;
     uint public ethCapPerAddress;
+    uint public startBlockNumber;
     Order order;
 
     struct Order {
@@ -63,22 +64,27 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     }
 
     modifier saleInitialized() {
-        assert(isInitialized);
+        assert(isSaleInitialized);
         _;
     }
 
     modifier saleNotInitialized() {
-        assert(!isInitialized);
+        assert(!isSaleInitialized);
         _;
     }
 
     modifier saleNotFinished() {
-        assert(!isFinished);
+        assert(!isSaleFinished);
         _;
     }
 
     modifier callerIsRegistered() {
         require(registered[msg.sender]);
+        _;
+    }
+
+    modifier pastStartBlock() {
+        assert(block.number >= startBlockNumber);
         _;
     }
 
@@ -113,12 +119,14 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     /// @param v ECDSA signature parameter v.
     /// @param r CDSA signature parameters r.
     /// @param s CDSA signature parameters s.
-    function init(
+    /// @param _startBlockNumber Block after which order will become fillable.
+    function initializeSale(
         address[5] orderAddresses,
         uint[6] orderValues,
         uint8 v,
         bytes32 r,
-        bytes32 s)
+        bytes32 s,
+        uint _startBlockNumber)
         public
         saleNotInitialized
         onlyOwner
@@ -144,6 +152,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         require(order.taker == address(this));
         require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
         require(order.takerToken == ETH_TOKEN_CONTRACT);
+        require(order.feeRecipient == address(0));
 
         require(isValidSignature(
             order.maker,
@@ -154,9 +163,10 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         ));
 
         assert(Token(ETH_TOKEN_CONTRACT).approve(PROXY_CONTRACT, order.takerTokenAmount));
-        isInitialized = true;
+        isSaleInitialized = true;
+        startBlockNumber = _startBlockNumber;
 
-        Initialized(
+        SaleInitialized(
             order.maker,
             order.taker,
             order.makerToken,
@@ -181,6 +191,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         saleInitialized
         saleNotFinished
         callerIsRegistered
+        pastStartBlock
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
         uint allowedEth = safeSub(ethCapPerAddress, contributed[msg.sender]);
@@ -204,8 +215,8 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             assert(msg.sender.send(safeSub(msg.value, ethToFill)));
         }
         if (remainingEth == ethToFill) {
-            isFinished = true;
-            Finished();
+            isSaleFinished = true;
+            SaleFinished();
         }
     }
 
