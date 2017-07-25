@@ -54,6 +54,7 @@ contract Proxy is Ownable {
     /// @param target Address to authorize.
     /// @return Success of authorization.
     function addAuthorizedAddress(address target)
+        public
         onlyOwner
         targetNotAuthorized(target)
         returns (bool success)
@@ -68,6 +69,7 @@ contract Proxy is Ownable {
     /// @param target Address to remove authorization from.
     /// @return Success of deauthorization.
     function removeAuthorizedAddress(address target)
+        public
         onlyOwner
         targetAuthorized(target)
         returns (bool success)
@@ -95,6 +97,7 @@ contract Proxy is Ownable {
         address from,
         address to,
         uint value)
+        public
         onlyAuthorized
         returns (bool success)
     {
@@ -108,6 +111,7 @@ contract Proxy is Ownable {
     /// @dev Gets all authorized addresses.
     /// @return Array of authorized addresses.
     function getAuthorizedAddresses()
+        public
         constant
         returns (address[])
     {

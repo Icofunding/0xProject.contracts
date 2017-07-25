@@ -106,6 +106,7 @@ contract Exchange is SafeMath {
           uint8 v,
           bytes32 r,
           bytes32 s)
+          public
           returns (uint filledTakerTokenAmount)
     {
         Order memory order = Order({
@@ -215,6 +216,7 @@ contract Exchange is SafeMath {
         address[5] orderAddresses,
         uint[6] orderValues,
         uint canceltakerTokenAmount)
+        public
         returns (uint cancelledTakerTokenAmount)
     {
         Order memory order = Order({
@@ -279,6 +281,7 @@ contract Exchange is SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
+        public
         returns (bool success)
     {
         assert(fillOrder(
@@ -310,6 +313,7 @@ contract Exchange is SafeMath {
         uint8[] v,
         bytes32[] r,
         bytes32[] s)
+        public
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
@@ -341,6 +345,7 @@ contract Exchange is SafeMath {
         uint8[] v,
         bytes32[] r,
         bytes32[] s)
+        public
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
@@ -373,6 +378,7 @@ contract Exchange is SafeMath {
         uint8[] v,
         bytes32[] r,
         bytes32[] s)
+        public
         returns (uint filledTakerTokenAmount)
     {
         filledTakerTokenAmount = 0;
@@ -401,6 +407,7 @@ contract Exchange is SafeMath {
         address[5][] orderAddresses,
         uint[6][] orderValues,
         uint[] cancelTakerTokenAmounts)
+        public
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
@@ -422,10 +429,11 @@ contract Exchange is SafeMath {
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @return Keccak-256 hash of order.
     function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
+        public
         constant
         returns (bytes32 orderHash)
     {
-        return sha3(
+        return keccak256(
             address(this),
             orderAddresses[0], // maker
             orderAddresses[1], // taker
@@ -454,11 +462,12 @@ contract Exchange is SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
+        public
         constant
         returns (bool isValid)
     {
         return signer == ecrecover(
-            sha3("\x19Ethereum Signed Message:\n32", hash),
+            keccak256("\x19Ethereum Signed Message:\n32", hash),
             v,
             r,
             s
@@ -471,6 +480,7 @@ contract Exchange is SafeMath {
     /// @param target Value to multiply with numerator/denominator.
     /// @return Rounding error is present.
     function isRoundingError(uint numerator, uint denominator, uint target)
+        public
         constant
         returns (bool isError)
     {
@@ -483,6 +493,7 @@ contract Exchange is SafeMath {
     /// @param target Value to calculate partial of.
     /// @return Partial value of target.
     function getPartialAmount(uint numerator, uint denominator, uint target)
+        public
         constant
         returns (uint partialValue)
     {
@@ -493,6 +504,7 @@ contract Exchange is SafeMath {
     /// @param orderHash The Keccak-256 hash of the given order.
     /// @return Sum of values already filled and cancelled.
     function getUnavailableTakerTokenAmount(bytes32 orderHash)
+        public
         constant
         returns (uint unavailableTakerTokenAmount)
     {

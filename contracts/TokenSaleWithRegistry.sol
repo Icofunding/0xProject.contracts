@@ -6,7 +6,7 @@ import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
 
-contract TokenDistributionWithRegistry is Ownable, SafeMath {
+contract TokenSaleWithRegistry is Ownable, SafeMath {
 
     event Initialized(
         address maker,
@@ -62,17 +62,17 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         bytes32 orderHash;
     }
 
-    modifier distributionInitialized() {
+    modifier saleInitialized() {
         assert(isInitialized);
         _;
     }
 
-    modifier distributionNotInitialized() {
+    modifier saleNotInitialized() {
         assert(!isInitialized);
         _;
     }
 
-    modifier distributionNotFinished() {
+    modifier saleNotFinished() {
         assert(!isFinished);
         _;
     }
@@ -82,7 +82,7 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         _;
     }
 
-    function TokenDistributionWithRegistry(
+    function TokenSaleWithRegistry(
         address _exchange,
         address _proxy,
         address _protocolToken,
@@ -107,7 +107,7 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         fillOrderWithEth();
     }
 
-    /// @dev Stores order and initializes distribution.
+    /// @dev Stores order and initializes sale.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
@@ -119,7 +119,8 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
-        distributionNotInitialized
+        public
+        saleNotInitialized
         onlyOwner
     {
         order = Order({
@@ -152,7 +153,7 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
             s
         ));
 
-        assert(setTokenAllowance(order.takerToken, order.takerTokenAmount));
+        assert(Token(ETH_TOKEN_CONTRACT).approve(PROXY_CONTRACT, order.takerTokenAmount));
         isInitialized = true;
 
         Initialized(
@@ -175,9 +176,10 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
 
     /// @dev Fills order using msg.value.
     function fillOrderWithEth()
+        public
         payable
-        distributionInitialized
-        distributionNotFinished
+        saleInitialized
+        saleNotFinished
         callerIsRegistered
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
@@ -207,21 +209,10 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         }
     }
 
-    /// @dev Approves proxy to transfer a token.
-    /// @param _token Address of the token to approve.
-    /// @param _allowance Amount of token proxy can transfer.
-    /// @return Success of approval.
-    function setTokenAllowance(address _token, uint _allowance)
-        onlyOwner
-        returns (bool success)
-    {
-        assert(Token(_token).approve(PROXY_CONTRACT, _allowance));
-        return true;
-    }
-
     /// @dev Sets the cap per address to a new value.
     /// @param _newCapPerAddress New value of the cap per address.
     function setCapPerAddress(uint _newCapPerAddress)
+        public
         onlyOwner
     {
         ethCapPerAddress = _newCapPerAddress;
@@ -231,8 +222,9 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
     /// @param target Address that will be registered/deregistered.
     /// @param isRegistered New registration status of address.
     function changeRegistrationStatus(address target, bool isRegistered)
+        public
         onlyOwner
-        distributionNotInitialized
+        saleNotInitialized
     {
         registered[target] = isRegistered;
     }
@@ -241,8 +233,9 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
     /// @param targets Addresses that will be registered/deregistered.
     /// @param isRegistered New registration status of addresss.
     function changeRegistrationStatuses(address[] targets, bool isRegistered)
+        public
         onlyOwner
-        distributionNotInitialized
+        saleNotInitialized
     {
         for (uint i = 0; i < targets.length; i++) {
             changeRegistrationStatus(targets[i], isRegistered);
@@ -254,10 +247,11 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @return Keccak-256 hash of order.
     function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
+        public
         constant
         returns (bytes32 orderHash)
     {
-        return sha3(
+        return keccak256(
             EXCHANGE_CONTRACT,
             orderAddresses[0],
             orderAddresses[1],
@@ -286,11 +280,12 @@ contract TokenDistributionWithRegistry is Ownable, SafeMath {
         uint8 v,
         bytes32 r,
         bytes32 s)
+        public
         constant
         returns (bool isValid)
     {
         return pubKey == ecrecover(
-            sha3("\x19Ethereum Signed Message:\n32", hash),
+            keccak256("\x19Ethereum Signed Message:\n32", hash),
             v,
             r,
             s

@@ -4,12 +4,10 @@ machine:
 
 dependencies:
   pre:
-    - npm install -g npm@3.10.10
-    - npm install ethereumjs-testrpc@3.0.2
-    - npm install -g truffle@3.2.5
+    - npm install -g npm@5.1.0
 
 test:
   override:
-    - node node_modules/ethereumjs-testrpc/bin/testrpc:
+    - npm run testrpc:
         background: true
     - npm run test
