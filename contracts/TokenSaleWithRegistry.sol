@@ -8,24 +8,10 @@ import "./base/SafeMath.sol";
 
 contract TokenSaleWithRegistry is Ownable, SafeMath {
 
-    event SaleInitialized(
-        address maker,
-        address taker,
-        address makerToken,
-        address takerToken,
-        address feeRecipient,
-        uint makerTokenAmount,
-        uint takerTokenAmount,
-        uint makerFee,
-        uint takerFee,
-        uint expirationTimestampInSec,
-        uint salt,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    );
+    event SaleInitialized(uint startTimeInSec);
+    event SaleFinished(uint endTimeInSec);
 
-    event SaleFinished();
+    uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
     address public PROXY_CONTRACT;
     address public EXCHANGE_CONTRACT;
@@ -41,8 +27,8 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
 
     bool public isSaleInitialized;
     bool public isSaleFinished;
-    uint public ethCapPerAddress;
-    uint public startBlockNumber;
+    uint public baseEthCapPerAddress;
+    uint public startTimeInSec;
     Order order;
 
     struct Order {
@@ -63,13 +49,13 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         bytes32 orderHash;
     }
 
-    modifier saleInitialized() {
-        assert(isSaleInitialized);
+    modifier saleNotInitialized() {
+        assert(!isSaleInitialized);
         _;
     }
 
-    modifier saleNotInitialized() {
-        assert(!isSaleInitialized);
+    modifier saleStarted() {
+        assert(startTimeInSec != 0 && block.timestamp >= startTimeInSec);
         _;
     }
 
@@ -78,13 +64,18 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         _;
     }
 
-    modifier callerIsRegistered() {
+    modifier onlyRegistered() {
         require(registered[msg.sender]);
         _;
     }
 
-    modifier pastStartBlock() {
-        assert(block.number >= startBlockNumber);
+    modifier validStartTime(uint _startTimeInSec) {
+        require(_startTimeInSec >= block.timestamp);
+        _;
+    }
+
+    modifier validBaseEthCapPerAddress(uint _ethCapPerAddress) {
+        require(_ethCapPerAddress != 0);
         _;
     }
 
@@ -92,14 +83,12 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         address _exchange,
         address _proxy,
         address _protocolToken,
-        address _ethToken,
-        uint _capPerAddress)
+        address _ethToken)
     {
         PROXY_CONTRACT = _proxy;
         EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
-        ethCapPerAddress = _capPerAddress;
 
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
@@ -113,23 +102,27 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         fillOrderWithEth();
     }
 
-    /// @dev Stores order and initializes sale.
+    /// @dev Stores order and initializes sale parameters.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
     /// @param r CDSA signature parameters r.
     /// @param s CDSA signature parameters s.
-    /// @param _startBlockNumber Block after which order will become fillable.
+    /// @param _startTimeInSec Time that token sale begins in seconds since epoch.
+    /// @param _baseEthCapPerAddress The ETH cap per address for the first time period.
     function initializeSale(
         address[5] orderAddresses,
         uint[6] orderValues,
         uint8 v,
         bytes32 r,
         bytes32 s,
-        uint _startBlockNumber)
+        uint _startTimeInSec,
+        uint _baseEthCapPerAddress)
         public
         saleNotInitialized
         onlyOwner
+        validStartTime(_startTimeInSec)
+        validBaseEthCapPerAddress(_baseEthCapPerAddress)
     {
         order = Order({
             maker: orderAddresses[0],
@@ -164,36 +157,22 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
 
         assert(Token(ETH_TOKEN_CONTRACT).approve(PROXY_CONTRACT, order.takerTokenAmount));
         isSaleInitialized = true;
-        startBlockNumber = _startBlockNumber;
+        startTimeInSec = _startTimeInSec;
+        baseEthCapPerAddress = _baseEthCapPerAddress;
 
-        SaleInitialized(
-            order.maker,
-            order.taker,
-            order.makerToken,
-            order.takerToken,
-            order.feeRecipient,
-            order.makerTokenAmount,
-            order.takerTokenAmount,
-            order.makerFee,
-            order.takerFee,
-            order.expirationTimestampInSec,
-            order.salt,
-            order.v,
-            order.r,
-            order.s
-        );
+        SaleInitialized(_startTimeInSec);
     }
 
     /// @dev Fills order using msg.value.
     function fillOrderWithEth()
         public
         payable
-        saleInitialized
+        saleStarted
         saleNotFinished
-        callerIsRegistered
-        pastStartBlock
+        onlyRegistered
     {
         uint remainingEth = safeSub(order.takerTokenAmount, exchange.getUnavailableTakerTokenAmount(order.orderHash));
+        uint ethCapPerAddress = getEthCapPerAddress();
         uint allowedEth = safeSub(ethCapPerAddress, contributed[msg.sender]);
         uint ethToFill = min256(min256(msg.value, remainingEth), allowedEth);
         ethToken.deposit.value(ethToFill)();
@@ -216,17 +195,8 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         }
         if (remainingEth == ethToFill) {
             isSaleFinished = true;
-            SaleFinished();
+            SaleFinished(block.timestamp);
         }
-    }
-
-    /// @dev Sets the cap per address to a new value.
-    /// @param _newCapPerAddress New value of the cap per address.
-    function setCapPerAddress(uint _newCapPerAddress)
-        public
-        onlyOwner
-    {
-        ethCapPerAddress = _newCapPerAddress;
     }
 
     /// @dev Changes registration status of an address for participation.
@@ -251,6 +221,28 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         for (uint i = 0; i < targets.length; i++) {
             changeRegistrationStatus(targets[i], isRegistered);
         }
+    }
+
+    /// @dev Calculates the ETH cap per address. The cap increases by double the previous increase at each next period. E.g 1, 3, 7, 15
+    /// @return THe current ETH cap per address.
+    function getEthCapPerAddress()
+        public
+        constant
+        returns (uint ethCapPerAddress)
+    {
+        uint timeSinceStartInSec = safeSub(block.timestamp, startTimeInSec);
+        uint currentPeriod = safeAdd(                           // currentPeriod begins at 1
+              safeDiv(timeSinceStartInSec, TIME_PERIOD_IN_SEC), // rounds down
+              1
+        );
+
+        return safeMul(
+            baseEthCapPerAddress,
+            safeSub(
+                2 ** currentPeriod,
+                currentPeriod
+            )
+        );
     }
 
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
