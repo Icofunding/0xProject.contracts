@@ -13,7 +13,6 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public PROXY_CONTRACT;
     address public EXCHANGE_CONTRACT;
     address public PROTOCOL_TOKEN_CONTRACT;
     address public ETH_TOKEN_CONTRACT;
@@ -81,11 +80,9 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
 
     function TokenSaleWithRegistry(
         address _exchange,
-        address _proxy,
         address _protocolToken,
         address _ethToken)
     {
-        PROXY_CONTRACT = _proxy;
         EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
@@ -155,7 +152,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             s
         ));
 
-        assert(Token(ETH_TOKEN_CONTRACT).approve(PROXY_CONTRACT, order.takerTokenAmount));
+        assert(ethToken.approve(exchange.PROXY_CONTRACT(), order.takerTokenAmount));
         isSaleInitialized = true;
         startTimeInSec = _startTimeInSec;
         baseEthCapPerAddress = _baseEthCapPerAddress;
