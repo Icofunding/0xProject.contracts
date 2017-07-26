@@ -33,6 +33,8 @@ contract Exchange is SafeMath {
         INSUFFICIENT_BALANCE_OR_ALLOWANCE // Insufficient balance or allowance for token transfer
     }
 
+    uint16 constant CONSTANT_EXTERNAL_CALL_GAS_LIMIT = 4999;    // Gas limit at which state update cannot occur
+
     address public ZRX_TOKEN_CONTRACT;
     address public PROXY_CONTRACT;
 
@@ -237,7 +239,7 @@ contract Exchange is SafeMath {
 
         require(order.maker == msg.sender);
         require(order.makerTokenAmount > 0 && order.takerTokenAmount > 0);
-        
+
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
@@ -586,7 +588,7 @@ contract Exchange is SafeMath {
         constant
         returns (uint balance)
     {
-        return Token(token).balanceOf(owner);
+        return Token(token).balanceOf.gas(CONSTANT_EXTERNAL_CALL_GAS_LIMIT)(owner); // Limit gas to prevent reentrancy
     }
 
     /// @dev Get allowance of token given to PROXY_CONTRACT by an address.
@@ -598,6 +600,6 @@ contract Exchange is SafeMath {
         constant
         returns (uint allowance)
     {
-        return Token(token).allowance(owner, PROXY_CONTRACT);
+        return Token(token).allowance.gas(CONSTANT_EXTERNAL_CALL_GAS_LIMIT)(owner, PROXY_CONTRACT); // Limit gas to prevent reentrancy
     }
 }
