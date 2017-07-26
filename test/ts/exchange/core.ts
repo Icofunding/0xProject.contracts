@@ -17,6 +17,7 @@ const {
   Proxy,
   DummyToken,
   TokenRegistry,
+  MaliciousToken,
 } = new Artifacts(artifacts);
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
@@ -541,6 +542,22 @@ contract('Exchange', (accounts: string[]) => {
       await exWrapper.fillOrderAsync(order, taker);
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
+    });
+
+    it('should throw if getBalance or getAllowance attempts to change state and shouldThrowOnInsufficientBalanceOrAllowance = false', async () => {
+      const maliciousToken = await MaliciousToken.new();
+      await maliciousToken.approve(Proxy.address, INIT_ALLOW, { from: taker });
+
+      order = await orderFactory.newSignedOrderAsync({
+        takerToken: maliciousToken.address,
+      });
+
+      try {
+        await exWrapper.fillOrderAsync(order, taker, { shouldThrowOnInsufficientBalanceOrAllowance: false });
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
 
     it('should not change balances if an order is expired', async () => {
