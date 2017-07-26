@@ -35,12 +35,12 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  const baseEthCapPerAddress = new BigNumber(web3Instance.toWei(.1, 'ether'));
+  const baseEthCapPerAddress = new BigNumber(web3Instance.toWei(0.1, 'ether'));
   const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
   const timePeriodInSec = 86400; // seconds in 1 day
   const secondsToAdd = 100; // seconds until start time from current timestamp
 
-  let currentTimestamp: BigNumber.BigNumber;
+  let currentBlockTimestamp: BigNumber.BigNumber;
   let startTimeInSec: BigNumber.BigNumber;
 
   let tokenRegistry: ContractInstance;
@@ -61,16 +61,28 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   const getEthBalanceAsync = promisify(web3Instance.eth.getBalance);
   const getTransactionReceiptAsync = promisify(web3Instance.eth.getTransactionReceipt);
 
-  const getBlockTimestampAsync = async () => {
+  const getBlockTimestampAsync = async (): Promise<BigNumber.BigNumber> => {
     const blockNum = await promisify(web3Instance.eth.getBlockNumber)();
     const blockData = await promisify(web3Instance.eth.getBlock)(blockNum);
     const blockTimestamp: number = blockData.timestamp;
 
-    return blockTimestamp;
+    return new BigNumber(blockTimestamp);
   };
 
-  const getEthCapPerAddress = (baseEthCapPerAddress: BigNumber.BigNumber, periodNumber: number): BigNumber.BigNumber => {
-    const ethCapPerAddress = baseEthCapPerAddress.mul(Math.pow(2, periodNumber) - 1);
+  const getHardCodedEthCapPerAddress = (baseEthCapPerAddress: BigNumber.BigNumber, periodNumber: number): BigNumber.BigNumber => {
+    let multiplier: number;
+    if (periodNumber > 4) {
+      throw new Error('Only period numbers up to 4 are hard coded into getHardCodedEthCapPerAddress');
+    } else if (periodNumber === 4) {
+      multiplier = 15;
+    } else if (periodNumber === 3) {
+      multiplier = 7;
+    } else if (periodNumber === 2) {
+      multiplier = 3;
+    } else if (periodNumber === 1) {
+      multiplier = 1;
+    }
+    const ethCapPerAddress = baseEthCapPerAddress.mul(multiplier);
     return ethCapPerAddress;
   };
 
@@ -123,8 +135,8 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       zrx.setBalance(maker, mul(validOrder.params.makerTokenAmount, 100), { from: owner }),
     ]);
 
-    currentTimestamp = new BigNumber(await getBlockTimestampAsync());
-    startTimeInSec = currentTimestamp.plus(secondsToAdd);
+    currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
+    startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
   });
 
   describe('initializeSale', () => {
@@ -257,7 +269,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should throw with an invalid start time', async () => {
       const params = validOrder.createFill();
-      startTimeInSec = currentTimestamp.minus(1);
+      startTimeInSec = currentBlockTimestamp.minus(1);
       try {
         await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
@@ -372,9 +384,9 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('should throw if called after distrubution has been initialized', async () => {
       const params = validOrder.createFill();
 
-      currentTimestamp = new BigNumber(await getBlockTimestampAsync());
+      currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
       const secondsToAdd = 100;
-      startTimeInSec = currentTimestamp.plus(secondsToAdd);
+      startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
 
       await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
@@ -426,9 +438,9 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('should throw if called after distrubution has been initialized', async () => {
       const params = validOrder.createFill();
 
-      currentTimestamp = new BigNumber(await getBlockTimestampAsync());
+      currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
       const secondsToAdd = 100;
-      startTimeInSec = currentTimestamp.plus(secondsToAdd);
+      startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
 
       await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
@@ -491,7 +503,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await rpc.increaseTimeAsync(secondsToAdd);
       await rpc.mineBlockAsync();
 
-      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress();
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
       const expectedEthCapPerAddress = baseEthCapPerAddress;
       assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress.toString());
     });
@@ -515,7 +527,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       period += 1;
 
       const ethCapPerAddress2 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
-      const expectedEthCapPerAddress2 = getEthCapPerAddress(baseEthCapPerAddress, period);
+      const expectedEthCapPerAddress2 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
       assert.equal(ethCapPerAddress2.toString(), expectedEthCapPerAddress2.toString());
 
       await rpc.increaseTimeAsync(timePeriodInSec);
@@ -523,7 +535,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       period += 1;
 
       const ethCapPerAddress3 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
-      const expectedEthCapPerAddress3 = getEthCapPerAddress(baseEthCapPerAddress, period);
+      const expectedEthCapPerAddress3 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
       assert.equal(ethCapPerAddress3.toString(), expectedEthCapPerAddress3.toString());
     });
   });
@@ -644,7 +656,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
       });
 
-      it('should fill the remaining ethCapPerAddress if sent > than the remaining ethCapPerAddress',
+      it('should fill the remaining ethCapPerAddress and refund difference if sent > than the remaining ethCapPerAddress',
          async () => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
@@ -684,7 +696,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
       });
 
-      it('should partial fill and end sale if sender is registered and sent ETH > remaining order ETH', async () => {
+      it('should partial fill, end sale, and refund difference if sender is registered and sent ETH > remaining order ETH', async () => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
@@ -751,7 +763,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         await rpc.increaseTimeAsync(secondsToAdd);
         let period = 1;
-        let ethValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        let ethValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
         let res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
@@ -774,7 +786,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         await rpc.increaseTimeAsync(timePeriodInSec);
         period += 1;
-        let totalEthValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        let totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
         ethValue = totalEthValue.minus(ethValue);
         res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
@@ -798,7 +810,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         await rpc.increaseTimeAsync(timePeriodInSec);
         period += 1;
-        totalEthValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
         ethValue = totalEthValue.minus(ethValue);
         res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,

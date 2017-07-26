@@ -193,6 +193,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         if (remainingEth == ethToFill) {
             isSaleFinished = true;
             SaleFinished(block.timestamp);
+            return;
         }
     }
 
@@ -235,13 +236,14 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
               1
         );
 
-        return safeMul(
+        uint ethCapPerAddress = safeMul(
             baseEthCapPerAddress,
             safeSub(
                 2 ** currentPeriod,
                 1
             )
         );
+        return ethCapPerAddress;
     }
 
     /// @dev Calculates Keccak-256 hash of order with specified parameters.
