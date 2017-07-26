@@ -26,11 +26,12 @@ import "./base/SafeMath.sol";
 contract Exchange is SafeMath {
 
     // Error Codes
-    uint8 constant ERROR_ORDER_EXPIRED = 0;                     // Order has already expired
-    uint8 constant ERROR_ORDER_FULLY_FILLED_OR_CANCELLED = 1;   // Order has already been fully filled or cancelled
-    uint8 constant ERROR_ROUNDING_ERROR_TOO_LARGE = 2;          // Rounding error too large
-    uint8 constant ERROR_INSUFFICIENT_BALANCE_OR_ALLOWANCE = 3; // Insufficient balance or allowance for token transfer
-
+    enum Errors {
+        ORDER_EXPIRED,                    // Order has already expired
+        ORDER_FULLY_FILLED_OR_CANCELLED,  // Order has already been fully filled or cancelled
+        ROUNDING_ERROR_TOO_LARGE,         // Rounding error too large
+        INSUFFICIENT_BALANCE_OR_ALLOWANCE // Insufficient balance or allowance for token transfer
+    }
 
     address public ZRX_TOKEN_CONTRACT;
     address public PROXY_CONTRACT;
@@ -133,24 +134,24 @@ contract Exchange is SafeMath {
         ));
 
         if (block.timestamp >= order.expirationTimestampInSec) {
-            LogError(ERROR_ORDER_EXPIRED, order.orderHash);
+            LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
         filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
         if (filledTakerTokenAmount == 0) {
-            LogError(ERROR_ORDER_FULLY_FILLED_OR_CANCELLED, order.orderHash);
+            LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
         }
 
         if (isRoundingError(filledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount)) {
-            LogError(ERROR_ROUNDING_ERROR_TOO_LARGE, order.orderHash);
+            LogError(uint8(Errors.ROUNDING_ERROR_TOO_LARGE), order.orderHash);
             return 0;
         }
 
         if (!shouldThrowOnInsufficientBalanceOrAllowance && !isTransferable(order, filledTakerTokenAmount)) {
-            LogError(ERROR_INSUFFICIENT_BALANCE_OR_ALLOWANCE, order.orderHash);
+            LogError(uint8(Errors.INSUFFICIENT_BALANCE_OR_ALLOWANCE), order.orderHash);
             return 0;
         }
 
@@ -236,14 +237,14 @@ contract Exchange is SafeMath {
         require(order.maker == msg.sender);
 
         if (block.timestamp >= order.expirationTimestampInSec) {
-            LogError(ERROR_ORDER_EXPIRED, order.orderHash);
+            LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
         cancelledTakerTokenAmount = min256(canceltakerTokenAmount, remainingTakerTokenAmount);
         if (cancelledTakerTokenAmount == 0) {
-            LogError(ERROR_ORDER_FULLY_FILLED_OR_CANCELLED, order.orderHash);
+            LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
         }
 
