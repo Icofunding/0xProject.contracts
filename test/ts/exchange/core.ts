@@ -589,6 +589,32 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
+    it('should throw if makerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        makerTokenAmount: new BigNumber(0),
+      });
+
+      try {
+        await exWrapper.cancelOrderAsync(order, maker);
+        throw new Error('Cancel succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if takerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        takerTokenAmount: new BigNumber(0),
+      });
+
+      try {
+        await exWrapper.cancelOrderAsync(order, maker);
+        throw new Error('Cancel succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
     it('should be able to cancel a full order', async () => {
       await exWrapper.cancelOrderAsync(order, maker);
       await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });

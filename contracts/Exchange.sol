@@ -236,7 +236,8 @@ contract Exchange is SafeMath {
         });
 
         require(order.maker == msg.sender);
-
+        require(order.makerTokenAmount > 0 && order.takerTokenAmount > 0);
+        
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
             return 0;
