@@ -54,16 +54,17 @@ contract('ZRXToken', (accounts: string[]) => {
 
   describe('transfer', () => {
     it('should transfer balance from sender to receiver', async () => {
+      const receiver = spender;
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = new BigNumber(1);
-      await zrx.transfer(spender, amountToTransfer, { from: owner });
+      await zrx.transfer(receiver, amountToTransfer, { from: owner });
       const finalOwnerBalance = await zrx.balanceOf(owner);
-      const finalSpenderBalance = await zrx.balanceOf(spender);
+      const finalReceiverBalance = await zrx.balanceOf(receiver);
 
       const expectedFinalOwnerBalance = initOwnerBalance.minus(amountToTransfer);
-      const expectedFinalSpenderBalance = amountToTransfer;
+      const expectedFinalReceiverBalance = amountToTransfer;
       assert.equal(finalOwnerBalance.toString(), expectedFinalOwnerBalance.toString());
-      assert.equal(finalSpenderBalance.toString(), expectedFinalSpenderBalance.toString());
+      assert.equal(finalReceiverBalance.toString(), expectedFinalReceiverBalance.toString());
     });
 
     it('should return true on a 0 value transfer', async () => {
@@ -108,8 +109,16 @@ contract('ZRXToken', (accounts: string[]) => {
     });
 
     it('should return false if spender is not allowed unlimited and owner has insufficient allowance', async () => {
+      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
+      assert.equal(spenderHasUnlimitedAllowance, false);
+
       const ownerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = ownerBalance;
+
+      const spenderAllowance = await zrx.allowance(owner, spender);
+      const spenderAllowanceIsInsufficient = spenderAllowance.cmp(amountToTransfer) < 0;
+      assert.equal(spenderAllowanceIsInsufficient, true);
+
       const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
       assert.equal(didReturnTrue, false);
     });
@@ -123,7 +132,8 @@ contract('ZRXToken', (accounts: string[]) => {
     it('should transfer the correct balances if spender is allowed unlimited', async () => {
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
-      await zrx.approveUnlimited(spender, true, { from: owner });
+      const approval = true;
+      await zrx.approveUnlimited(spender, approval, { from: owner });
       await zrx.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
       const newOwnerBalance = await zrx.balanceOf(owner);
@@ -137,7 +147,8 @@ contract('ZRXToken', (accounts: string[]) => {
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
-      await zrx.approveUnlimited(spender, true, { from: owner });
+      const approval = true;
+      await zrx.approveUnlimited(spender, approval, { from: owner });
       await zrx.approve(spender, initSpenderAllowance, { from: owner });
       await zrx.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
@@ -146,6 +157,9 @@ contract('ZRXToken', (accounts: string[]) => {
     });
 
     it('should transfer the correct balances if spender is not allowed unlimited but has sufficient allowance', async () => {
+      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
+      assert.equal(spenderHasUnlimitedAllowance, false);
+
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
@@ -160,6 +174,9 @@ contract('ZRXToken', (accounts: string[]) => {
     });
 
     it('should modify allowance if spender is not allowed unlimited but has sufficient allowance', async () => {
+      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
+      assert.equal(spenderHasUnlimitedAllowance, false);
+
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;

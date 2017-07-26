@@ -30,14 +30,14 @@ contract ZRXToken is StandardToken {
         public
         returns (bool)
     {
-        bool isAllowedUnlimited = allowedUnlimited[_from][msg.sender];
-        if (   balances[_from] >= _value
-            && (isAllowedUnlimited || allowed[_from][msg.sender] >= _value)
+        bool hasUnlimitedAllowance = allowedUnlimited[_from][msg.sender];
+        if (balances[_from] >= _value
+            && (hasUnlimitedAllowance || allowed[_from][msg.sender] >= _value)
             && balances[_to] + _value >= balances[_to]
         ) {
             balances[_to] += _value;
             balances[_from] -= _value;
-            if (!isAllowedUnlimited) {
+            if (!hasUnlimitedAllowance) {
                 allowed[_from][msg.sender] -= _value;
             }
             Transfer(_from, _to, _value);
