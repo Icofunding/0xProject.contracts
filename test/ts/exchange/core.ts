@@ -371,6 +371,32 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
+    it('should throw if makerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        makerTokenAmount: new BigNumber(0),
+      });
+
+      try {
+        await exWrapper.fillOrderAsync(order, taker);
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if takerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        takerTokenAmount: new BigNumber(0),
+      });
+
+      try {
+        await exWrapper.fillOrderAsync(order, taker);
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
     it('should not change balances if maker balances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       order = await orderFactory.newSignedOrderAsync({
