@@ -54,7 +54,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     }
 
     modifier saleStarted() {
-        assert(startTimeInSec != 0 && block.timestamp >= startTimeInSec);
+        assert(isSaleInitialized && block.timestamp >= startTimeInSec);
         _;
     }
 
@@ -221,12 +221,14 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     }
 
     /// @dev Calculates the ETH cap per address. The cap increases by double the previous increase at each next period. E.g 1, 3, 7, 15
-    /// @return THe current ETH cap per address.
+    /// @return The current ETH cap per address.
     function getEthCapPerAddress()
         public
         constant
-        returns (uint ethCapPerAddress)
+        returns (uint)
     {
+        if (block.timestamp < startTimeInSec || startTimeInSec == 0) return 0;
+
         uint timeSinceStartInSec = safeSub(block.timestamp, startTimeInSec);
         uint currentPeriod = safeAdd(                           // currentPeriod begins at 1
               safeDiv(timeSinceStartInSec, TIME_PERIOD_IN_SEC), // rounds down
@@ -237,7 +239,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             baseEthCapPerAddress,
             safeSub(
                 2 ** currentPeriod,
-                currentPeriod
+                1
             )
         );
     }

@@ -37,7 +37,8 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
   const baseEthCapPerAddress = new BigNumber(web3Instance.toWei(.1, 'ether'));
   const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
-  const timePeriodInSec = 86400; // 1 day, in seconds
+  const timePeriodInSec = 86400; // seconds in 1 day
+  const secondsToAdd = 100; // seconds until start time from current timestamp
 
   let currentTimestamp: BigNumber.BigNumber;
   let startTimeInSec: BigNumber.BigNumber;
@@ -66,6 +67,11 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     const blockTimestamp: number = blockData.timestamp;
 
     return blockTimestamp;
+  };
+
+  const getEthCapPerAddress = (baseEthCapPerAddress: BigNumber.BigNumber, periodNumber: number): BigNumber.BigNumber => {
+    const ethCapPerAddress = baseEthCapPerAddress.mul(Math.pow(2, periodNumber) - 1);
+    return ethCapPerAddress;
   };
 
   before(async () => {
@@ -116,15 +122,12 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       zrx.approve(Proxy.address, mul(validOrder.params.makerTokenAmount, 100), { from: maker }),
       zrx.setBalance(maker, mul(validOrder.params.makerTokenAmount, 100), { from: owner }),
     ]);
+
+    currentTimestamp = new BigNumber(await getBlockTimestampAsync());
+    startTimeInSec = currentTimestamp.plus(secondsToAdd);
   });
 
   describe('initializeSale', () => {
-    beforeEach(async () => {
-      currentTimestamp = new BigNumber(await getBlockTimestampAsync());
-      const secondsToAdd = 100;
-      startTimeInSec = currentTimestamp.plus(secondsToAdd);
-    });
-
     it('should throw when not called by owner', async () => {
       const params = validOrder.createFill();
       try {
@@ -447,17 +450,88 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     });
   });
 
-  describe('contributing', () => {
-    const secondsToAdd = 100;
+  describe('getEthCapPerAddress', () => {
+    it('should return 0 before the sale has been initialized', async () => {
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress = '0';
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
+    });
 
+    it('should return 0 after the sale has been initialized but not yet started', async () => {
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress = '0';
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
+    });
+
+    it('should return the baseEthCapPerAddress during the first period', async () => {
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      await rpc.increaseTimeAsync(secondsToAdd);
+      await rpc.mineBlockAsync();
+
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress();
+      const expectedEthCapPerAddress = baseEthCapPerAddress;
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress.toString());
+    });
+
+    it('the ethCapPerAddress should increase by double the previous increase at each next period', async () => {
+      let period = 1;
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      await rpc.increaseTimeAsync(timePeriodInSec + secondsToAdd);
+      await rpc.mineBlockAsync();
+      period += 1;
+
+      const ethCapPerAddress2 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress2 = getEthCapPerAddress(baseEthCapPerAddress, period);
+      assert.equal(ethCapPerAddress2.toString(), expectedEthCapPerAddress2.toString());
+
+      await rpc.increaseTimeAsync(timePeriodInSec);
+      await rpc.mineBlockAsync();
+      period += 1;
+
+      const ethCapPerAddress3 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress3 = getEthCapPerAddress(baseEthCapPerAddress, period);
+      assert.equal(ethCapPerAddress3.toString(), expectedEthCapPerAddress3.toString());
+    });
+  });
+
+  describe('contributing', () => {
     beforeEach(async () => {
       const isRegistered = true;
       await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
-
-      const params = validOrder.createFill();
-
-      currentTimestamp = new BigNumber(await getBlockTimestampAsync());
-      startTimeInSec = currentTimestamp.plus(secondsToAdd);
     });
 
     describe('fillOrderWithEth', () => {
@@ -517,6 +591,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
           baseEthCapPerAddress,
           { from: owner },
         );
+
         try {
           const ethValue = new BigNumber(1);
           await tokenSaleWithRegistry.fillOrderWithEth({
@@ -656,6 +731,94 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         const isSaleFinished = await tokenSaleWithRegistry.isSaleFinished.call();
         assert.equal(isSaleFinished, true);
+      });
+
+      it('should allow an address to buy up to the new cap in each period', async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
+
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        await rpc.increaseTimeAsync(secondsToAdd);
+        let period = 1;
+        let ethValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        let res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        let finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        let finalTakerEthBalance = await getEthBalanceAsync(taker);
+        let totalEthSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        let totalFilledZrxValue = ethValue;
+        let totalFilledEthValue = ethValue;
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
+
+        await rpc.increaseTimeAsync(timePeriodInSec);
+        period += 1;
+        let totalEthValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        ethValue = totalEthValue.minus(ethValue);
+        res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        finalBalances = await dmyBalances.getAsync();
+        finalTakerEthBalance = await getEthBalanceAsync(taker);
+        totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
+        totalFilledZrxValue = totalEthValue;
+        totalFilledEthValue = totalEthValue;
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
+
+        await rpc.increaseTimeAsync(timePeriodInSec);
+        period += 1;
+        totalEthValue = getEthCapPerAddress(baseEthCapPerAddress, period);
+        ethValue = totalEthValue.minus(ethValue);
+        res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        finalBalances = await dmyBalances.getAsync();
+        finalTakerEthBalance = await getEthBalanceAsync(taker);
+        totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
+        totalFilledZrxValue = totalEthValue;
+        totalFilledEthValue = totalEthValue;
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
       });
 
       it('should throw if sale has ended', async () => {
