@@ -9,6 +9,7 @@ export class Artifacts {
   public EtherToken: any;
   public TokenSaleWithRegistry: any;
   public MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress: any;
+  public MaliciousToken: any;
   constructor(artifacts: any) {
     this.Migrations = artifacts.require('Migrations');
     this.Proxy = artifacts.require('Proxy');
@@ -20,5 +21,6 @@ export class Artifacts {
     this.EtherToken = artifacts.require('EtherToken');
     this.TokenSaleWithRegistry = artifacts.require('TokenSaleWithRegistry');
     this.MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress = artifacts.require('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress');
+    this.MaliciousToken = artifacts.require('MaliciousToken');
   }
 }

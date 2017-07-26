@@ -17,6 +17,7 @@ const {
   Proxy,
   DummyToken,
   TokenRegistry,
+  MaliciousToken,
 } = new Artifacts(artifacts);
 
 const { add, sub, mul, div, toSmallestUnits } = BNUtil;
@@ -27,8 +28,8 @@ contract('Exchange', (accounts: string[]) => {
   const taker = accounts[1] || accounts[accounts.length - 1];
   const feeRecipient = accounts[2] || accounts[accounts.length - 1];
 
-  const INIT_BAL = toSmallestUnits(10000);
-  const INIT_ALLOW = toSmallestUnits(10000);
+  const INITIAL_BALANCE = toSmallestUnits(10000);
+  const INITIAL_ALLOWANCE = toSmallestUnits(10000);
 
   let rep: ContractInstance;
   let dgd: ContractInstance;
@@ -75,18 +76,18 @@ contract('Exchange', (accounts: string[]) => {
     ]);
     dmyBalances = new Balances([rep, dgd, zrx], [maker, taker, feeRecipient]);
     await Promise.all([
-      rep.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      rep.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      rep.setBalance(maker, INIT_BAL, { from: tokenOwner }),
-      rep.setBalance(taker, INIT_BAL, { from: tokenOwner }),
-      dgd.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      dgd.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      dgd.setBalance(maker, INIT_BAL, { from: tokenOwner }),
-      dgd.setBalance(taker, INIT_BAL, { from: tokenOwner }),
-      zrx.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      zrx.approve(Proxy.address, INIT_ALLOW, { from: taker }),
-      zrx.setBalance(maker, INIT_BAL, { from: tokenOwner }),
-      zrx.setBalance(taker, INIT_BAL, { from: tokenOwner }),
+      rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      rep.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
+      rep.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
+      dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      dgd.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
+      dgd.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
+      zrx.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      zrx.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      zrx.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
+      zrx.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
     ]);
   });
 
@@ -451,7 +452,7 @@ contract('Exchange', (accounts: string[]) => {
        async () => {
       await rep.approve(Proxy.address, 0, { from: maker });
       await exWrapper.fillOrderAsync(order, taker);
-      await rep.approve(Proxy.address, INIT_ALLOW, { from: maker });
+      await rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -465,7 +466,7 @@ contract('Exchange', (accounts: string[]) => {
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
-        await rep.approve(Proxy.address, INIT_ALLOW, { from: maker });
+        await rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker });
       }
     });
 
@@ -473,7 +474,7 @@ contract('Exchange', (accounts: string[]) => {
        async () => {
       await dgd.approve(Proxy.address, 0, { from: taker });
       await exWrapper.fillOrderAsync(order, taker);
-      await dgd.approve(Proxy.address, INIT_ALLOW, { from: taker });
+      await dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -487,7 +488,7 @@ contract('Exchange', (accounts: string[]) => {
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
-        await dgd.approve(Proxy.address, INIT_ALLOW, { from: taker });
+        await dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
       }
     });
 
@@ -541,6 +542,22 @@ contract('Exchange', (accounts: string[]) => {
       await exWrapper.fillOrderAsync(order, taker);
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
+    });
+
+    it('should throw if getBalance or getAllowance attempts to change state and shouldThrowOnInsufficientBalanceOrAllowance = false', async () => {
+      const maliciousToken = await MaliciousToken.new();
+      await maliciousToken.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
+
+      order = await orderFactory.newSignedOrderAsync({
+        takerToken: maliciousToken.address,
+      });
+
+      try {
+        await exWrapper.fillOrderAsync(order, taker, { shouldThrowOnInsufficientBalanceOrAllowance: false });
+        throw new Error('Fill succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
     });
 
     it('should not change balances if an order is expired', async () => {
