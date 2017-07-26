@@ -351,14 +351,14 @@ contract Exchange is SafeMath {
         returns (bool success)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
-            assert(fillOrKillOrder(
+            fillOrKillOrder(
                 orderAddresses[i],
                 orderValues[i],
                 fillTakerTokenAmounts[i],
                 v[i],
                 r[i],
                 s[i]
-            ));
+            );
         }
         return true;
     }
