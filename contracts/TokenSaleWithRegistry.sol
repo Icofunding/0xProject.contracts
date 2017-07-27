@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "./Exchange.sol";
 import "./tokens/EtherToken.sol";
@@ -49,17 +49,17 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     }
 
     modifier saleNotInitialized() {
-        assert(!isSaleInitialized);
+        require(!isSaleInitialized);
         _;
     }
 
     modifier saleStarted() {
-        assert(isSaleInitialized && block.timestamp >= startTimeInSec);
+        require(isSaleInitialized && block.timestamp >= startTimeInSec);
         _;
     }
 
     modifier saleNotFinished() {
-        assert(!isSaleFinished);
+        require(!isSaleFinished);
         _;
     }
 
@@ -152,7 +152,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             s
         ));
 
-        assert(ethToken.approve(exchange.PROXY_CONTRACT(), order.takerTokenAmount));
+        require(ethToken.approve(exchange.PROXY_CONTRACT(), order.takerTokenAmount));
         isSaleInitialized = true;
         startTimeInSec = _startTimeInSec;
         baseEthCapPerAddress = _baseEthCapPerAddress;
@@ -176,7 +176,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
 
         contributed[msg.sender] = safeAdd(contributed[msg.sender], ethToFill);
 
-        assert(exchange.fillOrKillOrder(
+        require(exchange.fillOrKillOrder(
             [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
             [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
             ethToFill,
@@ -185,10 +185,10 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             order.s
         ));
         uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
-        assert(protocolToken.transfer(msg.sender, filledProtocolToken));
+        require(protocolToken.transfer(msg.sender, filledProtocolToken));
 
         if (ethToFill < msg.value) {
-            assert(msg.sender.send(safeSub(msg.value, ethToFill)));
+            require(msg.sender.send(safeSub(msg.value, ethToFill)));
         }
         if (remainingEth == ethToFill) {
             isSaleFinished = true;
@@ -253,7 +253,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
     function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
         public
         constant
-        returns (bytes32 orderHash)
+        returns (bytes32)
     {
         return keccak256(
             EXCHANGE_CONTRACT,
@@ -286,7 +286,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         bytes32 s)
         public
         constant
-        returns (bool isValid)
+        returns (bool)
     {
         return pubKey == ecrecover(
             keccak256("\x19Ethereum Signed Message:\n32", hash),

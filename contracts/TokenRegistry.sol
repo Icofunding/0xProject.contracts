@@ -15,7 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "./base/Ownable.sol";
 
@@ -216,14 +216,14 @@ contract TokenRegistry is Ownable {
     /// @dev Provides a registered token's address when given the token symbol.
     /// @param _symbol Symbol of registered token.
     /// @return Token's address.
-    function getTokenAddressBySymbol(string _symbol) constant returns (address tokenAddress) {
+    function getTokenAddressBySymbol(string _symbol) constant returns (address) {
         return tokenBySymbol[_symbol];
     }
 
     /// @dev Provides a registered token's address when given the token name.
     /// @param _name Name of registered token.
     /// @return Token's address.
-    function getTokenAddressByName(string _name) constant returns (address tokenAddress) {
+    function getTokenAddressByName(string _name) constant returns (address) {
         return tokenByName[_name];
     }
 
@@ -234,12 +234,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address tokenAddress,
-            string name,
-            string symbol,
-            uint8 decimals,
-            bytes ipfsHash,
-            bytes swarmHash
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         TokenMetadata memory token = tokens[_token];
@@ -260,12 +260,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address tokenAddress,
-            string name,
-            string symbol,
-            uint8 decimals,
-            bytes ipfsHash,
-            bytes swarmHash
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         address _token = tokenByName[_name];
@@ -279,12 +279,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address tokenAddress,
-            string name,
-            string symbol,
-            uint8 decimals,
-            bytes ipfsHash,
-            bytes swarmHash
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         address _token = tokenBySymbol[_symbol];

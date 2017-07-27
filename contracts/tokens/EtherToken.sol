@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "../base/StandardTokenWithOverflowProtection.sol";
 
@@ -42,6 +42,6 @@ contract EtherToken is StandardTokenWithOverflowProtection {
     {
         balances[msg.sender] = safeSub(balances[msg.sender], amount);
         totalSupply = safeSub(totalSupply, amount);
-        assert(msg.sender.send(amount));
+        require(msg.sender.send(amount));
     }
 }
