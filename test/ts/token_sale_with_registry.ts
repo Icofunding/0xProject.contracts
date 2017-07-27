@@ -12,6 +12,7 @@ import { Order } from '../../util/order';
 import { BalancesByOwner, ContractInstance, OrderParams } from '../../util/types';
 import { Artifacts } from '../../util/artifacts';
 import { constants } from '../../util/constants';
+import { RPC } from '../../util/rpc';
 
 const {
   TokenSaleWithRegistry,
@@ -26,6 +27,7 @@ const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
 const web3Instance: Web3 = web3;
+const rpc = new RPC();
 
 contract('TokenSaleWithRegistry', (accounts: string[]) => {
   const maker = accounts[0];
@@ -33,8 +35,13 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  let ethCapPerAddress = new BigNumber(web3Instance.toWei(1, 'ether'));
+  const baseEthCapPerAddress = new BigNumber(web3Instance.toWei(0.1, 'ether'));
   const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
+  const timePeriodInSec = 86400; // seconds in 1 day
+  const secondsToAdd = 100; // seconds until start time from current timestamp
+
+  let currentBlockTimestamp: BigNumber.BigNumber;
+  let startTimeInSec: BigNumber.BigNumber;
 
   let tokenRegistry: ContractInstance;
   let tokenSaleWithRegistry: ContractInstance;
@@ -53,6 +60,31 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   const sendTransactionAsync = promisify(web3Instance.eth.sendTransaction);
   const getEthBalanceAsync = promisify(web3Instance.eth.getBalance);
   const getTransactionReceiptAsync = promisify(web3Instance.eth.getTransactionReceipt);
+
+  const getBlockTimestampAsync = async (): Promise<BigNumber.BigNumber> => {
+    const blockNum = await promisify(web3Instance.eth.getBlockNumber)();
+    const blockData = await promisify(web3Instance.eth.getBlock)(blockNum);
+    const blockTimestamp: number = blockData.timestamp;
+
+    return new BigNumber(blockTimestamp);
+  };
+
+  const getHardCodedEthCapPerAddress = (baseEthCapPerAddress: BigNumber.BigNumber, periodNumber: number): BigNumber.BigNumber => {
+    let multiplier: number;
+    if (periodNumber > 4) {
+      throw new Error('Only period numbers up to 4 are hard coded into getHardCodedEthCapPerAddress');
+    } else if (periodNumber === 4) {
+      multiplier = 15;
+    } else if (periodNumber === 3) {
+      multiplier = 7;
+    } else if (periodNumber === 2) {
+      multiplier = 3;
+    } else if (periodNumber === 1) {
+      multiplier = 1;
+    }
+    const ethCapPerAddress = baseEthCapPerAddress.mul(multiplier);
+    return ethCapPerAddress;
+  };
 
   before(async () => {
     [exchange, tokenRegistry] = await Promise.all([
@@ -75,10 +107,8 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   beforeEach(async () => {
     tokenSaleWithRegistry = await TokenSaleWithRegistry.new(
       Exchange.address,
-      Proxy.address,
       zrxAddress,
       wEthAddress,
-      ethCapPerAddress,
     );
 
     const expirationInFuture = new BigNumber(Math.floor(Date.now() / 1000) + 1000000000);
@@ -104,21 +134,26 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       zrx.approve(Proxy.address, mul(validOrder.params.makerTokenAmount, 100), { from: maker }),
       zrx.setBalance(maker, mul(validOrder.params.makerTokenAmount, 100), { from: owner }),
     ]);
+
+    currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
+    startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
   });
 
-  describe('init', () => {
+  describe('initializeSale', () => {
     it('should throw when not called by owner', async () => {
       const params = validOrder.createFill();
       try {
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
           { from: notOwner },
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -128,14 +163,16 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       try {
         const params = validOrder.createFill();
         const invalidR = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           invalidR,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -148,14 +185,16 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = newOrder.createFill();
 
       try {
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -168,14 +207,16 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = newOrder.createFill();
 
       try {
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -187,15 +228,80 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await invalidOrder.signAsync();
       const params = invalidOrder.createFill();
       try {
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
           { from: owner },
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if order feeRecipient is not null', async () => {
+      const invalidFeeRecipient = accounts[0];
+      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { feeRecipient: invalidFeeRecipient });
+      const invalidOrder = new Order(invalidOrderParams);
+      await invalidOrder.signAsync();
+      const params = invalidOrder.createFill();
+      try {
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+        throw new Error('initializeSale succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw with an invalid start time', async () => {
+      const params = validOrder.createFill();
+      startTimeInSec = currentBlockTimestamp.minus(1);
+      try {
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+        throw new Error('initializeSale succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if baseEthCapPerAddress is 0', async () => {
+      const params = validOrder.createFill();
+      const invalidBaseEthCapPerAddress = new BigNumber(0);
+      try {
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          invalidBaseEthCapPerAddress,
+          { from: owner },
+        );
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -203,56 +309,49 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should initialize the sale with valid order params and log correct args', async () => {
       const params = validOrder.createFill();
-      const res = await tokenSaleWithRegistry.init(
+      const res = await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
         params.r,
         params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
         { from: owner },
       );
 
       assert.equal(res.logs.length, 1, 'Expected a single event to fire when the sale is successfully initialized');
       const logArgs = res.logs[0].args;
-      assert.equal(logArgs.maker, validOrder.params.maker);
-      assert.equal(logArgs.taker, validOrder.params.taker);
-      assert.equal(logArgs.makerToken, validOrder.params.makerToken);
-      assert.equal(logArgs.takerToken, validOrder.params.takerToken);
-      assert.equal(logArgs.feeRecipient, validOrder.params.feeRecipient);
-      assert.equal(cmp(logArgs.makerTokenAmount, validOrder.params.makerTokenAmount), 0);
-      assert.equal(cmp(logArgs.takerTokenAmount, validOrder.params.takerTokenAmount), 0);
-      assert.equal(cmp(logArgs.makerFee, validOrder.params.makerFee), 0);
-      assert.equal(cmp(logArgs.takerFee, validOrder.params.takerFee), 0);
-      assert.equal(cmp(logArgs.expirationTimestampInSec, validOrder.params.expirationTimestampInSec), 0);
-      assert.equal(cmp(logArgs.salt, validOrder.params.salt), 0);
-      assert.equal(logArgs.v, validOrder.params.v);
-      assert.equal(logArgs.r, validOrder.params.r);
-      assert.equal(logArgs.s, validOrder.params.s);
+      assert.equal(logArgs.startTimeInSec.toString(), startTimeInSec.toString());
 
-      const isInitialized = await tokenSaleWithRegistry.isInitialized.call();
-      assert.equal(isInitialized, true);
+      const isSaleInitialized = await tokenSaleWithRegistry.isSaleInitialized.call();
+      assert.equal(isSaleInitialized, true);
     });
 
     it('should throw if the sale has already been initialized', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.init(
+      await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
         params.r,
         params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
         { from: owner },
       );
       try {
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
           { from: owner },
         );
-        throw new Error('init succeeded when it should have thrown');
+        throw new Error('initializeSale succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -284,12 +383,19 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should throw if called after distrubution has been initialized', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.init(
+
+      currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
+      const secondsToAdd = 100;
+      startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
+
+      await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
         params.r,
         params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
         { from: owner },
       );
       try {
@@ -331,12 +437,19 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should throw if called after distrubution has been initialized', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.init(
+
+      currentBlockTimestamp = new BigNumber(await getBlockTimestampAsync());
+      const secondsToAdd = 100;
+      startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
+
+      await tokenSaleWithRegistry.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
         params.r,
         params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
         { from: owner },
       );
       try {
@@ -349,22 +462,81 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     });
   });
 
-  describe('setCapPerAddress', () => {
-    it('should throw if not called by owner', async () => {
-      try {
-        const newCapPerAddress = web3Instance.toWei(1.1, 'ether');
-        await tokenSaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: notOwner });
-        throw new Error('setCapPerAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+  describe('getEthCapPerAddress', () => {
+    it('should return 0 before the sale has been initialized', async () => {
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress = '0';
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
     });
 
-    it('should set a new ethCapPerAddress if called by owner', async () => {
-      const newCapPerAddress = new BigNumber(web3Instance.toWei(1.1, 'ether'));
-      await tokenSaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
-      ethCapPerAddress = await tokenSaleWithRegistry.ethCapPerAddress.call();
-      assert.equal(cmp(newCapPerAddress, ethCapPerAddress), 0);
+    it('should return 0 after the sale has been initialized but not yet started', async () => {
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress = '0';
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
+    });
+
+    it('should return the baseEthCapPerAddress during the first period', async () => {
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      await rpc.increaseTimeAsync(secondsToAdd);
+      await rpc.mineBlockAsync();
+
+      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress = baseEthCapPerAddress;
+      assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress.toString());
+    });
+
+    it('the ethCapPerAddress should increase by double the previous increase at each next period', async () => {
+      let period = 1;
+      const params = validOrder.createFill();
+      await tokenSaleWithRegistry.initializeSale(
+        params.orderAddresses,
+        params.orderValues,
+        params.v,
+        params.r,
+        params.s,
+        startTimeInSec,
+        baseEthCapPerAddress,
+        { from: owner },
+      );
+
+      await rpc.increaseTimeAsync(timePeriodInSec + secondsToAdd);
+      await rpc.mineBlockAsync();
+      period += 1;
+
+      const ethCapPerAddress2 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress2 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
+      assert.equal(ethCapPerAddress2.toString(), expectedEthCapPerAddress2.toString());
+
+      await rpc.increaseTimeAsync(timePeriodInSec);
+      await rpc.mineBlockAsync();
+      period += 1;
+
+      const ethCapPerAddress3 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const expectedEthCapPerAddress3 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
+      assert.equal(ethCapPerAddress3.toString(), expectedEthCapPerAddress3.toString());
     });
   });
 
@@ -372,28 +544,10 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     beforeEach(async () => {
       const isRegistered = true;
       await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
-
-      const params = validOrder.createFill();
-      await tokenSaleWithRegistry.init(
-        params.orderAddresses,
-        params.orderValues,
-        params.v,
-        params.r,
-        params.s,
-        { from: owner },
-      );
     });
 
     describe('fillOrderWithEth', () => {
       it('should throw if sale not initialized', async () => {
-        tokenSaleWithRegistry = await TokenSaleWithRegistry.new(
-          Exchange.address,
-          Proxy.address,
-          zrxAddress,
-          wEthAddress,
-          ethCapPerAddress,
-          { from: owner },
-        );
         try {
           const ethValue = new BigNumber(1);
           await tokenSaleWithRegistry.fillOrderWithEth({
@@ -407,15 +561,6 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       });
 
       it('should throw if the caller is not registered', async () => {
-        tokenSaleWithRegistry = await TokenSaleWithRegistry.new(
-          Exchange.address,
-          Proxy.address,
-          zrxAddress,
-          wEthAddress,
-          ethCapPerAddress,
-          { from: owner },
-        );
-
         const isRegistered = false;
         await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
 
@@ -423,12 +568,39 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         validOrder = new Order(validOrderParams);
         await validOrder.signAsync();
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.init(
+        await tokenSaleWithRegistry.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
           params.r,
           params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        try {
+          const ethValue = new BigNumber(1);
+          await tokenSaleWithRegistry.fillOrderWithEth({
+            from: taker,
+            value: ethValue,
+          });
+          throw new Error('Fallback succeeded when it should have thrown');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
+      });
+
+      it('should throw if the sale has not started', async () => {
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
           { from: owner },
         );
 
@@ -449,9 +621,22 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
-        const ethValue = web3Instance.toWei(1, 'ether');
+        const ethValue = baseEthCapPerAddress;
         const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
 
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        await rpc.increaseTimeAsync(secondsToAdd);
         const res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
@@ -461,6 +646,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
         const finalTakerEthBalance = await getEthBalanceAsync(taker);
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
@@ -468,15 +654,28 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], ethValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], zrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
-      it('should fill the remaining ethCapPerAddress if sent > than the remaining ethCapPerAddress',
+      it('should fill the remaining ethCapPerAddress and refund difference if sent > than the remaining ethCapPerAddress',
          async () => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
-        const ethValue = add(ethCapPerAddress, 1);
+        const ethValue = add(baseEthCapPerAddress, 1);
 
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        await rpc.increaseTimeAsync(secondsToAdd);
         const res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
@@ -486,8 +685,9 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
         const finalTakerEthBalance = await getEthBalanceAsync(taker);
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
-        const filledZrxValue = ethCapPerAddress;
-        const filledEthValue = ethCapPerAddress;
+        const filledZrxValue = baseEthCapPerAddress;
+        const filledEthValue = baseEthCapPerAddress;
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
@@ -495,17 +695,29 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
-      it('should partial fill and end sale if sender is registered and sent ETH > remaining order ETH', async () => {
-        const newCapPerAddress = mul(validOrder.params.makerTokenAmount, 2);
-        await tokenSaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
+      it('should partial fill, end sale, and refund difference if sender is registered and sent ETH > remaining order ETH', async () => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
+        const newBaseEthCapPerAddress = validOrder.params.takerTokenAmount;
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          newBaseEthCapPerAddress,
+          { from: owner },
+        );
+
         const ethValue = add(validOrder.params.takerTokenAmount, 1);
 
+        await rpc.increaseTimeAsync(secondsToAdd);
         const res = await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
@@ -516,6 +728,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
         const filledZrxValue = validOrder.params.makerTokenAmount;
         const filledEthValue = validOrder.params.takerTokenAmount;
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
@@ -523,32 +736,134 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
 
         assert.equal(res.receipt.logs.length, 5, 'Expected 5 events to fire when the sale is successfully initialized');
         const finishedLog = res.receipt.logs[4];
-        const funcSig = finishedLog.topics[0].slice(2, 10);
-        const expectedFuncSig = crypto.solSHA3(['Finished()']).slice(0, 4).toString('hex');
-        assert.equal(funcSig, expectedFuncSig);
+        const logData = finishedLog.data;
+        const endTimeInSec = parseInt(logData, 16);
+        assert.equal(endTimeInSec.toString(), startTimeInSec.toString());
 
-        const isFinished = await tokenSaleWithRegistry.isFinished.call();
-        assert.equal(isFinished, true);
+        const isSaleFinished = await tokenSaleWithRegistry.isSaleFinished.call();
+        assert.equal(isSaleFinished, true);
+      });
+
+      it('should allow an address to buy up to the new cap in each period', async () => {
+        const initBalances: BalancesByOwner = await dmyBalances.getAsync();
+        const initTakerEthBalance = await getEthBalanceAsync(taker);
+
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        await rpc.increaseTimeAsync(secondsToAdd);
+        let period = 1;
+        let ethValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
+        let res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        let finalBalances: BalancesByOwner = await dmyBalances.getAsync();
+        let finalTakerEthBalance = await getEthBalanceAsync(taker);
+        let totalEthSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        let totalFilledZrxValue = ethValue;
+        let totalFilledEthValue = ethValue;
+        let remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
+
+        await rpc.increaseTimeAsync(timePeriodInSec);
+        period += 1;
+        let totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
+        ethValue = totalEthValue.minus(ethValue);
+        res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        finalBalances = await dmyBalances.getAsync();
+        finalTakerEthBalance = await getEthBalanceAsync(taker);
+        totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
+        totalFilledZrxValue = totalEthValue;
+        totalFilledEthValue = totalEthValue;
+        remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
+
+        await rpc.increaseTimeAsync(timePeriodInSec);
+        period += 1;
+        totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
+        ethValue = totalEthValue.minus(ethValue);
+        res = await tokenSaleWithRegistry.fillOrderWithEth({
+          from: taker,
+          value: ethValue,
+          gasPrice,
+        });
+
+        finalBalances = await dmyBalances.getAsync();
+        finalTakerEthBalance = await getEthBalanceAsync(taker);
+        totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
+        totalFilledZrxValue = totalEthValue;
+        totalFilledEthValue = totalEthValue;
+        remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
+
+        assert.equal(finalBalances[maker][validOrder.params.makerToken],
+                     sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalBalances[maker][validOrder.params.takerToken],
+                     add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
+        assert.equal(finalBalances[taker][validOrder.params.makerToken],
+                     add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
       it('should throw if sale has ended', async () => {
-        const newCapPerAddress = mul(validOrder.params.makerTokenAmount, 2);
-        await tokenSaleWithRegistry.setCapPerAddress(newCapPerAddress, { from: owner });
+        const newBaseEthCapPerAddress = validOrder.params.takerTokenAmount;
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          newBaseEthCapPerAddress,
+          { from: owner },
+        );
 
         const ethValue = add(validOrder.params.takerTokenAmount, 1);
 
+        await rpc.increaseTimeAsync(secondsToAdd);
         await tokenSaleWithRegistry.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
         });
 
-        const isFinished = await tokenSaleWithRegistry.isFinished.call();
-        assert.equal(isFinished, true);
+        const isSaleFinished = await tokenSaleWithRegistry.isSaleFinished.call();
+        assert.equal(isSaleFinished, true);
 
         try {
           const newEthValue = new BigNumber(1);
@@ -569,11 +884,24 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const initBalances: BalancesByOwner = await dmyBalances.getAsync();
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
-        const ethValue = web3Instance.toWei(1, 'ether');
+        const params = validOrder.createFill();
+        await tokenSaleWithRegistry.initializeSale(
+          params.orderAddresses,
+          params.orderValues,
+          params.v,
+          params.r,
+          params.s,
+          startTimeInSec,
+          baseEthCapPerAddress,
+          { from: owner },
+        );
+
+        const ethValue = baseEthCapPerAddress;
         const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
 
         const gas = 300000;
 
+        await rpc.increaseTimeAsync(secondsToAdd);
         const txHash = await sendTransactionAsync({
           from: taker,
           to: tokenSaleWithRegistry.address,

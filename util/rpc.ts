@@ -16,6 +16,11 @@ export class RPC {
     const payload = this.toPayload(method, params);
     return this.sendAsync(payload);
   }
+  public async mineBlockAsync() {
+    const method = 'evm_mine';
+    const payload = this.toPayload(method);
+    return this.sendAsync(payload);
+  }
   private toPayload(method: string, params: any[] = []) {
     const payload = JSON.stringify({
       id: this.id,
