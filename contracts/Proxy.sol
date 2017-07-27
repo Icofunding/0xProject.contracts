@@ -15,7 +15,7 @@
   limitations under the License.
 
 */
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "./base/Token.sol";
 import "./base/Ownable.sol";
