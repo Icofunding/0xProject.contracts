@@ -234,12 +234,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address,
-            string,
-            string,
-            uint8,
-            bytes,
-            bytes
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         TokenMetadata memory token = tokens[_token];
@@ -260,12 +260,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address,
-            string,
-            string,
-            uint8,
-            bytes,
-            bytes
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         address _token = tokenByName[_name];
@@ -279,12 +279,12 @@ contract TokenRegistry is Ownable {
         public
         constant
         returns (
-            address,
-            string,
-            string,
-            uint8,
-            bytes,
-            bytes
+            address,  //tokenAddress
+            string,   //name
+            string,   //symbol
+            uint8,    //decimals
+            bytes,    //ipfsHash
+            bytes     //swarmHash
         )
     {
         address _token = tokenBySymbol[_symbol];
