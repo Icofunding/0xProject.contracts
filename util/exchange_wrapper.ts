@@ -62,6 +62,19 @@ export class ExchangeWrapper {
       { from },
     );
   }
+  public batchFillOrKillOrdersAsync(orders: Order[], from: string,
+                              opts: { fillTakerTokenAmounts?: BigNumber.BigNumber[] } = {}) {
+    const params = formatters.createBatchFill(orders, undefined, opts.fillTakerTokenAmounts);
+    return this.exchange.batchFillOrKillOrders(
+      params.orderAddresses,
+      params.orderValues,
+      params.fillTakerTokenAmounts,
+      params.v,
+      params.r,
+      params.s,
+      { from },
+    );
+  }
   public fillOrdersUpToAsync(orders: Order[], from: string,
                              opts: { fillTakerTokenAmount?: BigNumber.BigNumber,
                                      shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
