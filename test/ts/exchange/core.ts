@@ -14,7 +14,7 @@ import { Artifacts } from '../../../util/artifacts';
 
 const {
   Exchange,
-  Proxy,
+  TokenProxy,
   DummyToken,
   TokenRegistry,
   MaliciousToken,
@@ -76,24 +76,24 @@ contract('Exchange', (accounts: string[]) => {
     ]);
     dmyBalances = new Balances([rep, dgd, zrx], [maker, taker, feeRecipient]);
     await Promise.all([
-      rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
-      rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      rep.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      rep.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker }),
       rep.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
       rep.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
-      dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
-      dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      dgd.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      dgd.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker }),
       dgd.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
       dgd.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
-      zrx.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker }),
-      zrx.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker }),
+      zrx.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: maker }),
+      zrx.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker }),
       zrx.setBalance(maker, INITIAL_BALANCE, { from: tokenOwner }),
       zrx.setBalance(taker, INITIAL_BALANCE, { from: tokenOwner }),
     ]);
   });
 
   describe('internal functions', () => {
-    it('should include transferViaProxy', () => {
-      assert.equal(exchange.transferViaProxy, undefined);
+    it('should include transferViaTokenProxy', () => {
+      assert.equal(exchange.transferViaTokenProxy, undefined);
     });
 
     it('should include isTransferable', () => {
@@ -450,9 +450,9 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should not change balances if maker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
-      await rep.approve(Proxy.address, 0, { from: maker });
+      await rep.approve(TokenProxy.address, 0, { from: maker });
       await exWrapper.fillOrderAsync(order, taker);
-      await rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker });
+      await rep.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: maker });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -461,20 +461,20 @@ contract('Exchange', (accounts: string[]) => {
     it('should throw if maker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       try {
-        await rep.approve(Proxy.address, 0, { from: maker });
+        await rep.approve(TokenProxy.address, 0, { from: maker });
         await exWrapper.fillOrderAsync(order, taker, { shouldThrowOnInsufficientBalanceOrAllowance: true });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
-        await rep.approve(Proxy.address, INITIAL_ALLOWANCE, { from: maker });
+        await rep.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: maker });
       }
     });
 
     it('should not change balances if taker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
-      await dgd.approve(Proxy.address, 0, { from: taker });
+      await dgd.approve(TokenProxy.address, 0, { from: taker });
       await exWrapper.fillOrderAsync(order, taker);
-      await dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
+      await dgd.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker });
 
       const newBalances = await dmyBalances.getAsync();
       assert.deepEqual(newBalances, balances);
@@ -483,12 +483,12 @@ contract('Exchange', (accounts: string[]) => {
     it('should throw if taker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       try {
-        await dgd.approve(Proxy.address, 0, { from: taker });
+        await dgd.approve(TokenProxy.address, 0, { from: taker });
         await exWrapper.fillOrderAsync(order, taker, { shouldThrowOnInsufficientBalanceOrAllowance: true });
         throw new Error('Fill succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
-        await dgd.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
+        await dgd.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker });
       }
     });
 
@@ -507,7 +507,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
-      const makerZRXAllowance = await zrx.allowance(maker, Proxy.address);
+      const makerZRXAllowance = await zrx.allowance(maker, TokenProxy.address);
       order = await orderFactory.newSignedOrderAsync({
         makerToken: zrx.address,
         makerTokenAmount: new BigNumber(makerZRXAllowance),
@@ -533,7 +533,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
-      const takerZRXAllowance = await zrx.allowance(taker, Proxy.address);
+      const takerZRXAllowance = await zrx.allowance(taker, TokenProxy.address);
       order = await orderFactory.newSignedOrderAsync({
         takerToken: zrx.address,
         takerTokenAmount: new BigNumber(takerZRXAllowance),
@@ -546,7 +546,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should throw if getBalance or getAllowance attempts to change state and shouldThrowOnInsufficientBalanceOrAllowance = false', async () => {
       const maliciousToken = await MaliciousToken.new();
-      await maliciousToken.approve(Proxy.address, INITIAL_ALLOWANCE, { from: taker });
+      await maliciousToken.approve(TokenProxy.address, INITIAL_ALLOWANCE, { from: taker });
 
       order = await orderFactory.newSignedOrderAsync({
         takerToken: maliciousToken.address,

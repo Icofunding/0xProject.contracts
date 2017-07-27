@@ -7,28 +7,28 @@ import { Artifacts } from '../../../util/artifacts';
 
 const {
   Exchange,
-  Proxy,
+  TokenProxy,
   DummyToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
 
 const { add, sub } = BNUtil;
 
-contract('Proxy', (accounts: string[]) => {
+contract('TokenProxy', (accounts: string[]) => {
   const INIT_BAL = 100000000;
   const INIT_ALLOW = 100000000;
 
   const owner = accounts[0];
   const notAuthorized = owner;
 
-  let proxy: ContractInstance;
+  let tokenProxy: ContractInstance;
   let tokenRegistry: ContractInstance;
   let rep: ContractInstance;
   let dmyBalances: Balances;
 
   before(async () => {
-    [proxy, tokenRegistry] = await Promise.all([
-      Proxy.deployed(),
+    [tokenProxy, tokenRegistry] = await Promise.all([
+      TokenProxy.deployed(),
       TokenRegistry.deployed(),
     ]);
     const repAddress = await tokenRegistry.getTokenAddressBySymbol('REP');
@@ -36,9 +36,9 @@ contract('Proxy', (accounts: string[]) => {
 
     dmyBalances = new Balances([rep], [accounts[0], accounts[1]]);
     await Promise.all([
-      rep.approve(Proxy.address, INIT_ALLOW, { from: accounts[0] }),
+      rep.approve(TokenProxy.address, INIT_ALLOW, { from: accounts[0] }),
       rep.setBalance(accounts[0], INIT_BAL, { from: owner }),
-      rep.approve(Proxy.address, INIT_ALLOW, { from: accounts[1] }),
+      rep.approve(TokenProxy.address, INIT_ALLOW, { from: accounts[1] }),
       rep.setBalance(accounts[1], INIT_BAL, { from: owner }),
     ]);
   });
@@ -46,8 +46,8 @@ contract('Proxy', (accounts: string[]) => {
   describe('transferFrom', () => {
     it('should throw when called by an unauthorized address', async () => {
       try {
-        await proxy.transferFrom(rep.address, accounts[0], accounts[1], 1000, { from: notAuthorized });
-        throw new Error('proxy.transferFrom succeeded when it should have thrown');
+        await tokenProxy.transferFrom(rep.address, accounts[0], accounts[1], 1000, { from: notAuthorized });
+        throw new Error('tokenProxy.transferFrom succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
       }
@@ -56,9 +56,9 @@ contract('Proxy', (accounts: string[]) => {
     it('should allow an authorized address to transfer', async () => {
       const balances = await dmyBalances.getAsync();
 
-      await proxy.addAuthorizedAddress(notAuthorized, { from: owner });
+      await tokenProxy.addAuthorizedAddress(notAuthorized, { from: owner });
       const transferAmt = 10000;
-      await proxy.transferFrom(rep.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
+      await tokenProxy.transferFrom(rep.address, accounts[0], accounts[1], transferAmt, { from: notAuthorized });
 
       const newBalances = await dmyBalances.getAsync();
       assert.equal(newBalances[accounts[0]][rep.address], sub(balances[accounts[0]][rep.address], transferAmt));

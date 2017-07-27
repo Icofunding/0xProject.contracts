@@ -20,9 +20,9 @@ pragma solidity 0.4.11;
 import "./base/Token.sol";
 import "./base/Ownable.sol";
 
-/// @title Proxy - Transfers tokens on behalf of contracts that have been approved via decentralized governance.
+/// @title TokenProxy - Transfers tokens on behalf of contracts that have been approved via decentralized governance.
 /// @author Amir Bandeali - <amir@0xProject.com>, Will Warren - <will@0xProject.com>
-contract Proxy is Ownable {
+contract TokenProxy is Ownable {
 
     /// @dev Only authorized addresses can invoke functions with this modifier.
     modifier onlyAuthorized {

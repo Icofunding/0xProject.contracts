@@ -12,7 +12,7 @@ import * as BigNumber from 'bignumber.js';
 
 const {
   Exchange,
-  Proxy,
+  TokenProxy,
   DummyToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
@@ -72,16 +72,16 @@ contract('Exchange', (accounts: string[]) => {
     ]);
     dmyBalances = new Balances([rep, dgd, zrx], [maker, taker, feeRecipient]);
     await Promise.all([
-      rep.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      rep.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      rep.approve(TokenProxy.address, INIT_ALLOW, { from: maker }),
+      rep.approve(TokenProxy.address, INIT_ALLOW, { from: taker }),
       rep.setBalance(maker, INIT_BAL, { from: tokenOwner }),
       rep.setBalance(taker, INIT_BAL, { from: tokenOwner }),
-      dgd.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      dgd.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      dgd.approve(TokenProxy.address, INIT_ALLOW, { from: maker }),
+      dgd.approve(TokenProxy.address, INIT_ALLOW, { from: taker }),
       dgd.setBalance(maker, INIT_BAL, { from: tokenOwner }),
       dgd.setBalance(taker, INIT_BAL, { from: tokenOwner }),
-      zrx.approve(Proxy.address, INIT_ALLOW, { from: maker }),
-      zrx.approve(Proxy.address, INIT_ALLOW, { from: taker }),
+      zrx.approve(TokenProxy.address, INIT_ALLOW, { from: maker }),
+      zrx.approve(TokenProxy.address, INIT_ALLOW, { from: taker }),
       zrx.setBalance(maker, INIT_BAL, { from: tokenOwner }),
       zrx.setBalance(taker, INIT_BAL, { from: tokenOwner }),
     ]);

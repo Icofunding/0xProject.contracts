@@ -13,20 +13,20 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
         _;
     }
 
-    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and proxy address.
+    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and tokenProxy address.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
-    /// @param _proxy Address of Proxy contract.
+    /// @param _tokenProxy Address of TokenProxy contract.
     function MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress(
         address[] _owners,
         uint _required,
         uint _secondsTimeLocked,
-        address _proxy)
+        address _tokenProxy)
         public
         MultiSigWalletWithTimeLock(_owners, _required, _secondsTimeLocked)
     {
-        PROXY_CONTRACT = _proxy;
+        PROXY_CONTRACT = _tokenProxy;
     }
 
     /// @dev Allows execution of removeAuthorizedAddress without time lock.
