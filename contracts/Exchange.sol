@@ -84,9 +84,9 @@ contract Exchange is SafeMath {
         bytes32 orderHash;
     }
 
-    function Exchange(address _ZRX_TOKEN_CONTRACT, address _TOKEN_PROXY_CONTRACT) {
-        ZRX_TOKEN_CONTRACT = _ZRX_TOKEN_CONTRACT;
-        TOKEN_PROXY_CONTRACT = _TOKEN_PROXY_CONTRACT;
+    function Exchange(address _zrxToken, address _tokenProxy) {
+        ZRX_TOKEN_CONTRACT = _zrxToken;
+        TOKEN_PROXY_CONTRACT = _tokenProxy;
     }
 
     /*
@@ -592,10 +592,10 @@ contract Exchange is SafeMath {
         return Token(token).balanceOf.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner); // Limit gas to prevent reentrancy
     }
 
-    /// @dev Get allowance of token given to TOKEN_PROXY_CONTRACT by an address.
+    /// @dev Get allowance of token given to TokenProxy by an address.
     /// @param token Address of token.
     /// @param owner Address of owner.
-    /// @return Allowance of token given to TOKEN_PROXY_CONTRACT by owner.
+    /// @return Allowance of token given to TokenProxy by owner.
     function getAllowance(address token, address owner)
         internal
         constant
