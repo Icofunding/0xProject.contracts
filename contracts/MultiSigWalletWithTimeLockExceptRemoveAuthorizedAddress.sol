@@ -4,11 +4,11 @@ import "./MultiSigWalletWithTimeLock.sol";
 
 contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
 
-    address public PROXY_CONTRACT;
+    address public TOKEN_PROXY_CONTRACT;
 
     modifier validRemoveAuthorizedAddressTx(uint transactionId) {
         Transaction storage tx = transactions[transactionId];
-        require(tx.destination == PROXY_CONTRACT);
+        require(tx.destination == TOKEN_PROXY_CONTRACT);
         require(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
     }
@@ -26,7 +26,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
         public
         MultiSigWalletWithTimeLock(_owners, _required, _secondsTimeLocked)
     {
-        PROXY_CONTRACT = _tokenProxy;
+        TOKEN_PROXY_CONTRACT = _tokenProxy;
     }
 
     /// @dev Allows execution of removeAuthorizedAddress without time lock.
