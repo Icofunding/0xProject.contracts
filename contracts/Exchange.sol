@@ -522,7 +522,7 @@ contract Exchange is SafeMath {
     * Internal functions
     */
 
-    /// @dev Transfers a token using TOKEN_TRANSFER_PROXY_CONTRACT transferFrom function.
+    /// @dev Transfers a token using TokenTransferProxy transferFrom function.
     /// @param token Address of token to transferFrom.
     /// @param from Address transfering token.
     /// @param to Address receiving token.
