@@ -71,6 +71,17 @@ contract TokenRegistry is Ownable {
         _;
     }
 
+    modifier nameDoesNotExist(string _name) {
+      require(tokenByName[_name] == address(0));
+      _;
+    }
+
+    modifier symbolDoesNotExist(string _symbol) {
+        require(tokenBySymbol[_symbol] == address(0));
+        _;
+    }
+
+
     /// @dev Allows owner to add a new token to the registry.
     /// @param _token Address of new token.
     /// @param _name Name of new token.
@@ -88,6 +99,8 @@ contract TokenRegistry is Ownable {
         public
         onlyOwner
         tokenDoesNotExist(_token)
+        symbolDoesNotExist(_symbol)
+        nameDoesNotExist(_name)
     {
         tokens[_token] = TokenMetadata({
             token: _token,
@@ -145,6 +158,7 @@ contract TokenRegistry is Ownable {
         public
         onlyOwner
         tokenExists(_token)
+        nameDoesNotExist(_name)
     {
         TokenMetadata storage token = tokens[_token];
         LogTokenNameChange(_token, token.name, _name);
@@ -160,6 +174,7 @@ contract TokenRegistry is Ownable {
         public
         onlyOwner
         tokenExists(_token)
+        symbolDoesNotExist(_symbol)
     {
         TokenMetadata storage token = tokens[_token];
         LogTokenSymbolChange(_token, token.symbol, _symbol);
