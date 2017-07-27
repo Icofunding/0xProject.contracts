@@ -646,6 +646,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const finalBalances: BalancesByOwner = await dmyBalances.getAsync();
         const finalTakerEthBalance = await getEthBalanceAsync(taker);
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], zrxValue));
@@ -653,7 +654,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], ethValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], zrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, ethValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
       it('should fill the remaining ethCapPerAddress and refund difference if sent > than the remaining ethCapPerAddress',
@@ -686,6 +687,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
         const filledZrxValue = baseEthCapPerAddress;
         const filledEthValue = baseEthCapPerAddress;
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
@@ -693,7 +695,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
       it('should partial fill, end sale, and refund difference if sender is registered and sent ETH > remaining order ETH', async () => {
@@ -726,6 +728,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
         const filledZrxValue = validOrder.params.makerTokenAmount;
         const filledEthValue = validOrder.params.takerTokenAmount;
+        const remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], filledZrxValue));
@@ -733,7 +736,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], filledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], filledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, filledEthValue), ethSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
 
         assert.equal(res.receipt.logs.length, 5, 'Expected 5 events to fire when the sale is successfully initialized');
         const finishedLog = res.receipt.logs[4];
@@ -775,6 +778,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         let totalEthSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
         let totalFilledZrxValue = ethValue;
         let totalFilledEthValue = ethValue;
+        let remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
@@ -782,7 +786,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
 
         await rpc.increaseTimeAsync(timePeriodInSec);
         period += 1;
@@ -799,6 +803,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
         totalFilledZrxValue = totalEthValue;
         totalFilledEthValue = totalEthValue;
+        remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
@@ -806,7 +811,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
 
         await rpc.increaseTimeAsync(timePeriodInSec);
         period += 1;
@@ -823,6 +828,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         totalEthSpentOnGas = add(totalEthSpentOnGas, mul(res.receipt.gasUsed, gasPrice));
         totalFilledZrxValue = totalEthValue;
         totalFilledEthValue = totalEthValue;
+        remainingTakerBalanceAfterFillAndGas = sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas);
 
         assert.equal(finalBalances[maker][validOrder.params.makerToken],
                      sub(initBalances[maker][validOrder.params.makerToken], totalFilledZrxValue));
@@ -830,7 +836,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
                      add(initBalances[maker][validOrder.params.takerToken], totalFilledEthValue));
         assert.equal(finalBalances[taker][validOrder.params.makerToken],
                      add(initBalances[taker][validOrder.params.makerToken], totalFilledZrxValue));
-        assert.equal(finalTakerEthBalance, sub(sub(initTakerEthBalance, totalFilledEthValue), totalEthSpentOnGas));
+        assert.equal(finalTakerEthBalance, remainingTakerBalanceAfterFillAndGas);
       });
 
       it('should throw if sale has ended', async () => {
