@@ -1,27 +1,27 @@
 import { ContractInstance } from '../util/types';
 import { Artifacts } from '../util/artifacts';
 const {
-  TokenProxy,
+  TokenTransferProxy,
   Exchange,
   TokenRegistry,
 } = new Artifacts(artifacts);
 
-let tokenProxy: ContractInstance;
+let tokenTransferProxy: ContractInstance;
 module.exports = (deployer: any) => {
   deployer.then(() => {
     return Promise.all([
-      TokenProxy.deployed(),
+      TokenTransferProxy.deployed(),
       TokenRegistry.deployed(),
     ]);
   })
   .then((instances: ContractInstance[]) => {
     let tokenRegistry: ContractInstance;
-    [tokenProxy, tokenRegistry] = instances;
+    [tokenTransferProxy, tokenRegistry] = instances;
     return tokenRegistry.getTokenAddressBySymbol('ZRX');
   })
   .then((ptAddress: string) => {
-    return deployer.deploy(Exchange, ptAddress, tokenProxy.address);
+    return deployer.deploy(Exchange, ptAddress, tokenTransferProxy.address);
   }).then(() => {
-    return tokenProxy.addAuthorizedAddress(Exchange.address);
+    return tokenTransferProxy.addAuthorizedAddress(Exchange.address);
   });
 };

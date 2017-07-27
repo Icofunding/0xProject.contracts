@@ -2,7 +2,7 @@ import { MultiSigConfigByNetwork, ContractInstance } from '../util/types';
 import { Artifacts } from '../util/artifacts';
 const {
   MultiSigWalletWithTimeLock,
-  TokenProxy,
+  TokenTransferProxy,
   EtherToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
@@ -27,7 +27,7 @@ module.exports = (deployer: any, network: string, accounts: string[]) => {
   if (network !== 'live') {
       deployer.deploy(MultiSigWalletWithTimeLock, config.owners, config.confirmationsRequired, config.secondsRequired)
       .then(() => {
-          return deployer.deploy(TokenProxy);
+          return deployer.deploy(TokenTransferProxy);
       }).then(() => {
           return deployer.deploy(TokenRegistry);
       }).then(() => {
@@ -36,7 +36,7 @@ module.exports = (deployer: any, network: string, accounts: string[]) => {
   } else {
     deployer.deploy([
       [MultiSigWalletWithTimeLock, config.owners, config.confirmationsRequired, config.secondsRequired],
-      TokenProxy,
+      TokenTransferProxy,
       TokenRegistry,
     ]);
   }

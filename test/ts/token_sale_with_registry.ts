@@ -19,7 +19,7 @@ const {
   TokenRegistry,
   Exchange,
   DummyToken,
-  TokenProxy,
+  TokenTransferProxy,
 } = new Artifacts(artifacts);
 
 const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
@@ -131,7 +131,7 @@ contract('TokenSale', (accounts: string[]) => {
     await validOrder.signAsync();
 
     await Promise.all([
-      zrx.approve(TokenProxy.address, mul(validOrder.params.makerTokenAmount, 100), { from: maker }),
+      zrx.approve(TokenTransferProxy.address, mul(validOrder.params.makerTokenAmount, 100), { from: maker }),
       zrx.setBalance(maker, mul(validOrder.params.makerTokenAmount, 100), { from: owner }),
     ]);
 

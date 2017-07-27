@@ -4,29 +4,29 @@ import "./MultiSigWalletWithTimeLock.sol";
 
 contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
 
-    address public TOKEN_PROXY_CONTRACT;
+    address public TOKEN_TRANSFER_PROXY_CONTRACT;
 
     modifier validRemoveAuthorizedAddressTx(uint transactionId) {
         Transaction storage tx = transactions[transactionId];
-        require(tx.destination == TOKEN_PROXY_CONTRACT);
+        require(tx.destination == TOKEN_TRANSFER_PROXY_CONTRACT);
         require(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
     }
 
-    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and tokenProxy address.
+    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and tokenTransferProxy address.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
-    /// @param _tokenProxy Address of TokenProxy contract.
+    /// @param _tokenTransferProxy Address of TokenTransferProxy contract.
     function MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress(
         address[] _owners,
         uint _required,
         uint _secondsTimeLocked,
-        address _tokenProxy)
+        address _tokenTransferProxy)
         public
         MultiSigWalletWithTimeLock(_owners, _required, _secondsTimeLocked)
     {
-        TOKEN_PROXY_CONTRACT = _tokenProxy;
+        TOKEN_TRANSFER_PROXY_CONTRACT = _tokenTransferProxy;
     }
 
     /// @dev Allows execution of removeAuthorizedAddress without time lock.
