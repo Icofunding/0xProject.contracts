@@ -111,7 +111,7 @@ contract Exchange is SafeMath {
           bytes32 r,
           bytes32 s)
           public
-          returns (uint)
+          returns (uint filledTakerTokenAmount)
     {
         Order memory order = Order({
             maker: orderAddresses[0],
@@ -143,7 +143,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        uint filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
+        filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
         if (filledTakerTokenAmount == 0) {
             LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
