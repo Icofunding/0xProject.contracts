@@ -17,7 +17,7 @@
 */
 pragma solidity 0.4.11;
 
-import "./Proxy.sol";
+import "./TokenTransferProxy.sol";
 import "./base/Token.sol";
 import "./base/SafeMath.sol";
 
@@ -37,7 +37,7 @@ contract Exchange is SafeMath {
     uint16 constant public EXTERNAL_QUERY_GAS_LIMIT = 4999;    // Changes to state require at least 5000 gas
 
     address public ZRX_TOKEN_CONTRACT;
-    address public PROXY_CONTRACT;
+    address public TOKEN_TRANSFER_PROXY_CONTRACT;
 
     // Mappings of orderHash => amounts of takerTokenAmount filled or cancelled.
     mapping (bytes32 => uint) public filled;
@@ -84,9 +84,9 @@ contract Exchange is SafeMath {
         bytes32 orderHash;
     }
 
-    function Exchange(address _ZRX_TOKEN_CONTRACT, address _PROXY_CONTRACT) {
-        ZRX_TOKEN_CONTRACT = _ZRX_TOKEN_CONTRACT;
-        PROXY_CONTRACT = _PROXY_CONTRACT;
+    function Exchange(address _zrxToken, address _tokenTransferProxy) {
+        ZRX_TOKEN_CONTRACT = _zrxToken;
+        TOKEN_TRANSFER_PROXY_CONTRACT = _tokenTransferProxy;
     }
 
     /*
@@ -163,13 +163,13 @@ contract Exchange is SafeMath {
         uint paidMakerFee;
         uint paidTakerFee;
         filled[order.orderHash] = safeAdd(filled[order.orderHash], filledTakerTokenAmount);
-        require(transferViaProxy(
+        require(transferViaTokenTransferProxy(
             order.makerToken,
             order.maker,
             msg.sender,
             filledMakerTokenAmount
         ));
-        require(transferViaProxy(
+        require(transferViaTokenTransferProxy(
             order.takerToken,
             msg.sender,
             order.maker,
@@ -178,7 +178,7 @@ contract Exchange is SafeMath {
         if (order.feeRecipient != address(0)) {
             if (order.makerFee > 0) {
                 paidMakerFee = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.makerFee);
-                require(transferViaProxy(
+                require(transferViaTokenTransferProxy(
                     ZRX_TOKEN_CONTRACT,
                     order.maker,
                     order.feeRecipient,
@@ -187,7 +187,7 @@ contract Exchange is SafeMath {
             }
             if (order.takerFee > 0) {
                 paidTakerFee = getPartialAmount(filledTakerTokenAmount, order.takerTokenAmount, order.takerFee);
-                require(transferViaProxy(
+                require(transferViaTokenTransferProxy(
                     ZRX_TOKEN_CONTRACT,
                     msg.sender,
                     order.feeRecipient,
@@ -522,13 +522,13 @@ contract Exchange is SafeMath {
     * Internal functions
     */
 
-    /// @dev Transfers a token using PROXY_CONTRACT transferFrom function.
+    /// @dev Transfers a token using TokenTransferProxy transferFrom function.
     /// @param token Address of token to transferFrom.
     /// @param from Address transfering token.
     /// @param to Address receiving token.
     /// @param value Amount of token to transfer.
     /// @return Success of token transfer.
-    function transferViaProxy(
+    function transferViaTokenTransferProxy(
         address token,
         address from,
         address to,
@@ -536,7 +536,7 @@ contract Exchange is SafeMath {
         internal
         returns (bool)
     {
-        return Proxy(PROXY_CONTRACT).transferFrom(token, from, to, value);
+        return TokenTransferProxy(TOKEN_TRANSFER_PROXY_CONTRACT).transferFrom(token, from, to, value);
     }
 
     /// @dev Checks if any order transfers will fail.
@@ -592,15 +592,15 @@ contract Exchange is SafeMath {
         return Token(token).balanceOf.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner); // Limit gas to prevent reentrancy
     }
 
-    /// @dev Get allowance of token given to PROXY_CONTRACT by an address.
+    /// @dev Get allowance of token given to TokenTransferProxy by an address.
     /// @param token Address of token.
     /// @param owner Address of owner.
-    /// @return Allowance of token given to PROXY_CONTRACT by owner.
+    /// @return Allowance of token given to TokenTransferProxy by owner.
     function getAllowance(address token, address owner)
         internal
         constant
         returns (uint)
     {
-        return Token(token).allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, PROXY_CONTRACT); // Limit gas to prevent reentrancy
+        return Token(token).allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, TOKEN_TRANSFER_PROXY_CONTRACT); // Limit gas to prevent reentrancy
     }
 }

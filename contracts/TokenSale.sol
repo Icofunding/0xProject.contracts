@@ -6,7 +6,7 @@ import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
 
-contract TokenSaleWithRegistry is Ownable, SafeMath {
+contract TokenSale is Ownable, SafeMath {
 
     event SaleInitialized(uint startTimeInSec);
     event SaleFinished(uint endTimeInSec);
@@ -78,7 +78,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         _;
     }
 
-    function TokenSaleWithRegistry(
+    function TokenSale(
         address _exchange,
         address _protocolToken,
         address _ethToken)
@@ -152,7 +152,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
             s
         ));
 
-        require(ethToken.approve(exchange.PROXY_CONTRACT(), order.takerTokenAmount));
+        require(ethToken.approve(exchange.TOKEN_TRANSFER_PROXY_CONTRACT(), order.takerTokenAmount));
         isSaleInitialized = true;
         startTimeInSec = _startTimeInSec;
         baseEthCapPerAddress = _baseEthCapPerAddress;

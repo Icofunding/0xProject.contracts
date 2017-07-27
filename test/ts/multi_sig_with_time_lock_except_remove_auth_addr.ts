@@ -4,9 +4,9 @@ import { crypto } from '../../util/crypto';
 import { MultiSigWrapper } from '../../util/multi_sig_wrapper';
 import { ContractInstance, TransactionDataParams } from '../../util/types';
 import { testUtil } from '../../util/test_util';
-import * as proxyJSON from '../../build/contracts/Proxy.json';
-const { Proxy, MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress } = new Artifacts(artifacts);
-const PROXY_ABI = (proxyJSON as any).abi;
+import * as tokenTransferProxyJSON from '../../build/contracts/TokenTransferProxy.json';
+const { TokenTransferProxy, MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress } = new Artifacts(artifacts);
+const PROXY_ABI = (tokenTransferProxyJSON as any).abi;
 
 contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: string[]) => {
   const owners = [accounts[0], accounts[1]];
@@ -17,7 +17,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
   const authorizedAddress = `0x${crypto.solSHA3([accounts[0]]).slice(0, 20).toString('hex')}`;
   const unauthorizedAddress = `0x${crypto.solSHA3([accounts[1]]).slice(0, 20).toString('hex')}`;
 
-  let proxy: ContractInstance;
+  let tokenTransferProxy: ContractInstance;
   let multiSig: ContractInstance;
   let multiSigWrapper: MultiSigWrapper;
 
@@ -25,12 +25,12 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
 
   beforeEach(async () => {
     const initialOwner = accounts[0];
-    proxy = await Proxy.new({ from: initialOwner });
-    await proxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
-    multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, proxy.address);
-    await proxy.transferOwnership(multiSig.address, { from: initialOwner });
+    tokenTransferProxy = await TokenTransferProxy.new({ from: initialOwner });
+    await tokenTransferProxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
+    multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, tokenTransferProxy.address);
+    await tokenTransferProxy.transferOwnership(multiSig.address, { from: initialOwner });
     multiSigWrapper = new MultiSigWrapper(multiSig);
-    validDestination = proxy.address;
+    validDestination = tokenTransferProxy.address;
   });
 
   describe('isFunctionRemoveAuthorizedAddress', () => {
@@ -69,9 +69,9 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       }
     });
 
-    it('should throw if tx destination is not the proxy', async () => {
-      const invalidProxy = await Proxy.new();
-      const invalidDestination = invalidProxy.address;
+    it('should throw if tx destination is not the tokenTransferProxy', async () => {
+      const invalidTokenTransferProxy = await TokenTransferProxy.new();
+      const invalidDestination = invalidTokenTransferProxy.address;
       const dataParams: TransactionDataParams = {
         name: 'removeAuthorizedAddress',
         abi: PROXY_ABI,
@@ -111,7 +111,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       }
     });
 
-    it('should execute removeAuthorizedAddress for valid proxy if fully confirmed', async () => {
+    it('should execute removeAuthorizedAddress for valid tokenTransferProxy if fully confirmed', async () => {
       const dataParams: TransactionDataParams = {
         name: 'removeAuthorizedAddress',
         abi: PROXY_ABI,
@@ -124,7 +124,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       assert.equal(isConfirmed, true);
       await multiSig.executeRemoveAuthorizedAddress(txId);
 
-      const isAuthorized = await proxy.authorized.call(authorizedAddress);
+      const isAuthorized = await tokenTransferProxy.authorized.call(authorizedAddress);
       assert.equal(isAuthorized, false);
     });
 
