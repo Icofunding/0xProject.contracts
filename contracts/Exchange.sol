@@ -33,7 +33,7 @@ contract Exchange is SafeMath {
         INSUFFICIENT_BALANCE_OR_ALLOWANCE // Insufficient balance or allowance for token transfer
     }
 
-    string constant public EXCHANGE_VERSION = "1.0.0";
+    string constant public VERSION = "1.0.0";
     uint16 constant public EXTERNAL_QUERY_GAS_LIMIT = 4999;    // Changes to state require at least 5000 gas
 
     address public ZRX_TOKEN_CONTRACT;
