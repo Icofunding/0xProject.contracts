@@ -15,7 +15,7 @@ import { constants } from '../../util/constants';
 import { RPC } from '../../util/rpc';
 
 const {
-  TokenSaleWithRegistry,
+  TokenSale,
   TokenRegistry,
   Exchange,
   DummyToken,
@@ -29,7 +29,7 @@ const { add, sub, mul, div, cmp, toSmallestUnits } = BNUtil;
 const web3Instance: Web3 = web3;
 const rpc = new RPC();
 
-contract('TokenSaleWithRegistry', (accounts: string[]) => {
+contract('TokenSale', (accounts: string[]) => {
   const maker = accounts[0];
   const taker = accounts[1];
   const owner = accounts[0];
@@ -44,7 +44,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   let startTimeInSec: BigNumber.BigNumber;
 
   let tokenRegistry: ContractInstance;
-  let tokenSaleWithRegistry: ContractInstance;
+  let tokenSale: ContractInstance;
   let exchange: ContractInstance;
   let zrx: ContractInstance;
   let wEth: ContractInstance;
@@ -105,7 +105,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   });
 
   beforeEach(async () => {
-    tokenSaleWithRegistry = await TokenSaleWithRegistry.new(
+    tokenSale = await TokenSale.new(
       Exchange.address,
       zrxAddress,
       wEthAddress,
@@ -116,7 +116,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     validOrderParams = {
       exchangeContractAddress: Exchange.address,
       maker,
-      taker: tokenSaleWithRegistry.address,
+      taker: tokenSale.address,
       feeRecipient: constants.NULL_ADDRESS,
       makerToken: zrxAddress,
       takerToken: wEthAddress,
@@ -143,7 +143,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('should throw when not called by owner', async () => {
       const params = validOrder.createFill();
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -163,7 +163,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       try {
         const params = validOrder.createFill();
         const invalidR = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -185,7 +185,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = newOrder.createFill();
 
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -207,7 +207,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = newOrder.createFill();
 
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -228,7 +228,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await invalidOrder.signAsync();
       const params = invalidOrder.createFill();
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -251,7 +251,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await invalidOrder.signAsync();
       const params = invalidOrder.createFill();
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -271,7 +271,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = validOrder.createFill();
       startTimeInSec = currentBlockTimestamp.minus(1);
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -291,7 +291,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const params = validOrder.createFill();
       const invalidBaseEthCapPerAddress = new BigNumber(0);
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -309,7 +309,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should initialize the sale with valid order params and log correct args', async () => {
       const params = validOrder.createFill();
-      const res = await tokenSaleWithRegistry.initializeSale(
+      const res = await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -324,13 +324,13 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const logArgs = res.logs[0].args;
       assert.equal(logArgs.startTimeInSec.toString(), startTimeInSec.toString());
 
-      const isSaleInitialized = await tokenSaleWithRegistry.isSaleInitialized.call();
+      const isSaleInitialized = await tokenSale.isSaleInitialized.call();
       assert.equal(isSaleInitialized, true);
     });
 
     it('should throw if the sale has already been initialized', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -341,7 +341,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         { from: owner },
       );
       try {
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -362,7 +362,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('should throw if not called by owner', async () => {
       try {
         const isRegistered = true;
-        await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: notOwner });
+        await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: notOwner });
         throw new Error('changeRegistrationStatus succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -371,13 +371,13 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should change registration status of an address if called by owner before sale has been initialized', async () => {
       let isRegistered = true;
-      await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
-      let isTakerRegistered = await tokenSaleWithRegistry.registered.call(taker);
+      await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: owner });
+      let isTakerRegistered = await tokenSale.registered.call(taker);
       assert.equal(isTakerRegistered, true);
 
       isRegistered = false;
-      await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
-      isTakerRegistered = await tokenSaleWithRegistry.registered.call(taker);
+      await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: owner });
+      isTakerRegistered = await tokenSale.registered.call(taker);
       assert.equal(isTakerRegistered, false);
     });
 
@@ -388,7 +388,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const secondsToAdd = 100;
       startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
 
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -400,7 +400,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       );
       try {
         const isRegistered = true;
-        await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
+        await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: owner });
         throw new Error('changeRegistrationStatus succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -412,7 +412,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('should throw if not called by owner', async () => {
       const isRegistered = true;
       try {
-        await tokenSaleWithRegistry.changeRegistrationStatuses([taker], isRegistered, { from: notOwner });
+        await tokenSale.changeRegistrationStatuses([taker], isRegistered, { from: notOwner });
         throw new Error('changeRegistrationStatuses succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -421,16 +421,16 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
     it('should change registration statuses of addresses if called by owner before sale has been initialized', async () => {
       let isRegistered = true;
-      await tokenSaleWithRegistry.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
-      let isMakerRegistered = await tokenSaleWithRegistry.registered.call(maker);
-      let isTakerRegistered = await tokenSaleWithRegistry.registered.call(taker);
+      await tokenSale.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
+      let isMakerRegistered = await tokenSale.registered.call(maker);
+      let isTakerRegistered = await tokenSale.registered.call(taker);
       assert.equal(isMakerRegistered, true);
       assert.equal(isTakerRegistered, true);
 
       isRegistered = false;
-      await tokenSaleWithRegistry.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
-      isMakerRegistered = await tokenSaleWithRegistry.registered.call(maker);
-      isTakerRegistered = await tokenSaleWithRegistry.registered.call(taker);
+      await tokenSale.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
+      isMakerRegistered = await tokenSale.registered.call(maker);
+      isTakerRegistered = await tokenSale.registered.call(taker);
       assert.equal(isMakerRegistered, false);
       assert.equal(isTakerRegistered, false);
     });
@@ -442,7 +442,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       const secondsToAdd = 100;
       startTimeInSec = currentBlockTimestamp.plus(secondsToAdd);
 
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -454,7 +454,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       );
       try {
         const isRegistered = true;
-        await tokenSaleWithRegistry.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
+        await tokenSale.changeRegistrationStatuses([maker, taker], isRegistered, { from: owner });
         throw new Error('changeRegistrationStatuses succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
@@ -464,14 +464,14 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
   describe('getEthCapPerAddress', () => {
     it('should return 0 before the sale has been initialized', async () => {
-      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const ethCapPerAddress = await tokenSale.getEthCapPerAddress.call();
       const expectedEthCapPerAddress = '0';
       assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
     });
 
     it('should return 0 after the sale has been initialized but not yet started', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -482,14 +482,14 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         { from: owner },
       );
 
-      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const ethCapPerAddress = await tokenSale.getEthCapPerAddress.call();
       const expectedEthCapPerAddress = '0';
       assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress);
     });
 
     it('should return the baseEthCapPerAddress during the first period', async () => {
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -503,7 +503,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await rpc.increaseTimeAsync(secondsToAdd);
       await rpc.mineBlockAsync();
 
-      const ethCapPerAddress = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const ethCapPerAddress = await tokenSale.getEthCapPerAddress.call();
       const expectedEthCapPerAddress = baseEthCapPerAddress;
       assert.equal(ethCapPerAddress.toString(), expectedEthCapPerAddress.toString());
     });
@@ -511,7 +511,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
     it('the ethCapPerAddress should increase by double the previous increase at each next period', async () => {
       let period = 1;
       const params = validOrder.createFill();
-      await tokenSaleWithRegistry.initializeSale(
+      await tokenSale.initializeSale(
         params.orderAddresses,
         params.orderValues,
         params.v,
@@ -526,7 +526,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await rpc.mineBlockAsync();
       period += 1;
 
-      const ethCapPerAddress2 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const ethCapPerAddress2 = await tokenSale.getEthCapPerAddress.call();
       const expectedEthCapPerAddress2 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
       assert.equal(ethCapPerAddress2.toString(), expectedEthCapPerAddress2.toString());
 
@@ -534,7 +534,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       await rpc.mineBlockAsync();
       period += 1;
 
-      const ethCapPerAddress3 = await tokenSaleWithRegistry.getEthCapPerAddress.call();
+      const ethCapPerAddress3 = await tokenSale.getEthCapPerAddress.call();
       const expectedEthCapPerAddress3 = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
       assert.equal(ethCapPerAddress3.toString(), expectedEthCapPerAddress3.toString());
     });
@@ -543,14 +543,14 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
   describe('contributing', () => {
     beforeEach(async () => {
       const isRegistered = true;
-      await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
+      await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: owner });
     });
 
     describe('fillOrderWithEth', () => {
       it('should throw if sale not initialized', async () => {
         try {
           const ethValue = new BigNumber(1);
-          await tokenSaleWithRegistry.fillOrderWithEth({
+          await tokenSale.fillOrderWithEth({
             from: taker,
             value: ethValue,
           });
@@ -562,13 +562,13 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
       it('should throw if the caller is not registered', async () => {
         const isRegistered = false;
-        await tokenSaleWithRegistry.changeRegistrationStatus(taker, isRegistered, { from: owner });
+        await tokenSale.changeRegistrationStatus(taker, isRegistered, { from: owner });
 
-        validOrderParams = _.assign({}, validOrderParams, { taker: tokenSaleWithRegistry.address });
+        validOrderParams = _.assign({}, validOrderParams, { taker: tokenSale.address });
         validOrder = new Order(validOrderParams);
         await validOrder.signAsync();
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -581,7 +581,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         try {
           const ethValue = new BigNumber(1);
-          await tokenSaleWithRegistry.fillOrderWithEth({
+          await tokenSale.fillOrderWithEth({
             from: taker,
             value: ethValue,
           });
@@ -593,7 +593,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
       it('should throw if the sale has not started', async () => {
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -606,7 +606,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         try {
           const ethValue = new BigNumber(1);
-          await tokenSaleWithRegistry.fillOrderWithEth({
+          await tokenSale.fillOrderWithEth({
             from: taker,
             value: ethValue,
           });
@@ -625,7 +625,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const zrxValue = div(mul(ethValue, validOrder.params.makerTokenAmount), validOrder.params.takerTokenAmount);
 
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -637,7 +637,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         );
 
         await rpc.increaseTimeAsync(secondsToAdd);
-        const res = await tokenSaleWithRegistry.fillOrderWithEth({
+        const res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -664,7 +664,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethValue = add(baseEthCapPerAddress, 1);
 
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -676,7 +676,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         );
 
         await rpc.increaseTimeAsync(secondsToAdd);
-        const res = await tokenSaleWithRegistry.fillOrderWithEth({
+        const res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -704,7 +704,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
 
         const newBaseEthCapPerAddress = validOrder.params.takerTokenAmount;
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -718,7 +718,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethValue = add(validOrder.params.takerTokenAmount, 1);
 
         await rpc.increaseTimeAsync(secondsToAdd);
-        const res = await tokenSaleWithRegistry.fillOrderWithEth({
+        const res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -744,7 +744,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const endTimeInSec = parseInt(logData, 16);
         assert.equal(endTimeInSec.toString(), startTimeInSec.toString());
 
-        const isSaleFinished = await tokenSaleWithRegistry.isSaleFinished.call();
+        const isSaleFinished = await tokenSale.isSaleFinished.call();
         assert.equal(isSaleFinished, true);
       });
 
@@ -753,7 +753,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -767,7 +767,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         await rpc.increaseTimeAsync(secondsToAdd);
         let period = 1;
         let ethValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
-        let res = await tokenSaleWithRegistry.fillOrderWithEth({
+        let res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -792,7 +792,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         period += 1;
         let totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
         ethValue = totalEthValue.minus(ethValue);
-        res = await tokenSaleWithRegistry.fillOrderWithEth({
+        res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -817,7 +817,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         period += 1;
         totalEthValue = getHardCodedEthCapPerAddress(baseEthCapPerAddress, period);
         ethValue = totalEthValue.minus(ethValue);
-        res = await tokenSaleWithRegistry.fillOrderWithEth({
+        res = await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
@@ -842,7 +842,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
       it('should throw if sale has ended', async () => {
         const newBaseEthCapPerAddress = validOrder.params.takerTokenAmount;
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -856,18 +856,18 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const ethValue = add(validOrder.params.takerTokenAmount, 1);
 
         await rpc.increaseTimeAsync(secondsToAdd);
-        await tokenSaleWithRegistry.fillOrderWithEth({
+        await tokenSale.fillOrderWithEth({
           from: taker,
           value: ethValue,
           gasPrice,
         });
 
-        const isSaleFinished = await tokenSaleWithRegistry.isSaleFinished.call();
+        const isSaleFinished = await tokenSale.isSaleFinished.call();
         assert.equal(isSaleFinished, true);
 
         try {
           const newEthValue = new BigNumber(1);
-          await tokenSaleWithRegistry.fillOrderWithEth({
+          await tokenSale.fillOrderWithEth({
             from: taker,
             value: newEthValue,
           });
@@ -885,7 +885,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         const initTakerEthBalance = await getEthBalanceAsync(taker);
 
         const params = validOrder.createFill();
-        await tokenSaleWithRegistry.initializeSale(
+        await tokenSale.initializeSale(
           params.orderAddresses,
           params.orderValues,
           params.v,
@@ -904,7 +904,7 @@ contract('TokenSaleWithRegistry', (accounts: string[]) => {
         await rpc.increaseTimeAsync(secondsToAdd);
         const txHash = await sendTransactionAsync({
           from: taker,
-          to: tokenSaleWithRegistry.address,
+          to: tokenSale.address,
           value: ethValue,
           gas,
           gasPrice,

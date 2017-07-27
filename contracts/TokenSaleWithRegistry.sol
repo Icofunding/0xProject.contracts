@@ -6,7 +6,7 @@ import "./base/Token.sol";
 import "./base/Ownable.sol";
 import "./base/SafeMath.sol";
 
-contract TokenSaleWithRegistry is Ownable, SafeMath {
+contract TokenSale is Ownable, SafeMath {
 
     event SaleInitialized(uint startTimeInSec);
     event SaleFinished(uint endTimeInSec);
@@ -78,7 +78,7 @@ contract TokenSaleWithRegistry is Ownable, SafeMath {
         _;
     }
 
-    function TokenSaleWithRegistry(
+    function TokenSale(
         address _exchange,
         address _protocolToken,
         address _ethToken)
