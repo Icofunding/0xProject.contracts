@@ -3,7 +3,7 @@ pragma solidity 0.4.11;
 contract SafeMath {
     function safeMul(uint a, uint b) internal constant returns (uint) {
         uint c = a * b;
-        assert(a == 0 || c / a == b);
+        require(a == 0 || c / a == b);
         return c;
     }
 
@@ -13,13 +13,13 @@ contract SafeMath {
     }
 
     function safeSub(uint a, uint b) internal constant returns (uint) {
-        assert(b <= a);
+        require(b <= a);
         return a - b;
     }
 
     function safeAdd(uint a, uint b) internal constant returns (uint) {
         uint c = a + b;
-        assert(c >= a);
+        require(c >= a);
         return c;
     }
 

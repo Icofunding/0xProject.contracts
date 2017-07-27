@@ -8,8 +8,8 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
 
     modifier validRemoveAuthorizedAddressTx(uint transactionId) {
         Transaction storage tx = transactions[transactionId];
-        assert(tx.destination == PROXY_CONTRACT);
-        assert(isFunctionRemoveAuthorizedAddress(tx.data));
+        require(tx.destination == PROXY_CONTRACT);
+        require(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
     }
 
@@ -57,7 +57,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
     {
         bytes4 removeAuthorizedAddressSignature = bytes4(sha3("removeAuthorizedAddress(address)"));
         for (uint i = 0; i < 4; i++) {
-            assert(data[i] == removeAuthorizedAddressSignature[i]);
+            require(data[i] == removeAuthorizedAddressSignature[i]);
         }
         return true;
     }
