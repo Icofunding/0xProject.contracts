@@ -110,7 +110,7 @@ contract Exchange is SafeMath {
           bytes32 r,
           bytes32 s)
           public
-          returns (uint filledTakerTokenAmount)
+          returns (uint)
     {
         Order memory order = Order({
             maker: orderAddresses[0],
@@ -142,7 +142,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
+        uint filledTakerTokenAmount = min256(fillTakerTokenAmount, remainingTakerTokenAmount);
         if (filledTakerTokenAmount == 0) {
             LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
@@ -221,7 +221,7 @@ contract Exchange is SafeMath {
         uint[6] orderValues,
         uint canceltakerTokenAmount)
         public
-        returns (uint cancelledTakerTokenAmount)
+        returns (uint)
     {
         Order memory order = Order({
             maker: orderAddresses[0],
@@ -246,7 +246,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        cancelledTakerTokenAmount = min256(canceltakerTokenAmount, remainingTakerTokenAmount);
+        uint cancelledTakerTokenAmount = min256(canceltakerTokenAmount, remainingTakerTokenAmount);
         if (cancelledTakerTokenAmount == 0) {
             LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
@@ -287,7 +287,7 @@ contract Exchange is SafeMath {
         bytes32 r,
         bytes32 s)
         public
-        returns (bool success)
+        returns (bool)
     {
         require(fillOrder(
             orderAddresses,
@@ -319,7 +319,7 @@ contract Exchange is SafeMath {
         bytes32[] r,
         bytes32[] s)
         public
-        returns (bool success)
+        returns (bool)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
             fillOrder(
@@ -351,7 +351,7 @@ contract Exchange is SafeMath {
         bytes32[] r,
         bytes32[] s)
         public
-        returns (bool success)
+        returns (bool)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
             fillOrKillOrder(
@@ -384,9 +384,9 @@ contract Exchange is SafeMath {
         bytes32[] r,
         bytes32[] s)
         public
-        returns (uint filledTakerTokenAmount)
+        returns (uint)
     {
-        filledTakerTokenAmount = 0;
+        uint filledTakerTokenAmount = 0;
         for (uint i = 0; i < orderAddresses.length; i++) {
             require(orderAddresses[i][3] == orderAddresses[0][3]); // takerToken must be the same for each order
             filledTakerTokenAmount = safeAdd(filledTakerTokenAmount, fillOrder(
@@ -413,7 +413,7 @@ contract Exchange is SafeMath {
         uint[6][] orderValues,
         uint[] cancelTakerTokenAmounts)
         public
-        returns (bool success)
+        returns (bool)
     {
         for (uint i = 0; i < orderAddresses.length; i++) {
             cancelOrder(
@@ -436,7 +436,7 @@ contract Exchange is SafeMath {
     function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
         public
         constant
-        returns (bytes32 orderHash)
+        returns (bytes32)
     {
         return keccak256(
             address(this),
@@ -469,7 +469,7 @@ contract Exchange is SafeMath {
         bytes32 s)
         public
         constant
-        returns (bool isValid)
+        returns (bool)
     {
         return signer == ecrecover(
             keccak256("\x19Ethereum Signed Message:\n32", hash),
@@ -487,7 +487,7 @@ contract Exchange is SafeMath {
     function isRoundingError(uint numerator, uint denominator, uint target)
         public
         constant
-        returns (bool isError)
+        returns (bool)
     {
         return (target < 10**3 && mulmod(target, numerator, denominator) != 0);
     }
@@ -500,7 +500,7 @@ contract Exchange is SafeMath {
     function getPartialAmount(uint numerator, uint denominator, uint target)
         public
         constant
-        returns (uint partialValue)
+        returns (uint)
     {
         return safeDiv(safeMul(numerator, target), denominator);
     }
@@ -511,7 +511,7 @@ contract Exchange is SafeMath {
     function getUnavailableTakerTokenAmount(bytes32 orderHash)
         public
         constant
-        returns (uint unavailableTakerTokenAmount)
+        returns (uint)
     {
         return safeAdd(filled[orderHash], cancelled[orderHash]);
     }
@@ -533,7 +533,7 @@ contract Exchange is SafeMath {
         address to,
         uint value)
         internal
-        returns (bool success)
+        returns (bool)
     {
         return Proxy(PROXY_CONTRACT).transferFrom(token, from, to, value);
     }
@@ -545,7 +545,7 @@ contract Exchange is SafeMath {
     function isTransferable(Order order, uint fillTakerTokenAmount)
         internal
         constant
-        returns (bool isTransferable)
+        returns (bool)
     {
         address taker = msg.sender;
         uint fillMakerTokenAmount = getPartialAmount(fillTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount);
@@ -586,7 +586,7 @@ contract Exchange is SafeMath {
     function getBalance(address token, address owner)
         internal
         constant
-        returns (uint balance)
+        returns (uint)
     {
         return Token(token).balanceOf.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner); // Limit gas to prevent reentrancy
     }
@@ -598,7 +598,7 @@ contract Exchange is SafeMath {
     function getAllowance(address token, address owner)
         internal
         constant
-        returns (uint allowance)
+        returns (uint)
     {
         return Token(token).allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, PROXY_CONTRACT); // Limit gas to prevent reentrancy
     }
