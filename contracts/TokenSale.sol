@@ -270,4 +270,16 @@ contract TokenSale is Ownable, SafeMath {
             s
         );
     }
+
+    function getOrderHash() public returns (bytes32) {
+        return order.orderHash;
+    }
+
+    function getOrderMakerTokenAmount() public returns (uint) {
+        return order.makerTokenAmount;
+    }
+
+    function getOrderTakerTokenAmount() public returns (uint) {
+        return order.takerTokenAmount;
+    }
 }
