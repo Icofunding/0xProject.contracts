@@ -28,7 +28,7 @@ contract TokenSale is Ownable, SafeMath {
     bool public isSaleFinished;
     uint public baseEthCapPerAddress;
     uint public startTimeInSec;
-    Order order;
+    Order public order;
 
     struct Order {
         address maker;
