@@ -13,7 +13,6 @@ contract TokenSale is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public EXCHANGE_CONTRACT;
     address public PROTOCOL_TOKEN_CONTRACT;
     address public ETH_TOKEN_CONTRACT;
 
@@ -83,7 +82,6 @@ contract TokenSale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
 
@@ -136,7 +134,7 @@ contract TokenSale is Ownable, SafeMath {
             v: v,
             r: r,
             s: s,
-            orderHash: getOrderHash(orderAddresses, orderValues)
+            orderHash: exchange.getOrderHash(orderAddresses, orderValues)
         });
 
         require(order.taker == address(this));
@@ -246,31 +244,6 @@ contract TokenSale is Ownable, SafeMath {
         return ethCapPerAddress;
     }
 
-    /// @dev Calculates Keccak-256 hash of order with specified parameters.
-    /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
-    /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
-    /// @return Keccak-256 hash of order.
-    function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
-        public
-        constant
-        returns (bytes32)
-    {
-        return keccak256(
-            EXCHANGE_CONTRACT,
-            orderAddresses[0],
-            orderAddresses[1],
-            orderAddresses[2],
-            orderAddresses[3],
-            orderAddresses[4],
-            orderValues[0],
-            orderValues[1],
-            orderValues[2],
-            orderValues[3],
-            orderValues[4],
-            orderValues[5]
-        );
-    }
-
     /// @dev Verifies that an order signature is valid.
     /// @param pubKey Public address of signer.
     /// @param hash Signed Keccak-256 hash.
@@ -294,5 +267,17 @@ contract TokenSale is Ownable, SafeMath {
             r,
             s
         );
+    }
+
+    function getOrderHash() public returns (bytes32) {
+        return order.orderHash;
+    }
+
+    function getOrderMakerTokenAmount() public returns (uint) {
+        return order.makerTokenAmount;
+    }
+
+    function getOrderTakerTokenAmount() public returns (uint) {
+        return order.takerTokenAmount;
     }
 }
