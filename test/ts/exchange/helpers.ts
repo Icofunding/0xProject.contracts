@@ -128,5 +128,15 @@ contract('Exchange', (accounts: string[]) => {
       const expectedPartialAmount = '6';
       assert.equal(partialAmount.toString(), expectedPartialAmount);
     });
+
+    it('should round .5 down', async () => {
+      const numerator = new BigNumber(1);
+      const denominator = new BigNumber(20);
+      const target = new BigNumber(10);
+
+      const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
+      const expectedPartialAmount = '0';
+      assert.equal(partialAmount.toString(), expectedPartialAmount);
+    });
   });
 });
