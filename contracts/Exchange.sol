@@ -491,7 +491,9 @@ contract Exchange is SafeMath {
         returns (bool)
     {
         if (mulmod(target, numerator, denominator) == 0) return false; // No rounding error.
+        // (numerator * target / denumerator) * 1000000
         uint partialAmountWithErr = safeMul(getPartialAmount(numerator, denominator, target), 1000000);
+        // (numerator * target * 1000000 / denumerator)
         uint partialAmountWithoutErr = safeDiv(
             safeMul(
                 safeMul(numerator, target),
