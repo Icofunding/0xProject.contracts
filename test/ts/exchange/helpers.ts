@@ -19,7 +19,7 @@ contract('Exchange', (accounts: string[]) => {
   const feeRecipient = accounts[1] || accounts[accounts.length - 1];
 
   let order: Order;
-  let exWrapper: ExchangeWrapper;
+  let exchangeWrapper: ExchangeWrapper;
   let orderFactory: OrderFactory;
 
   before(async () => {
@@ -27,7 +27,7 @@ contract('Exchange', (accounts: string[]) => {
       TokenRegistry.deployed(),
       Exchange.deployed(),
     ]);
-    exWrapper = new ExchangeWrapper(exchange);
+    exchangeWrapper = new ExchangeWrapper(exchange);
     const [repAddress, dgdAddress] = await Promise.all([
       tokenRegistry.getTokenAddressBySymbol('REP'),
       tokenRegistry.getTokenAddressBySymbol('DGD'),
@@ -52,7 +52,7 @@ contract('Exchange', (accounts: string[]) => {
 
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
-      const orderHashHex = await exWrapper.getOrderHashAsync(order);
+      const orderHashHex = await exchangeWrapper.getOrderHashAsync(order);
       assert.equal(order.params.orderHashHex, orderHashHex);
     });
   });
@@ -63,7 +63,7 @@ contract('Exchange', (accounts: string[]) => {
     });
 
     it('should return true with a valid signature', async () => {
-      const success = await exWrapper.isValidSignatureAsync(order);
+      const success = await exchangeWrapper.isValidSignatureAsync(order);
       const isValidSignature = order.isValidSignature();
       assert(isValidSignature);
       assert(success);
@@ -72,7 +72,7 @@ contract('Exchange', (accounts: string[]) => {
     it('should return false with an invalid signature', async () => {
       order.params.r = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
       order.params.s = ethUtil.bufferToHex(ethUtil.sha3('invalidS'));
-      const success = await exWrapper.isValidSignatureAsync(order);
+      const success = await exchangeWrapper.isValidSignatureAsync(order);
       assert(!order.isValidSignature());
       assert(!success);
     });
@@ -84,7 +84,7 @@ contract('Exchange', (accounts: string[]) => {
       const denominator = new BigNumber(7);
       const target = new BigNumber(10);
       // rounding error = ((3*10/7) - floor(3*10/7)) / (3*10/7) = 6.67%
-      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
       assert.equal(isRoundingError, true);
     });
 
@@ -93,7 +93,7 @@ contract('Exchange', (accounts: string[]) => {
       const denominator = new BigNumber(2);
       const target = new BigNumber(10);
 
-      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
       assert.equal(isRoundingError, false);
     });
 
@@ -103,7 +103,7 @@ contract('Exchange', (accounts: string[]) => {
       const denominator = new BigNumber(676373677);
       const target = new BigNumber(105762562);
       // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) / (76564*105762562/676373677) = 0.0007%
-      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
       assert.equal(isRoundingError, false);
     });
   });
@@ -114,7 +114,7 @@ contract('Exchange', (accounts: string[]) => {
       const denominator = new BigNumber(2);
       const target = new BigNumber(10);
 
-      const partialAmount = await exWrapper.getPartialAmountAsync(numerator, denominator, target);
+      const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
       const expectedPartialAmount = '5';
       assert.equal(partialAmount.toString(), expectedPartialAmount);
     });
@@ -124,7 +124,7 @@ contract('Exchange', (accounts: string[]) => {
       const denominator = new BigNumber(3);
       const target = new BigNumber(10);
 
-      const partialAmount = await exWrapper.getPartialAmountAsync(numerator, denominator, target);
+      const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
       const expectedPartialAmount = '6';
       assert.equal(partialAmount.toString(), expectedPartialAmount);
     });
