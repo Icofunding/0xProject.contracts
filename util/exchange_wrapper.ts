@@ -117,4 +117,12 @@ export class ExchangeWrapper {
     );
     return isValidSignature;
   }
+  public isRoundingErrorAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber, target: BigNumber.BigNumber) {
+    const isRoundingError = this.exchange.isRoundingError(numerator, denominator, target);
+    return isRoundingError;
+  }
+  public getPartialAmountAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber, target: BigNumber.BigNumber) {
+    const partialAmount = this.exchange.getPartialAmount(numerator, denominator, target);
+    return partialAmount;
+  }
 }

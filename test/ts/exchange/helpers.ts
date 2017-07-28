@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import * as BigNumber from 'bignumber.js';
 import ethUtil = require('ethereumjs-util');
 import { BNUtil } from '../../../util/bn_util';
 import { ExchangeWrapper } from '../../../util/exchange_wrapper';
@@ -74,6 +75,58 @@ contract('Exchange', (accounts: string[]) => {
       const success = await exWrapper.isValidSignatureAsync(order);
       assert(!order.isValidSignature());
       assert(!success);
+    });
+  });
+
+  describe('isRoundingError', () => {
+    it('should return true if there is a rounding error > 0.1%', async () => {
+      const numerator = new BigNumber(3);
+      const denominator = new BigNumber(7);
+      const target = new BigNumber(10);
+      // rounding error = ((3*10/7) - floor(3*10/7)) / (3*10/7) = 6.67%
+      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      assert.equal(isRoundingError, true);
+    });
+
+    it('should return false when there is no rounding error', async () => {
+      const numerator = new BigNumber(1);
+      const denominator = new BigNumber(2);
+      const target = new BigNumber(10);
+
+      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      assert.equal(isRoundingError, false);
+    });
+
+    it('should return false when there is rounding error <= 0.1%', async () => {
+      // randomly generated numbers
+      const numerator = new BigNumber(76564);
+      const denominator = new BigNumber(676373677);
+      const target = new BigNumber(105762562);
+      // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) / (76564*105762562/676373677) = 0.0007%
+      const isRoundingError = await exWrapper.isRoundingErrorAsync(numerator, denominator, target);
+      assert.equal(isRoundingError, false);
+    });
+  });
+
+  describe('getPartialAmount', () => {
+    it('should return the numerator/denominator*target', async () => {
+      const numerator = new BigNumber(1);
+      const denominator = new BigNumber(2);
+      const target = new BigNumber(10);
+
+      const partialAmount = await exWrapper.getPartialAmountAsync(numerator, denominator, target);
+      const expectedPartialAmount = '5';
+      assert.equal(partialAmount.toString(), expectedPartialAmount);
+    });
+
+    it('should round down', async () => {
+      const numerator = new BigNumber(2);
+      const denominator = new BigNumber(3);
+      const target = new BigNumber(10);
+
+      const partialAmount = await exWrapper.getPartialAmountAsync(numerator, denominator, target);
+      const expectedPartialAmount = '6';
+      assert.equal(partialAmount.toString(), expectedPartialAmount);
     });
   });
 });
