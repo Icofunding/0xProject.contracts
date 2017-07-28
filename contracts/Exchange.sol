@@ -53,7 +53,7 @@ contract Exchange is SafeMath {
         uint filledTakerTokenAmount,
         uint paidMakerFee,
         uint paidTakerFee,
-        bytes32 indexed tokens, // sha3(makerToken, takerToken), allows subscribing to a token pair
+        bytes32 indexed tokens, // keccak256(makerToken, takerToken), allows subscribing to a token pair
         bytes32 orderHash
     );
 
@@ -206,7 +206,7 @@ contract Exchange is SafeMath {
             filledTakerTokenAmount,
             paidMakerFee,
             paidTakerFee,
-            sha3(order.makerToken, order.takerToken),
+            keccak256(order.makerToken, order.takerToken),
             order.orderHash
         );
         return filledTakerTokenAmount;
@@ -262,7 +262,7 @@ contract Exchange is SafeMath {
             order.takerToken,
             getPartialAmount(cancelledTakerTokenAmount, order.takerTokenAmount, order.makerTokenAmount),
             cancelledTakerTokenAmount,
-            sha3(order.makerToken, order.takerToken),
+            keccak256(order.makerToken, order.takerToken),
             order.orderHash
         );
         return cancelledTakerTokenAmount;
