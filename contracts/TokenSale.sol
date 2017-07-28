@@ -13,7 +13,6 @@ contract TokenSale is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public EXCHANGE_CONTRACT;
     address public PROTOCOL_TOKEN_CONTRACT;
     address public ETH_TOKEN_CONTRACT;
 
@@ -83,7 +82,6 @@ contract TokenSale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        EXCHANGE_CONTRACT = _exchange;
         PROTOCOL_TOKEN_CONTRACT = _protocolToken;
         ETH_TOKEN_CONTRACT = _ethToken;
 
