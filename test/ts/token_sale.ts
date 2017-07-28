@@ -742,7 +742,8 @@ contract('TokenSale', (accounts: string[]) => {
         const finishedLog = res.receipt.logs[4];
         const logData = finishedLog.data;
         const endTimeInSec = parseInt(logData, 16);
-        assert.equal(endTimeInSec.toString(), startTimeInSec.toString());
+        currentBlockTimestamp = await getBlockTimestampAsync();
+        assert.equal(endTimeInSec.toString(), currentBlockTimestamp.toString());
 
         const isSaleFinished = await tokenSale.isSaleFinished.call();
         assert.equal(isSaleFinished, true);
