@@ -31,13 +31,13 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
 
     mapping (uint => uint) public confirmationTimes;
 
-    modifier confirmationTimeNotSet(uint transactionId) {
-        require(confirmationTimes[transactionId] == 0);
+    modifier notFullyConfirmed(uint transactionId) {
+        require(!isConfirmed(transactionId));
         _;
     }
 
-    modifier confirmationTimeSet(uint transactionId) {
-        require(confirmationTimes[transactionId] != 0);
+    modifier fullyConfirmed(uint transactionId) {
+        require(isConfirmed(transactionId));
         _;
     }
 
@@ -78,7 +78,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         ownerExists(msg.sender)
         transactionExists(transactionId)
         notConfirmed(transactionId, msg.sender)
-        confirmationTimeNotSet(transactionId)
+        notFullyConfirmed(transactionId)
     {
         confirmations[transactionId][msg.sender] = true;
         Confirmation(msg.sender, transactionId);
@@ -94,7 +94,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
         ownerExists(msg.sender)
         confirmed(transactionId, msg.sender)
         notExecuted(transactionId)
-        confirmationTimeNotSet(transactionId)
+        notFullyConfirmed(transactionId)
     {
         confirmations[transactionId][msg.sender] = false;
         Revocation(msg.sender, transactionId);
@@ -105,7 +105,7 @@ contract MultiSigWalletWithTimeLock is MultiSigWallet {
     function executeTransaction(uint transactionId)
         public
         notExecuted(transactionId)
-        confirmationTimeSet(transactionId)
+        fullyConfirmed(transactionId)
         pastTimeLock(transactionId)
     {
         Transaction storage tx = transactions[transactionId];

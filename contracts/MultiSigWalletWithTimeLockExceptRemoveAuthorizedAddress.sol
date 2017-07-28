@@ -34,7 +34,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
     function executeRemoveAuthorizedAddress(uint transactionId)
         public
         notExecuted(transactionId)
-        confirmationTimeSet(transactionId)
+        fullyConfirmed(transactionId)
         validRemoveAuthorizedAddressTx(transactionId)
     {
         Transaction storage tx = transactions[transactionId];
