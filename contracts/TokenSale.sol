@@ -136,7 +136,7 @@ contract TokenSale is Ownable, SafeMath {
             v: v,
             r: r,
             s: s,
-            orderHash: getOrderHash(orderAddresses, orderValues)
+            orderHash: exchange.getOrderHash(orderAddresses, orderValues)
         });
 
         require(order.taker == address(this));
@@ -244,31 +244,6 @@ contract TokenSale is Ownable, SafeMath {
             )
         );
         return ethCapPerAddress;
-    }
-
-    /// @dev Calculates Keccak-256 hash of order with specified parameters.
-    /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
-    /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
-    /// @return Keccak-256 hash of order.
-    function getOrderHash(address[5] orderAddresses, uint[6] orderValues)
-        public
-        constant
-        returns (bytes32)
-    {
-        return keccak256(
-            EXCHANGE_CONTRACT,
-            orderAddresses[0],
-            orderAddresses[1],
-            orderAddresses[2],
-            orderAddresses[3],
-            orderAddresses[4],
-            orderValues[0],
-            orderValues[1],
-            orderValues[2],
-            orderValues[3],
-            orderValues[4],
-            orderValues[5]
-        );
     }
 
     /// @dev Verifies that an order signature is valid.
