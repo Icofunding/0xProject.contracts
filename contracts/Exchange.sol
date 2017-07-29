@@ -490,20 +490,12 @@ contract Exchange is SafeMath {
         constant
         returns (bool)
     {
-        if (mulmod(target, numerator, denominator) == 0) return false; // No rounding error.
-        // (numerator * target / denumerator) * 1000000
-        uint partialAmountWithErr = safeMul(getPartialAmount(numerator, denominator, target), 1000000);
-        // (numerator * target * 1000000 / denumerator)
-        uint partialAmountWithoutErr = safeDiv(
-            safeMul(
-                safeMul(numerator, target),
-                1000000
-            ),
-            denominator
-        );
+        uint remainder = mulmod(target, numerator, denominator);
+        if (remainder == 0) return false; // No rounding error.
+
         uint errPercentageTimes1000 = safeDiv(
-            safeSub(partialAmountWithoutErr, partialAmountWithErr), // Absolute rounding error, times 1,000,000
-            safeDiv(partialAmountWithoutErr, 1000)                  // Amount being filled, times 1,000
+            safeMul(remainder, 1000),
+            safeMul(numerator, target)
         );
         return errPercentageTimes1000 > 1;
     }
