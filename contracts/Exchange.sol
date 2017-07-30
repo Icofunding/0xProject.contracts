@@ -494,10 +494,10 @@ contract Exchange is SafeMath {
         if (remainder == 0) return false; // No rounding error.
 
         uint errPercentageTimes1000 = safeDiv(
-            safeMul(remainder, 1000),
+            safeMul(remainder, 1000000),
             safeMul(numerator, target)
         );
-        return errPercentageTimes1000 > 1;
+        return errPercentageTimes1000 > 1000;
     }
 
     /// @dev Calculates partial value given a numerator and denominator.
