@@ -493,11 +493,11 @@ contract Exchange is SafeMath {
         uint remainder = mulmod(target, numerator, denominator);
         if (remainder == 0) return false; // No rounding error.
 
-        uint errPercentageTimes1000 = safeDiv(
+        uint errPercentageTimes1000000 = safeDiv(
             safeMul(remainder, 1000000),
             safeMul(numerator, target)
         );
-        return errPercentageTimes1000 > 1000;
+        return errPercentageTimes1000000 > 1000;
     }
 
     /// @dev Calculates partial value given a numerator and denominator.
