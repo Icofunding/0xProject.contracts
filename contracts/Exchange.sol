@@ -552,7 +552,7 @@ contract Exchange is SafeMath {
     /// @return Predicted result of transfers.
     function isTransferable(Order order, uint fillTakerTokenAmount)
         internal
-        constant
+        constant  // The called token contracts may attempt to change state, but will not be able to due to gas limits on getBalance and getAllowance.
         returns (bool)
     {
         address taker = msg.sender;
@@ -593,7 +593,7 @@ contract Exchange is SafeMath {
     /// @return Token balance of owner.
     function getBalance(address token, address owner)
         internal
-        constant
+        constant  // The called token contract may attempt to change state, but will not be able to due to an added gas limit.
         returns (uint)
     {
         return Token(token).balanceOf.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner); // Limit gas to prevent reentrancy
@@ -605,7 +605,7 @@ contract Exchange is SafeMath {
     /// @return Allowance of token given to TokenTransferProxy by owner.
     function getAllowance(address token, address owner)
         internal
-        constant
+        constant  // The called token contract may attempt to change state, but will not be able to due to an added gas limit.
         returns (uint)
     {
         return Token(token).allowance.gas(EXTERNAL_QUERY_GAS_LIMIT)(owner, TOKEN_TRANSFER_PROXY_CONTRACT); // Limit gas to prevent reentrancy
