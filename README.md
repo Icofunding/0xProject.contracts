@@ -13,6 +13,7 @@
 
 ## Table of Contents
 
+* [Bug Bounty](#bug-bounty)
 * [Architecture](#architecture)
 * [Contracts](#contracts)
     * [Deployed Addresses](#deployed-addresses)
@@ -25,6 +26,32 @@
     * [Installing Dependencies](#installing-dependencies)
     * [Running Tests](#running-tests)
 * [Contributing](#contributing)
+
+## Bug Bounty
+
+Details regarding compensation for reported bugs can be found [here](https://blog.0xproject.com/announcing-the-0x-protocol-bug-bounty-b0559d2738c). The following contracts are within the scope of the bug bounty:
+
+#### Core Contracts
+* [Exchange.sol](https://github.com/0xProject/contracts/tree/master/contracts/Exchange.sol)
+* [TokenTransferProxy.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenTransferProxy.sol)
+* [TokenRegistry.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenRegistry.sol)
+* [ZRXToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/tokens/ZRXToken.sol)
+* [MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol](https://github.com/0xProject/contracts/tree/master/contracts/MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol)
+* [TokenSale.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenSale.sol)
+
+#### Wallets
+* [MultiSigWallet.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/MultiSigWallet.sol)
+* [MultiSigWalletWithTimeLock.sol](https://github.com/0xProject/contracts/tree/master/contracts/MultiSigWalletWithTimeLock.sol)
+* [VestingWallet.sol](https://github.com/0xProject/vesting-wallet/blob/master/contracts/VestingWallet.sol) (Note: This is in a different repo, found [here](https://github.com/0xProject/vesting-wallet))
+
+#### Tokens
+* [EtherToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/tokens/EtherToken.sol)
+* [StandardTokenWithOverflowProtection.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/StandardTokenWithOverflowProtection.sol)
+* [StandardToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/StandardToken.sol)
+
+#### Base Contracts
+* [Ownable.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/Ownable.sol)
+* [SafeMath.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/SafeMath.sol)
 
 ## Architecture
 
