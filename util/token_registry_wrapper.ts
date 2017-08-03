@@ -11,7 +11,6 @@ export class TokenRegWrapper {
       token.address,
       token.name,
       token.symbol,
-      token.url,
       token.decimals,
       token.ipfsHash,
       token.swarmHash,
@@ -25,10 +24,9 @@ export class TokenRegWrapper {
       address: data[0],
       name: data[1],
       symbol: data[2],
-      url: data[3],
-      decimals: data[4].toNumber(),
-      ipfsHash: data[5],
-      swarmHash: data[6],
+      decimals: data[3].toNumber(),
+      ipfsHash: data[4],
+      swarmHash: data[5],
     };
     return token;
   }
@@ -38,10 +36,9 @@ export class TokenRegWrapper {
       address: data[0],
       name: data[1],
       symbol: data[2],
-      url: data[3],
-      decimals: data[4].toNumber(),
-      ipfsHash: data[5],
-      swarmHash: data[6],
+      decimals: data[3].toNumber(),
+      ipfsHash: data[4],
+      swarmHash: data[5],
     };
     return token;
   }
@@ -51,10 +48,9 @@ export class TokenRegWrapper {
       address: data[0],
       name: data[1],
       symbol: data[2],
-      url: data[3],
-      decimals: data[4].toNumber(),
-      ipfsHash: data[5],
-      swarmHash: data[6],
+      decimals: data[3].toNumber(),
+      ipfsHash: data[4],
+      swarmHash: data[5],
     };
     return token;
   }

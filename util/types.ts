@@ -102,7 +102,6 @@ export interface Token {
   address?: string;
   name: string;
   symbol: string;
-  url: string;
   decimals: number;
   ipfsHash: string;
   swarmHash: string;

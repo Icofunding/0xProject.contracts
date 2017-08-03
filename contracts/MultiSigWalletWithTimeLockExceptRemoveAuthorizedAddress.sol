@@ -1,32 +1,32 @@
-pragma solidity ^0.4.11;
+pragma solidity 0.4.11;
 
 import "./MultiSigWalletWithTimeLock.sol";
 
 contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWalletWithTimeLock {
 
-    address public PROXY_CONTRACT;
+    address public TOKEN_TRANSFER_PROXY_CONTRACT;
 
     modifier validRemoveAuthorizedAddressTx(uint transactionId) {
-        Transaction tx = transactions[transactionId];
-        assert(tx.destination == PROXY_CONTRACT);
-        assert(isFunctionRemoveAuthorizedAddress(tx.data));
+        Transaction storage tx = transactions[transactionId];
+        require(tx.destination == TOKEN_TRANSFER_PROXY_CONTRACT);
+        require(isFunctionRemoveAuthorizedAddress(tx.data));
         _;
     }
 
-    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and proxy address.
+    /// @dev Contract constructor sets initial owners, required number of confirmations, time lock, and tokenTransferProxy address.
     /// @param _owners List of initial owners.
     /// @param _required Number of required confirmations.
     /// @param _secondsTimeLocked Duration needed after a transaction is confirmed and before it becomes executable, in seconds.
-    /// @param _proxy Address of Proxy contract.
+    /// @param _tokenTransferProxy Address of TokenTransferProxy contract.
     function MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress(
         address[] _owners,
         uint _required,
         uint _secondsTimeLocked,
-        address _proxy)
+        address _tokenTransferProxy)
         public
         MultiSigWalletWithTimeLock(_owners, _required, _secondsTimeLocked)
     {
-        PROXY_CONTRACT = _proxy;
+        TOKEN_TRANSFER_PROXY_CONTRACT = _tokenTransferProxy;
     }
 
     /// @dev Allows execution of removeAuthorizedAddress without time lock.
@@ -34,10 +34,10 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
     function executeRemoveAuthorizedAddress(uint transactionId)
         public
         notExecuted(transactionId)
-        confirmationTimeSet(transactionId)
+        fullyConfirmed(transactionId)
         validRemoveAuthorizedAddressTx(transactionId)
     {
-        Transaction tx = transactions[transactionId];
+        Transaction storage tx = transactions[transactionId];
         tx.executed = true;
         if (tx.destination.call.value(tx.value)(tx.data))
             Execution(transactionId);
@@ -57,7 +57,7 @@ contract MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress is MultiSigWall
     {
         bytes4 removeAuthorizedAddressSignature = bytes4(sha3("removeAuthorizedAddress(address)"));
         for (uint i = 0; i < 4; i++) {
-            assert(data[i] == removeAuthorizedAddressSignature[i]);
+            require(data[i] == removeAuthorizedAddressSignature[i]);
         }
         return true;
     }
