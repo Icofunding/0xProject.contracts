@@ -152,7 +152,7 @@ contract TokenSale is Ownable, SafeMath {
         SaleInitialized(_startTimeInSec);
     }
 
-    /// @dev Fills order using msg.value.
+    /// @dev Fills order using msg.value. Should not be called by contracts unless able to access the protocol token after execution.
     function fillOrderWithEth()
         public
         payable
