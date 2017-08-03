@@ -13,9 +13,6 @@ contract TokenSale is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public PROTOCOL_TOKEN_CONTRACT;
-    address public ETH_TOKEN_CONTRACT;
-
     Exchange exchange;
     Token protocolToken;
     EtherToken ethToken;
@@ -82,9 +79,6 @@ contract TokenSale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        PROTOCOL_TOKEN_CONTRACT = _protocolToken;
-        ETH_TOKEN_CONTRACT = _ethToken;
-
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
         ethToken = EtherToken(_ethToken);
@@ -138,8 +132,8 @@ contract TokenSale is Ownable, SafeMath {
         });
 
         require(order.taker == address(this));
-        require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
-        require(order.takerToken == ETH_TOKEN_CONTRACT);
+        require(order.makerToken == address(protocolToken));
+        require(order.takerToken == address(ethToken));
         require(order.feeRecipient == address(0));
 
         require(isValidSignature(
