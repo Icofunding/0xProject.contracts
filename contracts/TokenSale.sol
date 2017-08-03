@@ -13,9 +13,6 @@ contract TokenSale is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public PROTOCOL_TOKEN_CONTRACT;
-    address public ETH_TOKEN_CONTRACT;
-
     Exchange exchange;
     Token protocolToken;
     EtherToken ethToken;
@@ -82,9 +79,6 @@ contract TokenSale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        PROTOCOL_TOKEN_CONTRACT = _protocolToken;
-        ETH_TOKEN_CONTRACT = _ethToken;
-
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
         ethToken = EtherToken(_ethToken);
@@ -138,8 +132,8 @@ contract TokenSale is Ownable, SafeMath {
         });
 
         require(order.taker == address(this));
-        require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
-        require(order.takerToken == ETH_TOKEN_CONTRACT);
+        require(order.makerToken == address(protocolToken));
+        require(order.takerToken == address(ethToken));
         require(order.feeRecipient == address(0));
 
         require(isValidSignature(
@@ -158,7 +152,7 @@ contract TokenSale is Ownable, SafeMath {
         SaleInitialized(_startTimeInSec);
     }
 
-    /// @dev Fills order using msg.value.
+    /// @dev Fills order using msg.value. Should not be called by contracts unless able to access the protocol token after execution.
     function fillOrderWithEth()
         public
         payable
@@ -269,15 +263,33 @@ contract TokenSale is Ownable, SafeMath {
         );
     }
 
-    function getOrderHash() public returns (bytes32) {
+    /// @dev Getter function for initialized order's orderHash.
+    /// @return orderHash of initialized order or null.
+    function getOrderHash()
+        public
+        constant
+        returns (bytes32)
+    {
         return order.orderHash;
     }
 
-    function getOrderMakerTokenAmount() public returns (uint) {
+    /// @dev Getter function for initialized order's makerTokenAmount.
+    /// @return makerTokenAmount of initialized order or 0.
+    function getOrderMakerTokenAmount()
+        public
+        constant
+        returns (uint)
+    {
         return order.makerTokenAmount;
     }
 
-    function getOrderTakerTokenAmount() public returns (uint) {
+    /// @dev Getter function for initialized order's takerTokenAmount.
+    /// @return takerTokenAmount of initialized order or 0.
+    function getOrderTakerTokenAmount()
+        public
+        constant
+        returns (uint)
+    {
         return order.takerTokenAmount;
     }
 }

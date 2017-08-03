@@ -24,7 +24,7 @@ import "./base/Ownable.sol";
 contract TokenRegistry is Ownable {
 
     event LogAddToken(
-        address token,
+        address indexed token,
         string name,
         string symbol,
         uint8 decimals,
@@ -33,7 +33,7 @@ contract TokenRegistry is Ownable {
     );
 
     event LogRemoveToken(
-        address token,
+        address indexed token,
         string name,
         string symbol,
         uint8 decimals,
@@ -41,10 +41,10 @@ contract TokenRegistry is Ownable {
         bytes swarmHash
     );
 
-    event LogTokenNameChange(address token, string oldName, string newName);
-    event LogTokenSymbolChange(address token, string oldSymbol, string newSymbol);
-    event LogTokenIpfsHashChange(address token, bytes oldIpfsHash, bytes newIpfsHash);
-    event LogTokenSwarmHashChange(address token, bytes oldSwarmHash, bytes newSwarmHash);
+    event LogTokenNameChange(address indexed token, string oldName, string newName);
+    event LogTokenSymbolChange(address indexed token, string oldSymbol, string newSymbol);
+    event LogTokenIpfsHashChange(address indexed token, bytes oldIpfsHash, bytes newIpfsHash);
+    event LogTokenSwarmHashChange(address indexed token, bytes oldSwarmHash, bytes newSwarmHash);
 
     mapping (address => TokenMetadata) public tokens;
     mapping (string => address) tokenBySymbol;

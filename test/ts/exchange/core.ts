@@ -643,6 +643,17 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
+    it('should throw if cancelTakerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync();
+
+      try {
+        await exWrapper.cancelOrderAsync(order, maker, { cancelTakerTokenAmount: new BigNumber(0) });
+        throw new Error('Cancel succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
     it('should be able to cancel a full order', async () => {
       await exWrapper.cancelOrderAsync(order, maker);
       await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });
