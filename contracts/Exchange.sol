@@ -215,12 +215,12 @@ contract Exchange is SafeMath {
     /// @dev Cancels the input order.
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
-    /// @param canceltakerTokenAmount Desired amount of takerToken to cancel in order.
+    /// @param cancelTakerTokenAmount Desired amount of takerToken to cancel in order.
     /// @return Amount of takerToken cancelled.
     function cancelOrder(
         address[5] orderAddresses,
         uint[6] orderValues,
-        uint canceltakerTokenAmount)
+        uint cancelTakerTokenAmount)
         public
         returns (uint)
     {
@@ -239,7 +239,7 @@ contract Exchange is SafeMath {
         });
 
         require(order.maker == msg.sender);
-        require(order.makerTokenAmount > 0 && order.takerTokenAmount > 0);
+        require(order.makerTokenAmount > 0 && order.takerTokenAmount > 0 && cancelTakerTokenAmount > 0);
 
         if (block.timestamp >= order.expirationTimestampInSec) {
             LogError(uint8(Errors.ORDER_EXPIRED), order.orderHash);
@@ -247,7 +247,7 @@ contract Exchange is SafeMath {
         }
 
         uint remainingTakerTokenAmount = safeSub(order.takerTokenAmount, getUnavailableTakerTokenAmount(order.orderHash));
-        uint cancelledTakerTokenAmount = min256(canceltakerTokenAmount, remainingTakerTokenAmount);
+        uint cancelledTakerTokenAmount = min256(cancelTakerTokenAmount, remainingTakerTokenAmount);
         if (cancelledTakerTokenAmount == 0) {
             LogError(uint8(Errors.ORDER_FULLY_FILLED_OR_CANCELLED), order.orderHash);
             return 0;
