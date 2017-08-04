@@ -29,7 +29,7 @@
 
 ## Bug Bounty
 
-The Bug Bounty is now live! Details regarding compensation for reported bugs can be found [here](https://blog.0xproject.com/announcing-the-0x-protocol-bug-bounty-b0559d2738c). Submissions should be based off of commit [74728c404a1c7e9091074bd88abf454fd374228a](https://github.com/0xProject/contracts/tree/74728c404a1c7e9091074bd88abf454fd374228a) and will be accepted until 8pm EST on 08/08/17. Please e-mail all submissions to team@0xProject.com with the subject "BUG BOUNTY".
+The Bug Bounty is now live! Details regarding compensation for reported bugs can be found [here](https://blog.0xproject.com/announcing-the-0x-protocol-bug-bounty-b0559d2738c). Submissions should be based off of commit [74728c404a1c7e9091074bd88abf454fd374228a](https://github.com/0xProject/contracts/tree/74728c404a1c7e9091074bd88abf454fd374228a) and will be accepted until 8pm EST on 08/08/17. Please e-mail all submissions to team@0xProject.com with the subject "BUG BOUNTY". Note that submissions already reported in our [security audits](https://github.com/ConsenSys/0x_review) or GitHub issues will not be eligible.
 
 The following contracts are within the scope of the bug bounty:
 
