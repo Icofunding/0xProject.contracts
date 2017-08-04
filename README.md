@@ -29,29 +29,31 @@
 
 ## Bug Bounty
 
-Details regarding compensation for reported bugs can be found [here](https://blog.0xproject.com/announcing-the-0x-protocol-bug-bounty-b0559d2738c). The following contracts are within the scope of the bug bounty:
+The Bug Bounty is now live! Details regarding compensation for reported bugs can be found [here](https://blog.0xproject.com/announcing-the-0x-protocol-bug-bounty-b0559d2738c). Submissions should be based off of commit [74728c404a1c7e9091074bd88abf454fd374228a](https://github.com/0xProject/contracts/tree/74728c404a1c7e9091074bd88abf454fd374228a) and will be accepted until 8pm EST on 08/08/17. Please e-mail all submissions to team@0xProject.com with the subject "BUG BOUNTY". Note that submissions already reported in our [security audits](https://github.com/ConsenSys/0x_review) or GitHub issues will not be eligible.
+
+The following contracts are within the scope of the bug bounty:
 
 #### Core Contracts
-* [Exchange.sol](https://github.com/0xProject/contracts/tree/master/contracts/Exchange.sol)
-* [TokenTransferProxy.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenTransferProxy.sol)
-* [TokenRegistry.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenRegistry.sol)
-* [ZRXToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/tokens/ZRXToken.sol)
-* [MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol](https://github.com/0xProject/contracts/tree/master/contracts/MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol)
-* [TokenSale.sol](https://github.com/0xProject/contracts/tree/master/contracts/TokenSale.sol)
+* [Exchange.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/Exchange.sol)
+* [TokenTransferProxy.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/TokenTransferProxy.sol)
+* [TokenRegistry.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/TokenRegistry.sol)
+* [ZRXToken.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/tokens/ZRXToken.sol)
+* [MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol)
+* [TokenSale.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/TokenSale.sol)
 
 #### Wallets
-* [MultiSigWallet.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/MultiSigWallet.sol)
-* [MultiSigWalletWithTimeLock.sol](https://github.com/0xProject/contracts/tree/master/contracts/MultiSigWalletWithTimeLock.sol)
-* [VestingWallet.sol](https://github.com/0xProject/vesting-wallet/blob/master/contracts/VestingWallet.sol) (Note: This is in a different repo, found [here](https://github.com/0xProject/vesting-wallet))
+* [MultiSigWallet.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/base/MultiSigWallet.sol) (There is an additional growing bug bounty for this contract [here](https://www.reddit.com/r/ethdev/comments/6qaxc1/bug_bounty_on_the_consensys_and_whitelisted/))
+* [MultiSigWalletWithTimeLock.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/MultiSigWalletWithTimeLock.sol)
+* [VestingWallet.sol](https://github.com/0xProject/vesting-wallet/blob/5b546aaa28cca843d52c01bc02800d702f6f6135/contracts/VestingWallet.sol) (This is in a different repo, found [here](https://github.com/0xProject/vesting-wallet))
 
 #### Tokens
-* [EtherToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/tokens/EtherToken.sol)
-* [StandardTokenWithOverflowProtection.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/StandardTokenWithOverflowProtection.sol)
-* [StandardToken.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/StandardToken.sol)
+* [EtherToken.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/tokens/EtherToken.sol)
+* [StandardTokenWithOverflowProtection.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/base/StandardTokenWithOverflowProtection.sol)
+* [StandardToken.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/base/StandardToken.sol)
 
 #### Base Contracts
-* [Ownable.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/Ownable.sol)
-* [SafeMath.sol](https://github.com/0xProject/contracts/tree/master/contracts/base/SafeMath.sol)
+* [Ownable.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/base/Ownable.sol)
+* [SafeMath.sol](https://github.com/0xProject/contracts/blob/74728c404a1c7e9091074bd88abf454fd374228a/contracts/base/SafeMath.sol)
 
 ## Architecture
 
