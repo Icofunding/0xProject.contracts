@@ -95,8 +95,8 @@ contract TokenSale is Ownable, SafeMath {
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
-    /// @param r CDSA signature parameters r.
-    /// @param s CDSA signature parameters s.
+    /// @param r ECDSA signature parameters r.
+    /// @param s ECDSA signature parameters s.
     /// @param _startTimeInSec Time that token sale begins in seconds since epoch.
     /// @param _baseEthCapPerAddress The ETH cap per address for the first time period.
     function initializeSale(
@@ -168,14 +168,14 @@ contract TokenSale is Ownable, SafeMath {
 
         contributed[msg.sender] = safeAdd(contributed[msg.sender], ethToFill);
 
-        require(exchange.fillOrKillOrder(
+        exchange.fillOrKillOrder(
             [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
             [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
             ethToFill,
             order.v,
             order.r,
             order.s
-        ));
+        );
         uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
         require(protocolToken.transfer(msg.sender, filledProtocolToken));
 

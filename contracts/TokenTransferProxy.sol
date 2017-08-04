@@ -52,27 +52,22 @@ contract TokenTransferProxy is Ownable {
 
     /// @dev Authorizes an address.
     /// @param target Address to authorize.
-    /// @return Success of authorization.
     function addAuthorizedAddress(address target)
         public
         onlyOwner
         targetNotAuthorized(target)
-        returns (bool)
     {
         authorized[target] = true;
         authorities.push(target);
         LogAuthorizedAddressAdded(target, msg.sender);
-        return true;
     }
 
     /// @dev Removes authorizion of an address.
     /// @param target Address to remove authorization from.
-    /// @return Success of deauthorization.
     function removeAuthorizedAddress(address target)
         public
         onlyOwner
         targetAuthorized(target)
-        returns (bool)
     {
         delete authorized[target];
         for (uint i = 0; i < authorities.length; i++) {
@@ -83,7 +78,6 @@ contract TokenTransferProxy is Ownable {
             }
         }
         LogAuthorizedAddressRemoved(target, msg.sender);
-        return true;
     }
 
     /// @dev Calls into ERC20 Token contract, invoking transferFrom.
