@@ -13,9 +13,6 @@ contract TokenSale is Ownable, SafeMath {
 
     uint public constant TIME_PERIOD_IN_SEC = 1 days;
 
-    address public PROTOCOL_TOKEN_CONTRACT;
-    address public ETH_TOKEN_CONTRACT;
-
     Exchange exchange;
     Token protocolToken;
     EtherToken ethToken;
@@ -82,9 +79,6 @@ contract TokenSale is Ownable, SafeMath {
         address _protocolToken,
         address _ethToken)
     {
-        PROTOCOL_TOKEN_CONTRACT = _protocolToken;
-        ETH_TOKEN_CONTRACT = _ethToken;
-
         exchange = Exchange(_exchange);
         protocolToken = Token(_protocolToken);
         ethToken = EtherToken(_ethToken);
@@ -101,8 +95,8 @@ contract TokenSale is Ownable, SafeMath {
     /// @param orderAddresses Array of order's maker, taker, makerToken, takerToken, and feeRecipient.
     /// @param orderValues Array of order's makerTokenAmount, takerTokenAmount, makerFee, takerFee, expirationTimestampInSec, and salt.
     /// @param v ECDSA signature parameter v.
-    /// @param r CDSA signature parameters r.
-    /// @param s CDSA signature parameters s.
+    /// @param r ECDSA signature parameters r.
+    /// @param s ECDSA signature parameters s.
     /// @param _startTimeInSec Time that token sale begins in seconds since epoch.
     /// @param _baseEthCapPerAddress The ETH cap per address for the first time period.
     function initializeSale(
@@ -138,8 +132,8 @@ contract TokenSale is Ownable, SafeMath {
         });
 
         require(order.taker == address(this));
-        require(order.makerToken == PROTOCOL_TOKEN_CONTRACT);
-        require(order.takerToken == ETH_TOKEN_CONTRACT);
+        require(order.makerToken == address(protocolToken));
+        require(order.takerToken == address(ethToken));
         require(order.feeRecipient == address(0));
 
         require(isValidSignature(
@@ -158,7 +152,7 @@ contract TokenSale is Ownable, SafeMath {
         SaleInitialized(_startTimeInSec);
     }
 
-    /// @dev Fills order using msg.value.
+    /// @dev Fills order using msg.value. Should not be called by contracts unless able to access the protocol token after execution.
     function fillOrderWithEth()
         public
         payable
@@ -174,14 +168,14 @@ contract TokenSale is Ownable, SafeMath {
 
         contributed[msg.sender] = safeAdd(contributed[msg.sender], ethToFill);
 
-        require(exchange.fillOrKillOrder(
+        exchange.fillOrKillOrder(
             [order.maker, order.taker, order.makerToken, order.takerToken, order.feeRecipient],
             [order.makerTokenAmount, order.takerTokenAmount, order.makerFee, order.takerFee, order.expirationTimestampInSec, order.salt],
             ethToFill,
             order.v,
             order.r,
             order.s
-        ));
+        );
         uint filledProtocolToken = safeDiv(safeMul(order.makerTokenAmount, ethToFill), order.takerTokenAmount);
         require(protocolToken.transfer(msg.sender, filledProtocolToken));
 
@@ -269,15 +263,33 @@ contract TokenSale is Ownable, SafeMath {
         );
     }
 
-    function getOrderHash() public returns (bytes32) {
+    /// @dev Getter function for initialized order's orderHash.
+    /// @return orderHash of initialized order or null.
+    function getOrderHash()
+        public
+        constant
+        returns (bytes32)
+    {
         return order.orderHash;
     }
 
-    function getOrderMakerTokenAmount() public returns (uint) {
+    /// @dev Getter function for initialized order's makerTokenAmount.
+    /// @return makerTokenAmount of initialized order or 0.
+    function getOrderMakerTokenAmount()
+        public
+        constant
+        returns (uint)
+    {
         return order.makerTokenAmount;
     }
 
-    function getOrderTakerTokenAmount() public returns (uint) {
+    /// @dev Getter function for initialized order's takerTokenAmount.
+    /// @return takerTokenAmount of initialized order or 0.
+    function getOrderTakerTokenAmount()
+        public
+        constant
+        returns (uint)
+    {
         return order.takerTokenAmount;
     }
 }

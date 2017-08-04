@@ -115,6 +115,30 @@ contract('Exchange', (accounts: string[]) => {
       order = await orderFactory.newSignedOrderAsync();
     });
 
+     it('should create an unfillable order', async () => {
+      order = await orderFactory.newSignedOrderAsync({
+        makerTokenAmount: new BigNumber(1001),
+        takerTokenAmount: new BigNumber(3)
+      });
+
+      const filledTakerTokenAmountBefore = await exchange.filled.call(order.params.orderHashHex);
+      assert.equal(filledTakerTokenAmountBefore, 0, 'filledAmountMBefore should be 0');
+      
+      const fillTakerTokenAmount1 = new BigNumber(2);
+      await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: fillTakerTokenAmount1 });
+
+      const filledTakerTokenAmountAfter1 = await exchange.filled.call(order.params.orderHashHex);
+      assert.equal(filledTakerTokenAmountAfter1, fillTakerTokenAmount1.toString(),
+                   'filledTakerTokenAmountAfter1 should be same as fillTakerTokenAmount1');
+                     
+      const fillTakerTokenAmount2 = new BigNumber(1);
+      await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: fillTakerTokenAmount2 });
+      
+      const filledTakerTokenAmountAfter2 = await exchange.filled.call(order.params.orderHashHex);
+      assert.equal(filledTakerTokenAmountAfter2.toString(), filledTakerTokenAmountAfter1.toString(),
+                   'filledTakerTokenAmountAfter2 should equal filledTakerTokenAmountAfter1 due to a rounding error');
+    });
+
     it('should transfer the correct amounts when makerTokenAmount === takerTokenAmount', async () => {
       order = await orderFactory.newSignedOrderAsync({
         makerTokenAmount: toSmallestUnits(100),
@@ -637,6 +661,17 @@ contract('Exchange', (accounts: string[]) => {
 
       try {
         await exWrapper.cancelOrderAsync(order, maker);
+        throw new Error('Cancel succeeded when it should have thrown');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
+    it('should throw if cancelTakerTokenAmount is 0', async () => {
+      order = await orderFactory.newSignedOrderAsync();
+
+      try {
+        await exWrapper.cancelOrderAsync(order, maker, { cancelTakerTokenAmount: new BigNumber(0) });
         throw new Error('Cancel succeeded when it should have thrown');
       } catch (err) {
         testUtil.assertThrow(err);
