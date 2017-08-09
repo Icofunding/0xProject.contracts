@@ -12,6 +12,8 @@ contract('ZRXToken', (accounts: string[]) => {
   const owner = accounts[0];
   const spender = accounts[1];
 
+  const MAX_UINT = (new BigNumber(2)).pow(256).minus(1);
+
   let zrx: ContractInstance;
 
   beforeEach(async () => {
@@ -73,32 +75,6 @@ contract('ZRXToken', (accounts: string[]) => {
     });
   });
 
-  describe('approveUnlimited', () => {
-    it('should log an event with the correct args', async () => {
-      const approval = true;
-      const res = await zrx.approveUnlimited(spender, approval, { from: owner });
-      const logs = res.logs;
-      assert.equal(logs.length, 1);
-
-      const logArgs = logs[0].args;
-      assert.equal(logArgs._owner, owner);
-      assert.equal(logArgs._spender, spender);
-      assert.equal(logArgs._approval, approval);
-    });
-
-    it('should update the allowedUnlimited mapping with the correct approval', async () => {
-      let approval = true;
-      await zrx.approveUnlimited(spender, approval);
-      let isApproved = await zrx.unlimitedAllowance(owner, spender);
-      assert.equal(isApproved, approval);
-
-      approval = false;
-      await zrx.approveUnlimited(spender, approval);
-      isApproved = await zrx.unlimitedAllowance(owner, spender);
-      assert.equal(isApproved, approval);
-    });
-  });
-
   describe('transferFrom', () => {
     it('should return false if owner has insufficient balance', async () => {
       const ownerBalance = await zrx.balanceOf(owner);
@@ -108,10 +84,7 @@ contract('ZRXToken', (accounts: string[]) => {
       assert.equal(didReturnTrue, false);
     });
 
-    it('should return false if spender is not allowed unlimited and owner has insufficient allowance', async () => {
-      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
-      assert.equal(spenderHasUnlimitedAllowance, false);
-
+    it('should return false if spender has insufficient allowance', async () => {
       const ownerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = ownerBalance;
 
@@ -129,37 +102,18 @@ contract('ZRXToken', (accounts: string[]) => {
       assert.equal(didReturnTrue, true);
     });
 
-    it('should transfer the correct balances if spender is allowed unlimited', async () => {
+    it('should not modify spender allowance if spender allowance is 2^256 - 1', async () => {
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
-      const approval = true;
-      await zrx.approveUnlimited(spender, approval, { from: owner });
-      await zrx.transferFrom(owner, spender, amountToTransfer, { from: spender });
-
-      const newOwnerBalance = await zrx.balanceOf(owner);
-      const newSpenderBalance = await zrx.balanceOf(spender);
-
-      assert.equal(newOwnerBalance.toString(), '0');
-      assert.equal(newSpenderBalance.toString(), initOwnerBalance.toString());
-    });
-
-    it('should not modify spender allowance if spender is allowed unlimited', async () => {
-      const initOwnerBalance = await zrx.balanceOf(owner);
-      const amountToTransfer = initOwnerBalance;
-      const initSpenderAllowance = initOwnerBalance;
-      const approval = true;
-      await zrx.approveUnlimited(spender, approval, { from: owner });
+      const initSpenderAllowance = MAX_UINT;
       await zrx.approve(spender, initSpenderAllowance, { from: owner });
       await zrx.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
       const newSpenderAllowance = await zrx.allowance(owner, spender);
-      assert.equal(initSpenderAllowance.toString(), newSpenderAllowance.toString());
+      assert.equal(initSpenderAllowance.toFixed(), newSpenderAllowance.toFixed());
     });
 
-    it('should transfer the correct balances if spender is not allowed unlimited but has sufficient allowance', async () => {
-      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
-      assert.equal(spenderHasUnlimitedAllowance, false);
-
+    it('should transfer the correct balances if spender has sufficient allowance', async () => {
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
@@ -173,10 +127,7 @@ contract('ZRXToken', (accounts: string[]) => {
       assert.equal(newSpenderBalance.toString(), initOwnerBalance.toString());
     });
 
-    it('should modify allowance if spender is not allowed unlimited but has sufficient allowance', async () => {
-      const spenderHasUnlimitedAllowance = await zrx.unlimitedAllowance(owner, spender);
-      assert.equal(spenderHasUnlimitedAllowance, false);
-
+    it('should modify allowance if spender has sufficient allowance less than 2^256 - 1', async () => {
       const initOwnerBalance = await zrx.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
