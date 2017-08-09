@@ -225,7 +225,7 @@ contract('TokenRegistry', (accounts: string[]) => {
     describe('removeToken', () => {
       it('should throw if not called by owner', async () => {
         try {
-          await tokenReg.removeToken(token1.address, { from: notOwner });
+          await tokenReg.removeToken(token1.address, 0, { from: notOwner });
           throw new Error('removeToken succeeded when it should have thrown');
         } catch (err) {
           testUtil.assertThrow(err);
@@ -233,7 +233,7 @@ contract('TokenRegistry', (accounts: string[]) => {
       });
 
       it('should remove token metadata when called by owner', async () => {
-        const res = await tokenReg.removeToken(token1.address, { from: owner });
+        const res = await tokenReg.removeToken(token1.address, 0, { from: owner });
         assert.equal(res.logs.length, 1);
         const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token1.address);
         assert.deepEqual(tokenData, nullToken);
@@ -241,12 +241,22 @@ contract('TokenRegistry', (accounts: string[]) => {
 
       it('should throw if token does not exist', async () => {
         try {
-          await tokenReg.removeToken(nullToken.address, { from: owner });
+          await tokenReg.removeToken(nullToken.address, 0, { from: owner });
           throw new Error('removeToken succeeded when it should have failed');
         } catch (err) {
           testUtil.assertThrow(err);
         }
       });
+
+      it('should throw if token at given index does not match address', async () => {
+        try {
+          await tokenReg.removeToken(nullToken.address, 1, { from: owner });
+          throw new Error('removeToken succeeded when it should have failed');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
+      });
+
     });
   });
 });
