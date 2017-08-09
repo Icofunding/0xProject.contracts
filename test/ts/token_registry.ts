@@ -249,8 +249,10 @@ contract('TokenRegistry', (accounts: string[]) => {
       });
 
       it('should throw if token at given index does not match address', async () => {
+        await tokenRegWrapper.addTokenAsync(token2, owner);
+
         try {
-          await tokenReg.removeToken(nullToken.address, 1, { from: owner });
+          await tokenReg.removeToken(token2.address, 0, { from: owner });
           throw new Error('removeToken succeeded when it should have failed');
         } catch (err) {
           testUtil.assertThrow(err);
