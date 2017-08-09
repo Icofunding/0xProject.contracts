@@ -81,6 +81,11 @@ contract TokenRegistry is Ownable {
         _;
     }
 
+    modifier addressNotNull(address _address) {
+        require(_address != address(0));
+        _;
+    }
+
 
     /// @dev Allows owner to add a new token to the registry.
     /// @param _token Address of new token.
@@ -99,6 +104,7 @@ contract TokenRegistry is Ownable {
         public
         onlyOwner
         tokenDoesNotExist(_token)
+        addressNotNull(_token)
         symbolDoesNotExist(_symbol)
         nameDoesNotExist(_name)
     {

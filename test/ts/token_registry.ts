@@ -78,6 +78,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       }
     });
 
+    it('should throw if token address is null', async () => {
+      try {
+        await tokenRegWrapper.addTokenAsync(nullToken, owner);
+        throw new Error('addToken succeeded when it should have failed');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
     it('should throw if name already exists', async () => {
       await tokenRegWrapper.addTokenAsync(token1, owner);
       const duplicateNameToken = _.assign({}, token2, { name: token1.name });
