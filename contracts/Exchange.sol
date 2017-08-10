@@ -1,6 +1,6 @@
 /*
 
-  Copyright 2017 ZeroEx Inc.
+  Copyright 2017 ZeroEx Intl.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
   limitations under the License.
 
 */
+
 pragma solidity 0.4.11;
 
 import "./TokenTransferProxy.sol";
