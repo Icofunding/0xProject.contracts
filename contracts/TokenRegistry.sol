@@ -81,6 +81,11 @@ contract TokenRegistry is Ownable {
         _;
     }
 
+    modifier addressNotNull(address _address) {
+        require(_address != address(0));
+        _;
+    }
+
 
     /// @dev Allows owner to add a new token to the registry.
     /// @param _token Address of new token.
@@ -99,6 +104,7 @@ contract TokenRegistry is Ownable {
         public
         onlyOwner
         tokenDoesNotExist(_token)
+        addressNotNull(_token)
         symbolDoesNotExist(_symbol)
         nameDoesNotExist(_name)
     {
@@ -125,18 +131,16 @@ contract TokenRegistry is Ownable {
 
     /// @dev Allows owner to remove an existing token from the registry.
     /// @param _token Address of existing token.
-    function removeToken(address _token)
+    function removeToken(address _token, uint _index)
         public
         onlyOwner
         tokenExists(_token)
     {
-        for (uint i = 0; i < tokenAddresses.length; i++) {
-            if (tokenAddresses[i] == _token) {
-                tokenAddresses[i] = tokenAddresses[tokenAddresses.length - 1];
-                tokenAddresses.length -= 1;
-                break;
-            }
-        }
+        require(tokenAddresses[_index] == _token);
+
+        tokenAddresses[_index] = tokenAddresses[tokenAddresses.length - 1];
+        tokenAddresses.length -= 1;
+
         TokenMetadata storage token = tokens[_token];
         LogRemoveToken(
             token.token,

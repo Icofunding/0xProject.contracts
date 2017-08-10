@@ -78,6 +78,15 @@ contract('TokenRegistry', (accounts: string[]) => {
       }
     });
 
+    it('should throw if token address is null', async () => {
+      try {
+        await tokenRegWrapper.addTokenAsync(nullToken, owner);
+        throw new Error('addToken succeeded when it should have failed');
+      } catch (err) {
+        testUtil.assertThrow(err);
+      }
+    });
+
     it('should throw if name already exists', async () => {
       await tokenRegWrapper.addTokenAsync(token1, owner);
       const duplicateNameToken = _.assign({}, token2, { name: token1.name });
@@ -215,8 +224,9 @@ contract('TokenRegistry', (accounts: string[]) => {
 
     describe('removeToken', () => {
       it('should throw if not called by owner', async () => {
+        const index = 0;
         try {
-          await tokenReg.removeToken(token1.address, { from: notOwner });
+          await tokenReg.removeToken(token1.address, index, { from: notOwner });
           throw new Error('removeToken succeeded when it should have thrown');
         } catch (err) {
           testUtil.assertThrow(err);
@@ -224,20 +234,34 @@ contract('TokenRegistry', (accounts: string[]) => {
       });
 
       it('should remove token metadata when called by owner', async () => {
-        const res = await tokenReg.removeToken(token1.address, { from: owner });
+        const index = 0;
+        const res = await tokenReg.removeToken(token1.address, index, { from: owner });
         assert.equal(res.logs.length, 1);
         const tokenData = await tokenRegWrapper.getTokenMetaDataAsync(token1.address);
         assert.deepEqual(tokenData, nullToken);
       });
 
       it('should throw if token does not exist', async () => {
+        const index = 0;
         try {
-          await tokenReg.removeToken(nullToken.address, { from: owner });
+          await tokenReg.removeToken(nullToken.address, index, { from: owner });
           throw new Error('removeToken succeeded when it should have failed');
         } catch (err) {
           testUtil.assertThrow(err);
         }
       });
+
+      it('should throw if token at given index does not match address', async () => {
+        await tokenRegWrapper.addTokenAsync(token2, owner);
+        const incorrectIndex = 0;
+        try {
+          await tokenReg.removeToken(token2.address, incorrectIndex, { from: owner });
+          throw new Error('removeToken succeeded when it should have failed');
+        } catch (err) {
+          testUtil.assertThrow(err);
+        }
+      });
+
     });
   });
 });
