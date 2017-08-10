@@ -9,35 +9,29 @@ contract ZRXToken is StandardToken {
     string constant public name = "0x Protocol Token";
     string constant public symbol = "ZRX";
 
-    mapping(address => mapping(address => bool)) allowedUnlimited;
-
-    event UnlimitedApproval(address indexed _owner, address indexed _spender, bool _approval);
+    uint constant MAX_UINT = 2**256 - 1;
 
     function ZRXToken() {
         balances[msg.sender] = totalSupply;
     }
 
-    function approveUnlimited(address _spender, bool _approval)
-        public
-        returns (bool)
-    {
-        allowedUnlimited[msg.sender][_spender] = _approval;
-        UnlimitedApproval(msg.sender, _spender, _approval);
-        return true;
-    }
-
+    /// @dev ERC20 transferFrom, modified such that an allowance of MAX_UINT represents an unlimited allowance.
+    /// @param _from Address to transfer from.
+    /// @param _to Address to transfer to.
+    /// @param _value Amount to transfer.
+    /// @return Success of transfer.
     function transferFrom(address _from, address _to, uint _value)
         public
         returns (bool)
     {
-        bool hasUnlimitedAllowance = allowedUnlimited[_from][msg.sender];
+        uint allowance = allowed[_from][msg.sender];
         if (balances[_from] >= _value
-            && (hasUnlimitedAllowance || allowed[_from][msg.sender] >= _value)
+            && allowance >= _value
             && balances[_to] + _value >= balances[_to]
         ) {
             balances[_to] += _value;
             balances[_from] -= _value;
-            if (!hasUnlimitedAllowance) {
+            if (allowance < MAX_UINT) {
                 allowed[_from][msg.sender] -= _value;
             }
             Transfer(_from, _to, _value);
@@ -45,13 +39,5 @@ contract ZRXToken is StandardToken {
         } else {
             return false;
         }
-    }
-
-    function unlimitedAllowance(address _owner, address _spender)
-        public
-        constant
-        returns (bool)
-    {
-        return allowedUnlimited[_owner][_spender];
     }
 }
