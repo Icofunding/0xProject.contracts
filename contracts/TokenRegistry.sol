@@ -73,8 +73,8 @@ contract TokenRegistry is Ownable {
     }
 
     modifier nameDoesNotExist(string _name) {
-      require(tokenByName[_name] == address(0));
-      _;
+        require(tokenByName[_name] == address(0));
+        _;
     }
 
     modifier symbolDoesNotExist(string _symbol) {
