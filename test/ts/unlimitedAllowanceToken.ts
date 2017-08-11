@@ -8,7 +8,7 @@ import { ContractInstance } from '../../util/types';
 const { DummyToken } = new Artifacts(artifacts);
 const web3Instance: Web3 = web3;
 
-contract('DummyToken', (accounts: string[]) => {
+contract('UnlimitedAllowanceToken', (accounts: string[]) => {
   const owner = accounts[0];
   const spender = accounts[1];
 
