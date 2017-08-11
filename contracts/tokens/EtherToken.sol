@@ -1,23 +1,31 @@
+/*
+
+  Copyright 2017 ZeroEx Intl.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+*/
+
 pragma solidity 0.4.11;
 
-import "../base/StandardTokenWithOverflowProtection.sol";
+import "./UnlimitedAllowanceToken.sol";
+import "./../base/SafeMath.sol";
 
-/// @title Token contract - Token exchanging Ether 1:1.
-/// @author Stefan George - <stefan.george@consensys.net>
-/// @author Modified by Amir Bandeali - <amir@0xproject.com>
-contract EtherToken is StandardTokenWithOverflowProtection {
+contract EtherToken is UnlimitedAllowanceToken, SafeMath {
 
-    /*
-     *  Constants
-     */
-    // Token meta data
     string constant public name = "Ether Token";
     string constant public symbol = "WETH";
     uint8 constant public decimals = 18;
-
-    /*
-     *  Read and write functions
-     */
 
     /// @dev Fallback to calling deposit when ether is sent directly to contract.
     function()
