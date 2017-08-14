@@ -402,6 +402,37 @@
       },
       "updated_at": 1502391794393,
       "address": "0x47512155B2cDBc7c4c8C018D2a8bFA6706aE62Cc"
+    },
+    "1": {
+      "links": {},
+      "events": {
+        "0xf4da425546dea8b9f96dc3e8d5884bf20b04876f8c2a6cd11bfdb240cdab35ce": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "startTimeInSec",
+              "type": "uint256"
+            }
+          ],
+          "name": "SaleInitialized",
+          "type": "event"
+        },
+        "0xb068776b457cefe34568f0e1ffb0cc2480cf799e77410c955f6e7502d654655d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "endTimeInSec",
+              "type": "uint256"
+            }
+          ],
+          "name": "SaleFinished",
+          "type": "event"
+        }
+      },
+      "updated_at": 1502679614000,
+      "address": "0xd4fd252d7d2c9479a8d616f510eac6243b5dddf9"
     }
   },
   "schema_version": "0.0.5",
