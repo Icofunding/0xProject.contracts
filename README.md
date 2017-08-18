@@ -95,7 +95,7 @@ TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entrie
 * ZRXToken.sol: [0xE41d2489571d322189246DaFA5ebDe1F4699F498](https://etherscan.io/address/0xE41d2489571d322189246DaFA5ebDe1F4699F498)
 * EtherToken.sol: [0x2956356cd2a2bf3202f771f50d3d14a367b48070](https://etherscan.io/address/0x2956356cd2a2bf3202f771f50d3d14a367b48070)
 * MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x01d9F4D104668CDc0b6d13C45DFf5E15D58d8f28](https://etherscan.io/address/0x01d9f4d104668cdc0b6d13c45dff5e15d58d8f28)
-* TokenRegistry.sol: [0x926a74c5C36adf004C87399e65f75628b0f98D2C] (https://etherscan.io/address/0x926a74c5c36adf004c87399e65f75628b0f98d2c)
+* TokenRegistry.sol: [0x926a74c5C36adf004C87399e65f75628b0f98D2C](https://etherscan.io/address/0x926a74c5c36adf004c87399e65f75628b0f98d2c)
 
 ### Contract Interactions
 
