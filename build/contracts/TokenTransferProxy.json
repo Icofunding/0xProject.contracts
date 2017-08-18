@@ -250,6 +250,47 @@
       },
       "updated_at": 1502391794384,
       "address": "0x087Eed4Bc1ee3DE49BeFbd66C662B434B15d49d4"
+    },
+    "1": {
+      "links": {},
+      "events": {
+        "0x94bb87f4c15c4587ff559a7584006fa01ddf9299359be6b512b94527aa961aca": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizedAddressAdded",
+          "type": "event"
+        },
+        "0xf5b347a1e40749dd050f5f07fbdbeb7e3efa9756903044dd29401fd1d4bb4a1c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "name": "LogAuthorizedAddressRemoved",
+          "type": "event"
+        }
+      },
+      "updated_at": 1502478966000,
+      "address": "0x8da0d80f5007ef1e431dd2127178d224e32c2ef4"
     }
   },
   "schema_version": "0.0.5",

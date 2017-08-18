@@ -81,25 +81,21 @@ TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entrie
 
 #### Kovan
 
-Commit Hash: ?
-
-Branch: ?
-
-* Exchange.sol: [0x63869171a246622ef8f9234879ce2c06cebd85f6](https://kovan.etherscan.io/address/0x63869171a246622ef8f9234879ce2c06cebd85f6)
-* TokenTransferProxy.sol: [0x946a1c437fb5a61bd5c95416346e684c802c5d2a](https://kovan.etherscan.io/address/0x946a1c437fb5a61bd5c95416346e684c802c5d2a)
-* MultiSigWalletWithTimeLock.sol: [0xa9a207b3df3f0d3ca33acf399e9af5db5902db39](https://kovan.etherscan.io/address/0xa9a207b3df3f0d3ca33acf399e9af5db5902db39)
-* TokenRegistry.sol: [0x0fea265f59495859467e648ec99a87549aa6ede0](https://kovan.etherscan.io/address/0x0fea265f59495859467e648ec99a87549aa6ede0)
+* Exchange.sol: [0x90fe2af704b34e0224bf2299c838e04d4dcf1364](https://kovan.etherscan.io/address/0x90fe2af704b34e0224bf2299c838e04d4dcf1364)
+* TokenTransferProxy.sol: [0x087Eed4Bc1ee3DE49BeFbd66C662B434B15d49d4](https://kovan.etherscan.io/address/0x087Eed4Bc1ee3DE49BeFbd66C662B434B15d49d4)
+* ZRXToken.sol: [0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570](https://kovan.etherscan.io/address/0x6ff6c0ff1d68b964901f986d4c9fa3ac68346570)
+* EtherToken.sol: [0x05d090b51c40b020eab3bfcb6a2dff130df22e9c](https://kovan.etherscan.io/address/0x05d090b51c40b020eab3bfcb6a2dff130df22e9c)
+* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x9301A2B0dCA791Ba27B1A074Aba3Bf47bcd80Cb9](https://kovan.etherscan.io/address/0x9301A2B0dCA791Ba27B1A074Aba3Bf47bcd80Cb9)
+* TokenRegistry.sol: [0xf18e504561f4347bea557f3d4558f559dddbae7f](https://kovan.etherscan.io/address/0xf18e504561f4347bea557f3d4558f559dddbae7f)
 
 #### Mainnet
 
-Commit Hash: TBD
-
-Branch: TBD
-
-* Exchange.sol: TBD
-* TokenTransferProxy.sol: TBD
-* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: TBD
-* TokenRegistry.sol: TBD
+* Exchange.sol: [0x12459C951127e0c374FF9105DdA097662A027093](https://etherscan.io/address/0x12459C951127e0c374FF9105DdA097662A027093)
+* TokenTransferProxy.sol: [0x8da0D80f5007ef1e431DD2127178d224E32C2eF4](https://etherscan.io/address/0x8da0D80f5007ef1e431DD2127178d224E32C2eF4)
+* ZRXToken.sol: [0xE41d2489571d322189246DaFA5ebDe1F4699F498](https://etherscan.io/address/0xE41d2489571d322189246DaFA5ebDe1F4699F498)
+* EtherToken.sol: [0x2956356cd2a2bf3202f771f50d3d14a367b48070](https://etherscan.io/address/0x2956356cd2a2bf3202f771f50d3d14a367b48070)
+* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x01d9F4D104668CDc0b6d13C45DFf5E15D58d8f28](https://etherscan.io/address/0x01d9f4d104668cdc0b6d13c45dff5e15d58d8f28)
+* TokenRegistry.sol: [0x926a74c5C36adf004C87399e65f75628b0f98D2C] (https://etherscan.io/address/0x926a74c5c36adf004c87399e65f75628b0f98d2c)
 
 ### Contract Interactions
 
