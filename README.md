@@ -90,12 +90,12 @@ TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entrie
 
 #### Mainnet
 
-* Exchange.sol: [0x12459C951127e0c374FF9105DdA097662A027093](https://etherscan.io/address/0x12459C951127e0c374FF9105DdA097662A027093)
-* TokenTransferProxy.sol: [0x8da0D80f5007ef1e431DD2127178d224E32C2eF4](https://etherscan.io/address/0x8da0D80f5007ef1e431DD2127178d224E32C2eF4)
-* ZRXToken.sol: [0xE41d2489571d322189246DaFA5ebDe1F4699F498](https://etherscan.io/address/0xE41d2489571d322189246DaFA5ebDe1F4699F498)
+* Exchange.sol: [0x12459c951127e0c374ff9105dda097662a027093](https://etherscan.io/address/0x12459C951127e0c374FF9105DdA097662A027093)
+* TokenTransferProxy.sol: [0x8da0d80f5007ef1e431dd2127178d224e32c2ef4](https://etherscan.io/address/0x8da0D80f5007ef1e431DD2127178d224E32C2eF4)
+* ZRXToken.sol: [0xe41d2489571d322189246dafa5ebde1f4699f498](https://etherscan.io/address/0xE41d2489571d322189246DaFA5ebDe1F4699F498)
 * EtherToken.sol: [0x2956356cd2a2bf3202f771f50d3d14a367b48070](https://etherscan.io/address/0x2956356cd2a2bf3202f771f50d3d14a367b48070)
-* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x01d9F4D104668CDc0b6d13C45DFf5E15D58d8f28](https://etherscan.io/address/0x01d9f4d104668cdc0b6d13c45dff5e15d58d8f28)
-* TokenRegistry.sol: [0x926a74c5C36adf004C87399e65f75628b0f98D2C](https://etherscan.io/address/0x926a74c5c36adf004c87399e65f75628b0f98d2c)
+* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x01d9f4d104668cdc0b6d13c45dff5e15d58d8f28](https://etherscan.io/address/0x01d9f4d104668cdc0b6d13c45dff5e15d58d8f28)
+* TokenRegistry.sol: [0x926a74c5c36adf004c87399e65f75628b0f98d2c](https://etherscan.io/address/0x926a74c5c36adf004c87399e65f75628b0f98d2c)
 
 ### Contract Interactions
 
