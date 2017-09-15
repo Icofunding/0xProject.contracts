@@ -108,13 +108,14 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public getOrderHashAsync(order: Order) {
+  public async getOrderHashAsync(order: Order): Promise<string> {
     const shouldThrowOnInsufficientBalanceOrAllowance = false;
     const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance);
-    return this.exchange.getOrderHash(params.orderAddresses, params.orderValues);
+    const orderHash = await this.exchange.getOrderHash(params.orderAddresses, params.orderValues);
+    return orderHash;
   }
-  public isValidSignatureAsync(order: Order) {
-    const isValidSignature = this.exchange.isValidSignature(
+  public async isValidSignatureAsync(order: Order): Promise<boolean> {
+    const isValidSignature = await this.exchange.isValidSignature(
       order.params.maker,
       order.params.orderHashHex,
       order.params.v,
@@ -123,14 +124,14 @@ export class ExchangeWrapper {
     );
     return isValidSignature;
   }
-  public isRoundingErrorAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
-                              target: BigNumber.BigNumber) {
-    const isRoundingError = this.exchange.isRoundingError(numerator, denominator, target);
+  public async isRoundingErrorAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
+                                    target: BigNumber.BigNumber): Promise<boolean> {
+    const isRoundingError = await this.exchange.isRoundingError(numerator, denominator, target);
     return isRoundingError;
   }
-  public getPartialAmountAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
-                               target: BigNumber.BigNumber) {
-    const partialAmount = this.exchange.getPartialAmount(numerator, denominator, target);
+  public async getPartialAmountAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
+                                     target: BigNumber.BigNumber): Promise<BigNumber.BigNumber> {
+    const partialAmount = new BigNumber(await this.exchange.getPartialAmount(numerator, denominator, target));
     return partialAmount;
   }
 }

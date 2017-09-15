@@ -147,7 +147,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '5';
+      const expectedPartialAmount = 5;
       expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
 
@@ -157,7 +157,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '6';
+      const expectedPartialAmount = 6;
       expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
 
@@ -167,8 +167,8 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '0';
-      expect(partialAmount).to.be.equal(expectedPartialAmount);
+      const expectedPartialAmount = 0;
+      expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
   });
 });
