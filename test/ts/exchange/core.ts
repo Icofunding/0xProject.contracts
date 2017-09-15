@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import ethUtil = require('ethereumjs-util');
 import * as BigNumber from 'bignumber.js';
+import {ZeroEx} from '0x.js';
 import { constants } from '../../../util/constants';
 import { Balances } from '../../../util/balances';
 import { BNUtil } from '../../../util/bn_util';
@@ -123,17 +124,17 @@ contract('Exchange', (accounts: string[]) => {
 
       const filledTakerTokenAmountBefore = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledTakerTokenAmountBefore, 0, 'filledAmountMBefore should be 0');
-      
+
       const fillTakerTokenAmount1 = new BigNumber(2);
       await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: fillTakerTokenAmount1 });
 
       const filledTakerTokenAmountAfter1 = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledTakerTokenAmountAfter1, fillTakerTokenAmount1.toString(),
                    'filledTakerTokenAmountAfter1 should be same as fillTakerTokenAmount1');
-                     
+
       const fillTakerTokenAmount2 = new BigNumber(1);
       await exWrapper.fillOrderAsync(order, taker, { fillTakerTokenAmount: fillTakerTokenAmount2 });
-      
+
       const filledTakerTokenAmountAfter2 = await exchange.filled.call(order.params.orderHashHex);
       assert.equal(filledTakerTokenAmountAfter2.toString(), filledTakerTokenAmountAfter1.toString(),
                    'filledTakerTokenAmountAfter2 should equal filledTakerTokenAmountAfter1 due to a rounding error');
@@ -338,7 +339,7 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should log 1 event with the correct arguments when order has no feeRecipient', async () => {
       order = await orderFactory.newSignedOrderAsync({
-        feeRecipient: constants.NULL_ADDRESS,
+        feeRecipient: ZeroEx.NULL_ADDRESS,
       });
       const divisor = 2;
       const res = await exWrapper.fillOrderAsync(order, taker,

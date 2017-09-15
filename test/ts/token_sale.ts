@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import Web3 = require('web3');
 import * as BigNumber from 'bignumber.js';
 import * as _ from 'lodash';
+import {ZeroEx} from '0x.js';
 import promisify = require('es6-promisify');
 import ethUtil = require('ethereumjs-util');
 import { Balances } from '../../util/balances';
@@ -117,7 +118,7 @@ contract('TokenSale', (accounts: string[]) => {
       exchangeContractAddress: Exchange.address,
       maker,
       taker: tokenSale.address,
-      feeRecipient: constants.NULL_ADDRESS,
+      feeRecipient: ZeroEx.NULL_ADDRESS,
       makerToken: zrxAddress,
       takerToken: wEthAddress,
       makerTokenAmount: toSmallestUnits(2),
@@ -223,7 +224,7 @@ contract('TokenSale', (accounts: string[]) => {
     });
 
     it('should throw if the order taker is not the crowdsale contract address', async () => {
-      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { taker: constants.NULL_ADDRESS });
+      const invalidOrderParams: OrderParams = _.assign({}, validOrderParams, { taker: ZeroEx.NULL_ADDRESS });
       const invalidOrder = new Order(invalidOrderParams);
       await invalidOrder.signAsync();
       const params = invalidOrder.createFill();

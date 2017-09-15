@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import {ZeroEx} from '0x.js';
 import { Order } from './order';
 import { OrderParams, DefaultOrderParams, OptionalOrderParams } from './types';
 import { constants } from './constants';
@@ -16,7 +17,7 @@ export class OrderFactory {
     const orderParams: OrderParams = _.assign({}, {
       expirationTimestampInSec: randomExpiration,
       salt: this.generateSalt(),
-      taker: constants.NULL_ADDRESS,
+      taker: ZeroEx.NULL_ADDRESS,
     }, this.defaultOrderParams, customOrderParams);
     const order = new Order(orderParams);
     await order.signAsync();

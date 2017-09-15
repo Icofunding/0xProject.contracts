@@ -1,4 +1,4 @@
-import * as request from 'request-promise-native';
+import 'isomorphic-fetch';
 import * as truffleConf from '../truffle.js';
 
 export class RPC {
@@ -30,13 +30,13 @@ export class RPC {
     this.id += 1;
     return payload;
   }
-  private async sendAsync(payload: string) {
+  private async sendAsync(payload: string): Promise<any> {
     const opts = {
       method: 'POST',
-      uri: `http://${this.host}:${this.port}`,
       body: payload,
     };
-    const body = await request(opts);
-    return body.result;
+    const response = await fetch(`http://${this.host}:${this.port}`, opts);
+    const responsePayload = await response.json();
+    return responsePayload;
   }
 }
