@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
-import { TransactionDataParams, ABIEntity, ContractInstance } from './types';
+import * as Web3 from 'web3';
+import { TransactionDataParams, ContractInstance } from './types';
 import ethUtil = require('ethereumjs-util');
 import ABI = require('ethereumjs-abi');
 
@@ -15,8 +16,8 @@ export class MultiSigWrapper {
     const encoded = this.encodeFnArgs(name, abi, args);
     return this.multiSig.submitTransaction(destination, value, encoded, { from });
   }
-  public encodeFnArgs(name: string, abi: ABIEntity[], args: any[]) {
-    const abiEntity = _.find(abi, { name });
+  public encodeFnArgs(name: string, abi: Web3.AbiDefinition[], args: any[]) {
+    const abiEntity = _.find(abi, { name }) as Web3.MethodAbi;
     if (_.isUndefined(abiEntity)) {
       throw new Error(`Did not find abi entry for name: ${name}`);
     }
