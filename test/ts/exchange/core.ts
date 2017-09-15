@@ -116,10 +116,10 @@ contract('Exchange', (accounts: string[]) => {
       order = await orderFactory.newSignedOrderAsync();
     });
 
-     it('should create an unfillable order', async () => {
+    it('should create an unfillable order', async () => {
       order = await orderFactory.newSignedOrderAsync({
         makerTokenAmount: new BigNumber(1001),
-        takerTokenAmount: new BigNumber(3)
+        takerTokenAmount: new BigNumber(3),
       });
 
       const filledTakerTokenAmountBefore = await exchange.filled.call(order.params.orderHashHex);
@@ -434,7 +434,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if maker balances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if maker balances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       order = await orderFactory.newSignedOrderAsync({
         makerTokenAmount: toSmallestUnits(100000),
@@ -445,7 +446,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if maker balances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
+    it('should throw if maker balances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       order = await orderFactory.newSignedOrderAsync({
         makerTokenAmount: toSmallestUnits(100000),
@@ -459,7 +461,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if taker balances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if taker balances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       order = await orderFactory.newSignedOrderAsync({
         takerTokenAmount: toSmallestUnits(100000),
@@ -470,7 +473,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if taker balances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
+    it('should throw if taker balances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       order = await orderFactory.newSignedOrderAsync({
         takerTokenAmount: toSmallestUnits(100000),
@@ -484,7 +488,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if maker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if maker allowances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       await rep.approve(TokenTransferProxy.address, 0, { from: maker });
       await exWrapper.fillOrderAsync(order, taker);
@@ -494,7 +499,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if maker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
+    it('should throw if maker allowances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       try {
         await rep.approve(TokenTransferProxy.address, 0, { from: maker });
@@ -506,7 +512,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if taker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if taker allowances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       await dgd.approve(TokenTransferProxy.address, 0, { from: taker });
       await exWrapper.fillOrderAsync(order, taker);
@@ -516,7 +523,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if taker allowances are too low to fill order and shouldThrowOnInsufficientBalanceOrAllowance = true',
+    it('should throw if taker allowances are too low to fill order and \
+        shouldThrowOnInsufficientBalanceOrAllowance = true',
        async () => {
       try {
         await dgd.approve(TokenTransferProxy.address, 0, { from: taker });
@@ -528,7 +536,8 @@ contract('Exchange', (accounts: string[]) => {
       }
     });
 
-    it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker balance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker balance, \
+        and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const makerZRXBalance = new BigNumber(balances[maker][zrx.address]);
       order = await orderFactory.newSignedOrderAsync({
@@ -541,7 +550,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if makerToken is ZRX, makerTokenAmount + makerFee > maker allowance, \
+        and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const makerZRXAllowance = await zrx.allowance(maker, TokenTransferProxy.address);
       order = await orderFactory.newSignedOrderAsync({
@@ -554,7 +564,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker balance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker balance, \
+        and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const takerZRXBalance = new BigNumber(balances[taker][zrx.address]);
       order = await orderFactory.newSignedOrderAsync({
@@ -567,7 +578,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker allowance, and shouldThrowOnInsufficientBalanceOrAllowance = false',
+    it('should not change balances if takerToken is ZRX, takerTokenAmount + takerFee > taker allowance, \
+        and shouldThrowOnInsufficientBalanceOrAllowance = false',
        async () => {
       const takerZRXAllowance = await zrx.allowance(taker, TokenTransferProxy.address);
       order = await orderFactory.newSignedOrderAsync({
@@ -580,7 +592,8 @@ contract('Exchange', (accounts: string[]) => {
       assert.deepEqual(newBalances, balances);
     });
 
-    it('should throw if getBalance or getAllowance attempts to change state and shouldThrowOnInsufficientBalanceOrAllowance = false', async () => {
+    it('should throw if getBalance or getAllowance attempts to change state and \
+        shouldThrowOnInsufficientBalanceOrAllowance = false', async () => {
       const maliciousToken = await MaliciousToken.new();
       await maliciousToken.approve(TokenTransferProxy.address, INITIAL_ALLOWANCE, { from: taker });
 
