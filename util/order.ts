@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import ethUtil = require('ethereumjs-util');
 import promisify = require('es6-promisify');
 import Web3 = require('web3');
+import {ZeroEx, ECSignature} from '0x.js';
 import { crypto } from './crypto';
 import { OrderParams } from './types';
 import * as BigNumber from 'bignumber.js';
@@ -12,7 +13,9 @@ const web3: Web3 = (global as any).web3;
 
 export class Order {
   public params: OrderParams;
+  public zeroEx: ZeroEx;
   constructor(params: OrderParams) {
+    this.zeroEx = new ZeroEx(web3.currentProvider);
     this.params = params;
   }
   public isValidSignature() {
@@ -20,25 +23,19 @@ export class Order {
     if (_.isUndefined(v) || _.isUndefined(r) || _.isUndefined(s)) {
       throw new Error('Cannot call isValidSignature on unsigned order');
     }
-    const orderHash = this.getOrderHash();
-    const msgHash = ethUtil.hashPersonalMessage(orderHash);
-    try {
-      const pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
-      const recoveredAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
-      return recoveredAddress === this.params.maker;
-    } catch (err) {
-      return false;
-    }
+    const orderHash = `0x${this.getOrderHash().toString('hex')}`;
+    const isValidSignature = ZeroEx.isValidSignature(orderHash, this.params as any as ECSignature, this.params.maker);
+    return isValidSignature;
   }
   public async signAsync() {
-    const orderHash = this.getOrderHash();
-    const signature = await promisify(web3.eth.sign)(this.params.maker, ethUtil.bufferToHex(orderHash));
-    const { v, r, s } = ethUtil.fromRpcSig(signature);
+    const orderHash = `0x${this.getOrderHash().toString('hex')}`;
+    const signature = await this.zeroEx.signOrderHashAsync(orderHash, this.params.maker);
+    const { v, r, s } = signature;
     this.params = _.assign(this.params, {
-      orderHashHex: ethUtil.bufferToHex(orderHash),
+      orderHashHex: orderHash,
       v,
-      r: ethUtil.bufferToHex(r),
-      s: ethUtil.bufferToHex(s),
+      r,
+      s,
     });
   }
   public createFill(shouldThrowOnInsufficientBalanceOrAllowance?: boolean, fillTakerTokenAmount?: BigNumber.BigNumber) {
