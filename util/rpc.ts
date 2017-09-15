@@ -27,7 +27,7 @@ export class RPC {
       method,
       params,
     });
-    this.id += 1;
+    this.id++;
     return payload;
   }
   private async sendAsync(payload: string): Promise<any> {
