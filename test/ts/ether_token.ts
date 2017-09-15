@@ -1,5 +1,7 @@
-import * as assert from 'assert';
+import * as chai from 'chai';
+import {chaiSetup} from './utils/chai_setup';
 import Web3 = require('web3');
+import {ZeroEx, ZeroExError} from '0x.js';
 import * as BigNumber from 'bignumber.js';
 import promisify = require('es6-promisify');
 import { BNUtil } from '../../util/bn_util';
@@ -9,6 +11,8 @@ import { testUtil } from '../../util/test_util';
 
 const { EtherToken } = new Artifacts(artifacts);
 
+chaiSetup.configure();
+const expect = chai.expect;
 const { add, sub, mul, cmp } = BNUtil;
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
@@ -18,6 +22,13 @@ const web3: Web3 = (global as any).web3;
 contract('EtherToken', (accounts: string[]) => {
   const account = accounts[0];
   const gasPrice = new BigNumber(web3.toWei(20, 'gwei'));
+  const zeroEx = new ZeroEx(web3.currentProvider, {
+      gasPrice,
+  });
+  let etherTokenAddress: string;
+  before(async () => {
+    etherTokenAddress = await zeroEx.etherToken.getContractAddressAsync();
+  });
 
   const sendTransactionAsync = promisify(web3.eth.sendTransaction);
   const getTransactionReceiptAsync = promisify(web3.eth.getTransactionReceipt);
@@ -26,101 +37,82 @@ contract('EtherToken', (accounts: string[]) => {
     const balance = new BigNumber(balanceStr);
     return balance;
   };
-  let ethToken: ContractInstance;
-
-  before(async () => {
-    ethToken = await EtherToken.new();
-  });
 
   describe('deposit', () => {
     it('should throw if caller attempts to deposit more Ether than caller balance', async () => {
       const initEthBalance = await getEthBalanceAsync(account);
-      const ethToDeposit = add(initEthBalance, 1);
+      const ethToDeposit = initEthBalance.plus(1);
 
-      try {
-        await ethToken.deposit({
-          from: account,
-          value: ethToDeposit,
-          gasPrice,
-        });
-        throw new Error('deposit succeeded when it should have failed');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(zeroEx.etherToken.depositAsync(ethToDeposit, account))
+        .to.be.rejectedWith(ZeroExError.InsufficientEthBalanceForDeposit);
     });
 
     it('should convert deposited Ether to wrapped Ether tokens', async () => {
       const initEthBalance = await getEthBalanceAsync(account);
-      const initEthTokenBalance = await ethToken.balanceOf(account);
+      const initEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
       const ethToDeposit = new BigNumber(web3.toWei(1, 'ether'));
 
-      const res = await ethToken.deposit({
-        from: account,
-        value: ethToDeposit,
-        gasPrice,
-      });
+      const txHash = await zeroEx.etherToken.depositAsync(ethToDeposit, account);
+      const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
-      const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
       const finalEthBalance = await getEthBalanceAsync(account);
-      const finalEthTokenBalance = await ethToken.balanceOf(account);
+      const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      assert.equal(finalEthBalance, sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
-      assert.equal(finalEthTokenBalance.toString(), add(initEthTokenBalance, ethToDeposit));
+      expect(finalEthBalance).to.be.bignumber.equal(sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(add(initEthTokenBalance, ethToDeposit));
     });
   });
 
   describe('withdraw', () => {
     it('should throw if caller attempts to withdraw greater than caller balance', async () => {
-      const initEthTokenBalance = await ethToken.balanceOf(account);
-      const ethTokensToWithdraw = add(initEthTokenBalance, 1);
-      try {
-        await ethToken.withdraw(ethTokensToWithdraw, { from: account });
-        throw new Error('withdraw succeeded when it should have failed');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      const initEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
+      const ethTokensToWithdraw = initEthTokenBalance.plus(1);
+
+      return expect(zeroEx.etherToken.withdrawAsync(ethTokensToWithdraw, account))
+        .to.be.rejectedWith(ZeroExError.InsufficientWEthBalanceForWithdrawal);
     });
 
     it('should convert ether tokens to ether with sufficient balance', async () => {
-      const initEthTokenBalance = await ethToken.balanceOf(account);
+      const initEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
       const initEthBalance = await getEthBalanceAsync(account);
       const ethTokensToWithdraw = initEthTokenBalance;
-      assert.equal(!ethTokensToWithdraw.toNumber(), 0);
+      expect(ethTokensToWithdraw).to.not.be.bignumber.equal(0);
+      const txHash = await zeroEx.etherToken.withdrawAsync(ethTokensToWithdraw, account);
+      const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
-      const res = await ethToken.withdraw(ethTokensToWithdraw, { from: account, gasPrice });
-
-      const ethSpentOnGas = mul(res.receipt.gasUsed, gasPrice);
+      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
       const finalEthBalance = await getEthBalanceAsync(account);
-      const finalEthTokenBalance = await ethToken.balanceOf(account);
+      const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      assert.equal(finalEthBalance, add(initEthBalance, sub(ethTokensToWithdraw, ethSpentOnGas)));
-      assert.equal(finalEthTokenBalance.toString(), sub(initEthTokenBalance, ethTokensToWithdraw));
+      expect(finalEthBalance).to.be.bignumber.equal(add(initEthBalance, sub(ethTokensToWithdraw, ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(sub(initEthTokenBalance, ethTokensToWithdraw));
     });
   });
 
   describe('fallback', () => {
     it('should convert sent ether to ether tokens', async () => {
       const initEthBalance = await getEthBalanceAsync(account);
-      const initEthTokenBalance = await ethToken.balanceOf(account);
+      const initEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      const ethToDeposit = new BigNumber(web3.toWei(1, 'ether'));
+      const ethToDeposit = ZeroEx.toBaseUnitAmount(new BigNumber(1), 18);
 
       const txHash = await sendTransactionAsync({
         from: account,
-        to: ethToken.address,
+        to: etherTokenAddress,
         value: ethToDeposit,
         gasPrice,
       });
 
-      const receipt = await getTransactionReceiptAsync(txHash);
+      const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
       const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
       const finalEthBalance = await getEthBalanceAsync(account);
-      const finalEthTokenBalance = await ethToken.balanceOf(account);
+      const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      assert.equal(finalEthBalance, sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
-      assert.equal(finalEthTokenBalance.toString(), add(initEthTokenBalance, ethToDeposit));
+      expect(finalEthBalance).to.be.bignumber.equal(sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(add(initEthTokenBalance, ethToDeposit));
     });
   });
 });

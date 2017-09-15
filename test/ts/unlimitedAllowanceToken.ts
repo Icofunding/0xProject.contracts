@@ -1,17 +1,19 @@
 import * as assert from 'assert';
 import * as Web3 from 'web3';
+import {ZeroEx} from '0x.js';
 import * as BigNumber from 'bignumber.js';
 import { testUtil } from '../../util/test_util';
 import { Artifacts } from '../../util/artifacts';
 import { ContractInstance } from '../../util/types';
 
 const { DummyToken } = new Artifacts(artifacts);
+const web3: Web3 = (global as any).web3;
 
 contract('UnlimitedAllowanceToken', (accounts: string[]) => {
+  const zeroEx = new ZeroEx(web3.currentProvider);
   const owner = accounts[0];
   const spender = accounts[1];
 
-  const MAX_UINT = (new BigNumber(2)).pow(256).minus(1);
   const MAX_MINT_VALUE = new BigNumber(100000000000000000000);
 
   let token: ContractInstance;
@@ -72,7 +74,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
     it('should not modify spender allowance if spender allowance is 2^256 - 1', async () => {
       const initOwnerBalance = await token.balanceOf(owner);
       const amountToTransfer = initOwnerBalance;
-      const initSpenderAllowance = MAX_UINT;
+      const initSpenderAllowance = zeroEx.token.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
       await token.approve(spender, initSpenderAllowance, { from: owner });
       await token.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
