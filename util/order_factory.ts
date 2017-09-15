@@ -16,17 +16,11 @@ export class OrderFactory {
     const randomExpiration = new BigNumber(Math.floor((Date.now() + (Math.random() * 100000000000)) / 1000));
     const orderParams: OrderParams = _.assign({}, {
       expirationTimestampInSec: randomExpiration,
-      salt: this.generateSalt(),
+      salt: ZeroEx.generatePseudoRandomSalt(),
       taker: ZeroEx.NULL_ADDRESS,
     }, this.defaultOrderParams, customOrderParams);
     const order = new Order(orderParams);
     await order.signAsync();
     return order;
-  }
-  private generateSalt() {
-      const randomNumber = BigNumber.random(MAX_DIGITS_IN_UNSIGNED_256_INT);
-      const factor = new BigNumber(10).pow(MAX_DIGITS_IN_UNSIGNED_256_INT - 1);
-      const salt = randomNumber.times(factor).round();
-      return salt;
   }
 }
