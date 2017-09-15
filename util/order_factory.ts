@@ -1,11 +1,8 @@
 import * as _ from 'lodash';
 import {ZeroEx} from '0x.js';
-import { Order } from './order';
-import { OrderParams, DefaultOrderParams, OptionalOrderParams } from './types';
-import { constants } from './constants';
+import {Order} from './order';
+import {OrderParams, DefaultOrderParams, OptionalOrderParams} from './types';
 import * as BigNumber from 'bignumber.js';
-
-const MAX_DIGITS_IN_UNSIGNED_256_INT = 78;
 
 export class OrderFactory {
   private defaultOrderParams: DefaultOrderParams;
