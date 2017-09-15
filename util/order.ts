@@ -8,7 +8,7 @@ import * as BigNumber from 'bignumber.js';
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
-const web3Instance: Web3 = web3;
+const web3: Web3 = (global as any).web3;
 
 export class Order {
   public params: OrderParams;
@@ -32,7 +32,7 @@ export class Order {
   }
   public async signAsync() {
     const orderHash = this.getOrderHash();
-    const signature = await promisify(web3Instance.eth.sign)(this.params.maker, ethUtil.bufferToHex(orderHash));
+    const signature = await promisify(web3.eth.sign)(this.params.maker, ethUtil.bufferToHex(orderHash));
     const { v, r, s } = ethUtil.fromRpcSig(signature);
     this.params = _.assign(this.params, {
       orderHashHex: ethUtil.bufferToHex(orderHash),

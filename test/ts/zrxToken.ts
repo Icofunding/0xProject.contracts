@@ -6,7 +6,7 @@ import { Artifacts } from '../../util/artifacts';
 import { ContractInstance } from '../../util/types';
 
 const { ZRXToken } = new Artifacts(artifacts);
-const web3Instance: Web3 = web3;
+const web3: Web3 = (global as any).web3;
 
 contract('ZRXToken', (accounts: string[]) => {
   const owner = accounts[0];
@@ -30,7 +30,7 @@ contract('ZRXToken', (accounts: string[]) => {
     it('should have a total supply of 1 billion tokens', async () => {
       const totalSupply = await zrx.totalSupply.call();
       const expectedTotalSupply = '1000000000';
-      assert.equal(web3Instance.fromWei(totalSupply, 'ether').toString(), expectedTotalSupply.toString());
+      assert.equal(web3.fromWei(totalSupply, 'ether').toString(), expectedTotalSupply.toString());
     });
 
     it('should be named 0x Protocol Token', async () => {
