@@ -9,7 +9,7 @@ export const testUtil = {
     const didCalledContractThrowManual = _.includes(errMsg, 'invalid JUMP');
     const didNestedContractThrow = _.includes(errMsg, 'out of gas');
     const didGethContractThrow = _.includes(errMsg, 'please check your gas amount');
-    assert(didNotHaveSufficientFunds || didCalledContractThrowInternal || didNestedContractThrow || didCalledContractThrowManual ||
-           didGethContractThrow, `Expected contract to throw, got: ${err}`);
+    assert(didNotHaveSufficientFunds || didCalledContractThrowInternal || didNestedContractThrow ||
+           didCalledContractThrowManual || didGethContractThrow, `Expected contract to throw, got: ${err}`);
   },
 };

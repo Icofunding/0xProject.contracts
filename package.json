@@ -12,6 +12,7 @@
     "compile": "rm -rf build/contracts; truffle compile",
     "migrate": "npm run transpile; truffle migrate",
     "deploy": "npm run migrate --network kovan",
+    "lint": "tslint migrations/*.ts test/*.ts util/*.ts",
     "testrpc": "testrpc --networkId 50"
   },
   "repository": {

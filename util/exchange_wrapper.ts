@@ -9,8 +9,10 @@ export class ExchangeWrapper {
     this.exchange = exchangeContractInstance;
   }
   public fillOrderAsync(order: Order, from: string,
-                   opts: { fillTakerTokenAmount?: BigNumber.BigNumber,
-                           shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
+                        opts: {
+                            fillTakerTokenAmount?: BigNumber.BigNumber,
+                            shouldThrowOnInsufficientBalanceOrAllowance?: boolean,
+                        } = {}) {
     const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
     const params = order.createFill(shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmount);
     return this.exchange.fillOrder(
@@ -50,7 +52,8 @@ export class ExchangeWrapper {
                               opts: { fillTakerTokenAmounts?: BigNumber.BigNumber[],
                                       shouldThrowOnInsufficientBalanceOrAllowance?: boolean } = {}) {
     const shouldThrowOnInsufficientBalanceOrAllowance = !!opts.shouldThrowOnInsufficientBalanceOrAllowance;
-    const params = formatters.createBatchFill(orders, shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmounts);
+    const params = formatters.createBatchFill(
+        orders, shouldThrowOnInsufficientBalanceOrAllowance, opts.fillTakerTokenAmounts);
     return this.exchange.batchFillOrders(
       params.orderAddresses,
       params.orderValues,
@@ -63,7 +66,9 @@ export class ExchangeWrapper {
     );
   }
   public batchFillOrKillOrdersAsync(orders: Order[], from: string,
-                              opts: { fillTakerTokenAmounts?: BigNumber.BigNumber[] } = {}) {
+                                    opts: {
+                                        fillTakerTokenAmounts?: BigNumber.BigNumber[],
+                                    } = {}) {
     const params = formatters.createBatchFill(orders, undefined, opts.fillTakerTokenAmounts);
     return this.exchange.batchFillOrKillOrders(
       params.orderAddresses,
@@ -93,7 +98,8 @@ export class ExchangeWrapper {
       { from },
     );
   }
-  public batchCancelOrdersAsync(orders: Order[], from: string, opts: { cancelTakerTokenAmounts?: BigNumber.BigNumber[] } = {}) {
+  public batchCancelOrdersAsync(orders: Order[], from: string,
+                                opts: {cancelTakerTokenAmounts?: BigNumber.BigNumber[]} = {}) {
     const params = formatters.createBatchCancel(orders, opts.cancelTakerTokenAmounts);
     return this.exchange.batchCancelOrders(
       params.orderAddresses,
@@ -117,11 +123,13 @@ export class ExchangeWrapper {
     );
     return isValidSignature;
   }
-  public isRoundingErrorAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber, target: BigNumber.BigNumber) {
+  public isRoundingErrorAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
+                              target: BigNumber.BigNumber) {
     const isRoundingError = this.exchange.isRoundingError(numerator, denominator, target);
     return isRoundingError;
   }
-  public getPartialAmountAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber, target: BigNumber.BigNumber) {
+  public getPartialAmountAsync(numerator: BigNumber.BigNumber, denominator: BigNumber.BigNumber,
+                               target: BigNumber.BigNumber) {
     const partialAmount = this.exchange.getPartialAmount(numerator, denominator, target);
     return partialAmount;
   }
