@@ -27,7 +27,8 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
     const initialOwner = accounts[0];
     tokenTransferProxy = await TokenTransferProxy.new({ from: initialOwner });
     await tokenTransferProxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
-    multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(owners, requiredApprovals, SECONDS_TIME_LOCKED, tokenTransferProxy.address);
+    multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(
+        owners, requiredApprovals, SECONDS_TIME_LOCKED, tokenTransferProxy.address);
     await tokenTransferProxy.transferOwnership(multiSig.address, { from: initialOwner });
     multiSigWrapper = new MultiSigWrapper(multiSig);
     validDestination = tokenTransferProxy.address;

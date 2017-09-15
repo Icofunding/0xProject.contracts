@@ -129,7 +129,8 @@ contract('Exchange', (accounts: string[]) => {
       const numerator = new BigNumber(76564);
       const denominator = new BigNumber(676373677);
       const target = new BigNumber(105762562);
-      // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) / (76564*105762562/676373677) = 0.0007%
+      // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) /
+      // (76564*105762562/676373677) = 0.0007%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
       assert.equal(isRoundingError, false);
     });
