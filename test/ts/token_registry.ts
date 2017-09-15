@@ -14,8 +14,8 @@ contract('TokenRegistry', (accounts: string[]) => {
   const owner = accounts[0];
   const notOwner = accounts[1];
 
-  const tokenAddress1 = `0x${ethUtil.setLength(ethUtil.toBuffer('0x1'), 20).toString('hex')}`;
-  const tokenAddress2 = `0x${ethUtil.setLength(ethUtil.toBuffer('0x2'), 20).toString('hex')}`;
+  const tokenAddress1 = `0x${ethUtil.setLength(ethUtil.toBuffer('0x1'), 20, false).toString('hex')}`;
+  const tokenAddress2 = `0x${ethUtil.setLength(ethUtil.toBuffer('0x2'), 20, false).toString('hex')}`;
 
   const token1 = {
     address: tokenAddress1,

@@ -25,7 +25,7 @@ export class MultiSigWrapper {
     const argsData = _.map(args, arg => {
       const target = _.isBoolean(arg) ? +arg : arg;
       const targetBuff = ethUtil.toBuffer(target);
-      return ethUtil.setLengthLeft(targetBuff, 32).toString('hex');
+      return ethUtil.setLengthLeft(targetBuff, 32, false).toString('hex');
     });
     return funcSig + argsData.join('');
   }
