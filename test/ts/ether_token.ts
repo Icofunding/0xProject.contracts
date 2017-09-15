@@ -13,16 +13,16 @@ const { add, sub, mul, cmp } = BNUtil;
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
-const web3Instance: Web3 = web3;
+const web3: Web3 = (global as any).web3;
 
 contract('EtherToken', (accounts: string[]) => {
   const account = accounts[0];
-  const gasPrice = new BigNumber(web3Instance.toWei(20, 'gwei'));
+  const gasPrice = new BigNumber(web3.toWei(20, 'gwei'));
 
-  const sendTransactionAsync = promisify(web3Instance.eth.sendTransaction);
-  const getTransactionReceiptAsync = promisify(web3Instance.eth.getTransactionReceipt);
+  const sendTransactionAsync = promisify(web3.eth.sendTransaction);
+  const getTransactionReceiptAsync = promisify(web3.eth.getTransactionReceipt);
   const getEthBalanceAsync = async (owner: string) => {
-    const balanceStr = await promisify(web3Instance.eth.getBalance)(owner);
+    const balanceStr = await promisify(web3.eth.getBalance)(owner);
     const balance = new BigNumber(balanceStr);
     return balance;
   };
@@ -53,7 +53,7 @@ contract('EtherToken', (accounts: string[]) => {
       const initEthBalance = await getEthBalanceAsync(account);
       const initEthTokenBalance = await ethToken.balanceOf(account);
 
-      const ethToDeposit = new BigNumber(web3Instance.toWei(1, 'ether'));
+      const ethToDeposit = new BigNumber(web3.toWei(1, 'ether'));
 
       const res = await ethToken.deposit({
         from: account,
@@ -104,7 +104,7 @@ contract('EtherToken', (accounts: string[]) => {
       const initEthBalance = await getEthBalanceAsync(account);
       const initEthTokenBalance = await ethToken.balanceOf(account);
 
-      const ethToDeposit = new BigNumber(web3Instance.toWei(1, 'ether'));
+      const ethToDeposit = new BigNumber(web3.toWei(1, 'ether'));
 
       const txHash = await sendTransactionAsync({
         from: account,
