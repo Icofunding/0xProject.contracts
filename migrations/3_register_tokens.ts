@@ -17,7 +17,7 @@ module.exports = (deployer: any, network: string) => {
     return TokenRegistry.deployed();
   }).then((tokenRegistry: ContractInstance) => {
     if (network !== 'live') {
-      const totalSupply = 100000000 * Math.pow(10, 18);
+      const totalSupply = 1000000000 * Math.pow(10, 18);
       return Bluebird.each(tokens.map((token: Token) => DummyToken.new(
         token.name,
         token.symbol,
