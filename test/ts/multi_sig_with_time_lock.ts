@@ -1,4 +1,5 @@
-import * as assert from 'assert';
+import * as chai from 'chai';
+import {chaiSetup} from './utils/chai_setup';
 import promisify = require('es6-promisify');
 import Web3 = require('web3');
 import { RPC } from '../../util/rpc';
@@ -11,6 +12,8 @@ import { Artifacts } from '../../util/artifacts';
 const { MultiSigWalletWithTimeLock } = new Artifacts(artifacts);
 
 const MULTI_SIG_ABI = (multiSigWalletJSON as any).abi;
+chaiSetup.configure();
+const expect = chai.expect;
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
@@ -37,12 +40,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
 
   describe('changeTimeLock', () => {
     it('should throw when not called by wallet', async () => {
-      try {
-        await multiSig.changeTimeLock(SECONDS_TIME_LOCKED, { from: owners[0] });
-        throw new Error('changeTimeLock succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(multiSig.changeTimeLock(SECONDS_TIME_LOCKED, { from: owners[0] })).to.rejectedWith('')
     });
 
     it('should throw without enough confirmations', async () => {
@@ -56,35 +54,28 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
       txId = subRes.logs[0].args.transactionId.toNumber();
-      try {
-        const execRes = await multiSig.executeTransaction(txId);
-        throw new Error('changeTimeLock executed without enough confirmations');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(await multiSig.executeTransaction(txId)).to.be.rejectedWith('');
     });
 
     it('should set confirmation time with enough confirmations', async () => {
       const res = await multiSig.confirmTransaction(txId, { from: owners[1] });
-      assert.equal(res.logs.length, 2);
+      expect(res.logs).to.have.length(2);
       const blockNum = await promisify(web3.eth.getBlockNumber)();
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
       const timestamp = blockInfo.timestamp;
       const confirmationTimeBigNum = await multiSig.confirmationTimes.call(txId);
-      const confirmationTime = confirmationTimeBigNum.toNumber();
 
-      assert.equal(timestamp, confirmationTime);
+      expect(timestamp).to.be.bignumber.equal(confirmationTimeBigNum);
     });
 
     it('should be executable with enough confirmations and secondsTimeLocked of 0', async () => {
-      assert.equal(initialSecondsTimeLocked, 0);
+      expect(initialSecondsTimeLocked).to.be.equal(0);
 
       const res = await multiSig.executeTransaction(txId);
-      assert.equal(res.logs.length, 2);
+      expect(res.logs).to.have.length(2);
 
       const secondsTimeLocked = await multiSig.secondsTimeLocked.call();
-      const newSecondsTimeLocked = secondsTimeLocked.toNumber();
-      assert.equal(newSecondsTimeLocked, SECONDS_TIME_LOCKED);
+      expect(secondsTimeLocked).to.be.bignumber.equal(SECONDS_TIME_LOCKED);
     });
 
     const newSecondsTimeLocked = 0;
@@ -100,14 +91,9 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
 
       txId = subRes.logs[0].args.transactionId.toNumber();
       const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
-      assert.equal(confRes.logs.length, 2);
+      expect(confRes.logs).to.have.length(2);
 
-      try {
-        const execRes = await multiSig.executeTransaction(txId);
-        throw new Error('changeTimeLock executed without enough confirmations');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(await multiSig.executeTransaction(txId)).to.be.rejectedWith('');
     });
 
     it('should execute if it has enough confirmations and is past the time lock', async () => {
@@ -115,7 +101,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       await multiSig.executeTransaction(txId);
 
       const secondsTimeLocked = await multiSig.secondsTimeLocked.call();
-      assert.equal(secondsTimeLocked.toNumber(), newSecondsTimeLocked);
+      expect(secondsTimeLocked).to.be.bignumber.equal(newSecondsTimeLocked);
     });
   });
 });
