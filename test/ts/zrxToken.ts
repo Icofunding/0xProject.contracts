@@ -83,7 +83,7 @@ contract('ZRXToken', (accounts: string[]) => {
     });
   });
 
-  describe.only('transferFrom', () => {
+  describe('transferFrom', () => {
     it('should return false if owner has insufficient balance', async () => {
       const ownerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
       const amountToTransfer = ownerBalance.plus(1);
