@@ -1,4 +1,5 @@
-import * as assert from 'assert';
+import * as chai from 'chai';
+import {chaiSetup} from './utils/chai_setup';
 import * as Web3 from 'web3';
 import {ZeroEx} from '0x.js';
 import * as BigNumber from 'bignumber.js';
@@ -8,6 +9,8 @@ import { ContractInstance } from '../../util/types';
 
 const { DummyToken } = new Artifacts(artifacts);
 const web3: Web3 = (global as any).web3;
+chaiSetup.configure();
+const expect = chai.expect;
 
 contract('UnlimitedAllowanceToken', (accounts: string[]) => {
   const zeroEx = new ZeroEx(web3.currentProvider);
@@ -34,13 +37,13 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
 
       const expectedFinalOwnerBalance = initOwnerBalance.minus(amountToTransfer);
       const expectedFinalReceiverBalance = amountToTransfer;
-      assert.equal(finalOwnerBalance.toString(), expectedFinalOwnerBalance.toString());
-      assert.equal(finalReceiverBalance.toString(), expectedFinalReceiverBalance.toString());
+      expect(finalOwnerBalance).to.be.bignumber.equal(expectedFinalOwnerBalance);
+      expect(finalReceiverBalance).to.be.bignumber.equal(expectedFinalReceiverBalance);
     });
 
     it('should return true on a 0 value transfer', async () => {
       const didReturnTrue = await token.transfer.call(spender, 0, { from: owner });
-      assert.equal(didReturnTrue, true);
+      expect(didReturnTrue).to.be.true();
     });
   });
 
@@ -50,7 +53,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       const amountToTransfer = ownerBalance.plus(1);
       await token.approve(spender, amountToTransfer, { from: owner });
       const didReturnTrue = await token.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
-      assert.equal(didReturnTrue, false);
+      expect(didReturnTrue).to.be.false();
     });
 
     it('should return false if spender has insufficient allowance', async () => {
@@ -59,16 +62,16 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
 
       const spenderAllowance = await token.allowance(owner, spender);
       const spenderAllowanceIsInsufficient = spenderAllowance.cmp(amountToTransfer) < 0;
-      assert.equal(spenderAllowanceIsInsufficient, true);
+      expect(spenderAllowanceIsInsufficient).to.be.true();
 
       const didReturnTrue = await token.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
-      assert.equal(didReturnTrue, false);
+      expect(didReturnTrue).to.be.false();
     });
 
     it('should return true on a 0 value transfer', async () => {
       const amountToTransfer = 0;
       const didReturnTrue = await token.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
-      assert.equal(didReturnTrue, true);
+      expect(didReturnTrue).to.be.true();
     });
 
     it('should not modify spender allowance if spender allowance is 2^256 - 1', async () => {
@@ -79,7 +82,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       await token.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
       const newSpenderAllowance = await token.allowance(owner, spender);
-      assert.equal(initSpenderAllowance.toFixed(), newSpenderAllowance.toFixed());
+      expect(initSpenderAllowance).to.be.bignumber.equal(newSpenderAllowance);
     });
 
     it('should transfer the correct balances if spender has sufficient allowance', async () => {
@@ -92,8 +95,8 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       const newOwnerBalance = await token.balanceOf(owner);
       const newSpenderBalance = await token.balanceOf(spender);
 
-      assert.equal(newOwnerBalance.toString(), '0');
-      assert.equal(newSpenderBalance.toString(), initOwnerBalance.toString());
+      expect(newOwnerBalance).to.be.bignumber.equal(0);
+      expect(newSpenderBalance).to.be.bignumber.equal(initOwnerBalance);
     });
 
     it('should modify allowance if spender has sufficient allowance less than 2^256 - 1', async () => {
@@ -104,7 +107,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       await token.transferFrom(owner, spender, amountToTransfer, { from: spender });
 
       const newSpenderAllowance = await token.allowance(owner, spender);
-      assert.equal(newSpenderAllowance, '0');
+      expect(newSpenderAllowance).to.be.bignumber.equal(0);
     });
   });
 });
