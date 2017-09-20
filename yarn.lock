@@ -8,9 +8,9 @@
   dependencies:
     jsonschema "^1.2.0"
 
-"0x.js@^0.15.0":
+"0x.js@0xProject/0x.js#temp-prerelease":
   version "0.15.0"
-  resolved "https://registry.yarnpkg.com/0x.js/-/0x.js-0.15.0.tgz#f96e51577b9bfc97a37fdffcf844a4c7ccbf5433"
+  resolved "https://codeload.github.com/0xProject/0x.js/tar.gz/dfcf3bac383b5db067a6fe51f3b21d29eb941cbe"
   dependencies:
     "0x-json-schemas" "^0.5.1"
     "@types/bignumber.js" "^4.0.2"
@@ -675,13 +675,9 @@ bluebird@^3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.0.tgz#791420d7f551eea2897453a8a77653f96606d67c"
 
-bn.js@4.11.7:
+bn.js@4.11.7, bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.11.3, bn.js@^4.11.7, bn.js@^4.4.0:
   version "4.11.7"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.7.tgz#ddb048e50d9482790094c13eb3fcfc833ce7ab46"
-
-bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.11.3, bn.js@^4.11.7, bn.js@^4.4.0:
-  version "4.11.8"
-  resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
 
 bn.js@^4.10.0, bn.js@^4.11.6, bn.js@^4.8.0:
   version "4.11.6"
