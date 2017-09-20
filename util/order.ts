@@ -2,8 +2,7 @@ import * as _ from 'lodash';
 import ethUtil = require('ethereumjs-util');
 import promisify = require('es6-promisify');
 import Web3 = require('web3');
-import {ZeroEx, ECSignature} from '0x.js';
-import { crypto } from './crypto';
+import {ZeroEx, ECSignature, Order as ZeroExOrder} from '0x.js';
 import { OrderParams } from './types';
 import * as BigNumber from 'bignumber.js';
 
@@ -23,12 +22,12 @@ export class Order {
     if (_.isUndefined(v) || _.isUndefined(r) || _.isUndefined(s)) {
       throw new Error('Cannot call isValidSignature on unsigned order');
     }
-    const orderHash = `0x${this.getOrderHash().toString('hex')}`;
+    const orderHash = this.getOrderHash();
     const isValidSignature = ZeroEx.isValidSignature(orderHash, this.params as any as ECSignature, this.params.maker);
     return isValidSignature;
   }
   public async signAsync() {
-    const orderHash = `0x${this.getOrderHash().toString('hex')}`;
+    const orderHash = this.getOrderHash();
     const signature = await this.zeroEx.signOrderHashAsync(orderHash, this.params.maker);
     const { v, r, s } = signature;
     this.params = _.assign(this.params, {
@@ -84,21 +83,22 @@ export class Order {
     };
     return cancel;
   }
-  private getOrderHash() {
-    const orderHash = crypto.solSHA3([
-      this.params.exchangeContractAddress,
-      this.params.maker,
-      this.params.taker,
-      this.params.makerToken,
-      this.params.takerToken,
-      this.params.feeRecipient,
-      this.params.makerTokenAmount,
-      this.params.takerTokenAmount,
-      this.params.makerFee,
-      this.params.takerFee,
-      this.params.expirationTimestampInSec,
-      this.params.salt,
-    ]);
+  private getOrderHash(): string {
+    const order: ZeroExOrder = {
+        exchangeContractAddress: this.params.exchangeContractAddress,
+        maker: this.params.maker,
+        taker: this.params.taker,
+        makerTokenAddress: this.params.makerToken,
+        takerTokenAddress: this.params.takerToken,
+        feeRecipient: this.params.feeRecipient,
+        makerTokenAmount: this.params.makerTokenAmount,
+        takerTokenAmount: this.params.takerTokenAmount,
+        makerFee: this.params.makerFee,
+        takerFee: this.params.takerFee,
+        expirationUnixTimestampSec: this.params.expirationTimestampInSec,
+        salt: this.params.salt,
+    };
+    const orderHash = ZeroEx.getOrderHashHex(order);
     return orderHash;
   }
 }
