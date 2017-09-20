@@ -140,7 +140,7 @@ contract('TokenRegistry', (accounts: string[]) => {
       });
 
       it('should throw if token does not exist', async () => {
-        return expect(tokenReg.setTokenName(token1.address, token2.name, {from: owner}))
+        return expect(tokenReg.setTokenName(nullToken.address, token2.name, {from: owner}))
           .to.be.rejectedWith(constants.INVALID_OPCODE);
       });
     });
