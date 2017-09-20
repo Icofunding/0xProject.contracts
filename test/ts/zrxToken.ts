@@ -3,28 +3,32 @@ import {chaiSetup} from './utils/chai_setup';
 import Web3 = require('web3');
 import {ZeroEx, ZeroExError} from '0x.js';
 import * as BigNumber from 'bignumber.js';
-import { testUtil } from '../../util/test_util';
-import { Artifacts } from '../../util/artifacts';
-import { ContractInstance } from '../../util/types';
+import {testUtil} from '../../util/test_util';
+import {Artifacts} from '../../util/artifacts';
+import {ContractInstance} from '../../util/types';
 
 chaiSetup.configure();
 const expect = chai.expect;
-const { ZRXToken } = new Artifacts(artifacts);
+const {Exchange, ZRXToken} = new Artifacts(artifacts);
 const web3: Web3 = (global as any).web3;
 
 contract('ZRXToken', (accounts: string[]) => {
   const owner = accounts[0];
   const spender = accounts[1];
-  const zeroEx = new ZeroEx(web3.currentProvider);
+  let zeroEx: ZeroEx;
 
-  const MAX_UINT = zeroEx.token.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
+  let MAX_UINT: BigNumber.BigNumber;
 
   let zrx: ContractInstance;
   let zrxAddress: string;
 
   beforeEach(async () => {
+    zeroEx = new ZeroEx(web3.currentProvider, {
+        exchangeContractAddress: Exchange.address,
+    });
     zrxAddress = await (zeroEx.exchange as any)._getZRXTokenAddressAsync();
     zrx = await ZRXToken.at(zrxAddress);
+    MAX_UINT = zeroEx.token.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
   });
 
   describe('constants', () => {
@@ -132,6 +136,7 @@ contract('ZRXToken', (accounts: string[]) => {
 
     it('should transfer the correct balances if spender has sufficient allowance', async () => {
       const initOwnerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
+      const initSpenderBalance = await zeroEx.token.getBalanceAsync(zrxAddress, spender);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, initSpenderAllowance);
@@ -143,7 +148,7 @@ contract('ZRXToken', (accounts: string[]) => {
       const newSpenderBalance = await zeroEx.token.getBalanceAsync(zrxAddress, spender);
 
       expect(newOwnerBalance).to.be.bignumber.equal(0);
-      expect(newSpenderBalance).to.be.bignumber.equal(initOwnerBalance);
+      expect(newSpenderBalance).to.be.bignumber.equal(initSpenderBalance.plus(initOwnerBalance));
     });
 
     it('should modify allowance if spender has sufficient allowance less than 2^256 - 1', async () => {
