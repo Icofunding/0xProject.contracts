@@ -4,16 +4,16 @@ import Web3 = require('web3');
 import {ZeroEx, ZeroExError} from '0x.js';
 import * as BigNumber from 'bignumber.js';
 import promisify = require('es6-promisify');
-import { BNUtil } from '../../util/bn_util';
-import { Artifacts } from '../../util/artifacts';
-import { ContractInstance } from '../../util/types';
-import { testUtil } from '../../util/test_util';
+import {BNUtil} from '../../util/bn_util';
+import {Artifacts} from '../../util/artifacts';
+import {ContractInstance} from '../../util/types';
+import {testUtil} from '../../util/test_util';
 
-const { EtherToken } = new Artifacts(artifacts);
+const {EtherToken} = new Artifacts(artifacts);
 
 chaiSetup.configure();
 const expect = chai.expect;
-const { add, sub, mul, cmp } = BNUtil;
+const {add, sub, mul, cmp} = BNUtil;
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
