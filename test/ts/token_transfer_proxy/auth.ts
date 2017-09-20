@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import {chaiSetup} from '../utils/chai_setup';
 import {ContractInstance} from '../../../util/types';

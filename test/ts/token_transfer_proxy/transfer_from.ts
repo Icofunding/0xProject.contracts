@@ -9,7 +9,6 @@ import {constants} from '../../../util/constants';
 chaiSetup.configure();
 const expect = chai.expect;
 const {
-  Exchange,
   TokenTransferProxy,
   DummyToken,
   TokenRegistry,

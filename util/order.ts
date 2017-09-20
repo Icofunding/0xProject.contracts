@@ -29,12 +29,9 @@ export class Order {
   public async signAsync() {
     const orderHash = this.getOrderHash();
     const signature = await this.zeroEx.signOrderHashAsync(orderHash, this.params.maker);
-    const { v, r, s } = signature;
     this.params = _.assign(this.params, {
       orderHashHex: orderHash,
-      v,
-      r,
-      s,
+      ...signature,
     });
   }
   public createFill(shouldThrowOnInsufficientBalanceOrAllowance?: boolean, fillTakerTokenAmount?: BigNumber.BigNumber) {

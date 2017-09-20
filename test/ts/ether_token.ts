@@ -6,7 +6,6 @@ import * as BigNumber from 'bignumber.js';
 import promisify = require('es6-promisify');
 import {BNUtil} from '../../util/bn_util';
 import {Artifacts} from '../../util/artifacts';
-import {ContractInstance} from '../../util/types';
 
 const {EtherToken} = new Artifacts(artifacts);
 
@@ -32,7 +31,6 @@ contract('EtherToken', (accounts: string[]) => {
   });
 
   const sendTransactionAsync = promisify(web3.eth.sendTransaction);
-  const getTransactionReceiptAsync = promisify(web3.eth.getTransactionReceipt);
   const getEthBalanceAsync = async (owner: string) => {
     const balanceStr = await promisify(web3.eth.getBalance)(owner);
     const balance = new BigNumber(balanceStr);

@@ -3,8 +3,8 @@ import {chaiSetup} from './utils/chai_setup';
 import * as Web3 from 'web3';
 import {ZeroEx} from '0x.js';
 import * as BigNumber from 'bignumber.js';
-import {Artifacts } from '../../util/artifacts';
-import {ContractInstance } from '../../util/types';
+import {Artifacts} from '../../util/artifacts';
+import {ContractInstance} from '../../util/types';
 
 const {DummyToken } = new Artifacts(artifacts);
 const web3: Web3 = (global as any).web3;

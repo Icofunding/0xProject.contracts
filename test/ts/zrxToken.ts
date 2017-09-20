@@ -1,7 +1,7 @@
 import * as chai from 'chai';
 import {chaiSetup} from './utils/chai_setup';
 import Web3 = require('web3');
-import {ZeroEx, ZeroExError} from '0x.js';
+import {ZeroEx} from '0x.js';
 import * as BigNumber from 'bignumber.js';
 import {Artifacts} from '../../util/artifacts';
 import {ContractInstance} from '../../util/types';
