@@ -6,7 +6,6 @@ import Web3 = require('web3');
 import {RPC} from '../../util/rpc';
 import {MultiSigWrapper} from '../../util/multi_sig_wrapper';
 import {constants} from '../../util/constants';
-import {testUtil} from '../../util/test_util';
 import {ContractInstance} from '../../util/types';
 import * as multiSigWalletJSON from '../../build/contracts/MultiSigWalletWithTimeLock.json';
 import {Artifacts} from '../../util/artifacts';

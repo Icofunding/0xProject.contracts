@@ -2,11 +2,11 @@ import * as chai from 'chai';
 import * as BigNumber from 'bignumber.js';
 import {chaiSetup} from '../utils/chai_setup';
 import ethUtil = require('ethereumjs-util');
-import { BNUtil } from '../../../util/bn_util';
-import { ExchangeWrapper } from '../../../util/exchange_wrapper';
-import { OrderFactory } from '../../../util/order_factory';
-import { Order } from '../../../util/order';
-import { Artifacts } from '../../../util/artifacts';
+import {BNUtil} from '../../../util/bn_util';
+import {ExchangeWrapper} from '../../../util/exchange_wrapper';
+import {OrderFactory} from '../../../util/order_factory';
+import {Order} from '../../../util/order';
+import {Artifacts} from '../../../util/artifacts';
 
 chaiSetup.configure();
 const expect = chai.expect;

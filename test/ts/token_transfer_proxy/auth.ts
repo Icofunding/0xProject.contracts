@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import {chaiSetup} from '../utils/chai_setup';
-import {testUtil} from '../../../util/test_util';
 import {ContractInstance} from '../../../util/types';
 import {constants} from '../../../util/constants';
 

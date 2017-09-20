@@ -7,7 +7,6 @@ import promisify = require('es6-promisify');
 import {BNUtil} from '../../util/bn_util';
 import {Artifacts} from '../../util/artifacts';
 import {ContractInstance} from '../../util/types';
-import {testUtil} from '../../util/test_util';
 
 const {EtherToken} = new Artifacts(artifacts);
 

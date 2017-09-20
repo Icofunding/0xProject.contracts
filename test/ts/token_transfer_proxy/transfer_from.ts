@@ -2,7 +2,6 @@ import * as chai from 'chai';
 import {chaiSetup} from '../utils/chai_setup';
 import {Balances } from '../../../util/balances';
 import {BNUtil} from '../../../util/bn_util';
-import {testUtil} from '../../../util/test_util';
 import {ContractInstance } from '../../../util/types';
 import {Artifacts} from '../../../util/artifacts';
 import {constants} from '../../../util/constants';

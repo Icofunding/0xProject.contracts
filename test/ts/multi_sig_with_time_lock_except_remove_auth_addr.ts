@@ -6,7 +6,6 @@ import {constants} from '../../util/constants';
 import {crypto} from '../../util/crypto';
 import {MultiSigWrapper} from '../../util/multi_sig_wrapper';
 import {ContractInstance, TransactionDataParams } from '../../util/types';
-import {testUtil} from '../../util/test_util';
 import * as tokenTransferProxyJSON from '../../build/contracts/TokenTransferProxy.json';
 const {TokenTransferProxy, MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress} = new Artifacts(artifacts);
 const PROXY_ABI = (tokenTransferProxyJSON as any).abi;
@@ -43,12 +42,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
   describe('isFunctionRemoveAuthorizedAddress', () => {
     it('should throw if data is not for removeAuthorizedAddress', async () => {
       const data = multiSigWrapper.encodeFnArgs('addAuthorizedAddress', PROXY_ABI, [owners[0]]);
-      try {
-        await multiSig.isFunctionRemoveAuthorizedAddress.call(data);
-        throw new Error('isFunctionRemoveAuthorizedAddress succeeded when it should have failed');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(multiSig.isFunctionRemoveAuthorizedAddress.call(data)).to.be.rejectedWith(constants.INVALID_OPCODE);
     });
 
     it('should return true if data is for removeAuthorizedAddress', async () => {

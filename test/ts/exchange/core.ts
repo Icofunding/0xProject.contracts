@@ -10,7 +10,6 @@ import {BNUtil } from '../../../util/bn_util';
 import {crypto } from '../../../util/crypto';
 import {ExchangeWrapper} from '../../../util/exchange_wrapper';
 import {OrderFactory } from '../../../util/order_factory';
-import {testUtil } from '../../../util/test_util';
 import {Order} from '../../../util/order';
 import {BalancesByOwner, ContractInstance, ExchangeContractErrs } from '../../../util/types';
 import {Artifacts } from '../../../util/artifacts';

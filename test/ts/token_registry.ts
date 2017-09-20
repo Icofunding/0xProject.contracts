@@ -3,7 +3,6 @@ import * as chai from 'chai';
 import {chaiSetup} from './utils/chai_setup';
 import ethUtil = require('ethereumjs-util');
 import {ZeroEx} from '0x.js';
-import {testUtil} from '../../util/test_util';
 import {TokenRegWrapper} from '../../util/token_registry_wrapper';
 import {ContractInstance} from '../../util/types';
 import {Artifacts} from '../../util/artifacts';
