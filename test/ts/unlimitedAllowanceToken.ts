@@ -52,7 +52,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
     it('should return false if owner has insufficient balance', async () => {
       const ownerBalance = await zeroEx.token.getBalanceAsync(tokenAddress, owner);
       const amountToTransfer = ownerBalance.plus(1);
-      await zeroEx.token.transferAsync(tokenAddress, owner, spender, amountToTransfer);
+      await zeroEx.token.setAllowanceAsync(tokenAddress, owner, spender, amountToTransfer);
       const didReturnTrue = await token.transferFrom.call(owner, spender, amountToTransfer, {from: spender});
       expect(didReturnTrue).to.be.false();
     });
@@ -79,7 +79,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       const initOwnerBalance = await zeroEx.token.getBalanceAsync(tokenAddress, owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = zeroEx.token.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
-      await zeroEx.token.transferAsync(tokenAddress, owner, spender, initSpenderAllowance);
+      await zeroEx.token.setAllowanceAsync(tokenAddress, owner, spender, initSpenderAllowance);
       await zeroEx.token.transferFromAsync(tokenAddress, owner, spender, spender, amountToTransfer);
 
       const newSpenderAllowance = await zeroEx.token.getAllowanceAsync(tokenAddress, owner, spender);
@@ -90,7 +90,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       const initOwnerBalance = await zeroEx.token.getBalanceAsync(tokenAddress, owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
-      await zeroEx.token.transferAsync(tokenAddress, owner, spender, initSpenderAllowance);
+      await zeroEx.token.setAllowanceAsync(tokenAddress, owner, spender, initSpenderAllowance);
       await zeroEx.token.transferFromAsync(tokenAddress, owner, spender, spender, amountToTransfer);
 
       const newOwnerBalance = await zeroEx.token.getBalanceAsync(tokenAddress, owner);
@@ -104,7 +104,7 @@ contract('UnlimitedAllowanceToken', (accounts: string[]) => {
       const initOwnerBalance = await zeroEx.token.getBalanceAsync(tokenAddress, owner);
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
-      await zeroEx.token.transferAsync(tokenAddress, owner, spender, initSpenderAllowance);
+      await zeroEx.token.setAllowanceAsync(tokenAddress, owner, spender, initSpenderAllowance);
       await zeroEx.token.transferFromAsync(tokenAddress, owner, spender, spender, amountToTransfer);
 
       const newSpenderAllowance = await zeroEx.token.getAllowanceAsync(tokenAddress, owner, spender);
