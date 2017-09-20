@@ -22,12 +22,14 @@ const web3: Web3 = (global as any).web3;
 contract('EtherToken', (accounts: string[]) => {
   const account = accounts[0];
   const gasPrice = new BigNumber(web3.toWei(20, 'gwei'));
-  const zeroEx = new ZeroEx(web3.currentProvider, {
-      gasPrice,
-  });
+  let zeroEx: ZeroEx;
   let etherTokenAddress: string;
   before(async () => {
-    etherTokenAddress = await zeroEx.etherToken.getContractAddressAsync();
+    etherTokenAddress = EtherToken.address;
+    zeroEx = new ZeroEx(web3.currentProvider, {
+        gasPrice,
+        etherTokenContractAddress: etherTokenAddress,
+    });
   });
 
   const sendTransactionAsync = promisify(web3.eth.sendTransaction);
