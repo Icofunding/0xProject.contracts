@@ -3,7 +3,7 @@ import * as Web3 from 'web3';
 
 export interface BalancesByOwner {
   [ownerAddress: string]: {
-    [tokenAddress: string]: string;
+    [tokenAddress: string]: BigNumber.BigNumber;
   };
 }
 

@@ -2,7 +2,7 @@ import * as chai from 'chai';
 import * as BigNumber from 'bignumber.js';
 import {chaiSetup} from '../utils/chai_setup';
 import ethUtil = require('ethereumjs-util');
-import {BNUtil} from '../../../util/bn_util';
+import {ZeroEx} from '0x.js';
 import {ExchangeWrapper} from '../../../util/exchange_wrapper';
 import {OrderFactory} from '../../../util/order_factory';
 import {Order} from '../../../util/order';
@@ -15,8 +15,6 @@ const {
   Exchange,
   TokenRegistry,
 } = new Artifacts(artifacts);
-
-const { toSmallestUnits } = BNUtil;
 
 contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
@@ -42,10 +40,10 @@ contract('Exchange', (accounts: string[]) => {
       feeRecipient,
       makerToken: repAddress,
       takerToken: dgdAddress,
-      makerTokenAmount: toSmallestUnits(100),
-      takerTokenAmount: toSmallestUnits(200),
-      makerFee: toSmallestUnits(1),
-      takerFee: toSmallestUnits(1),
+      makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(100), 18),
+      takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
+      makerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
+      takerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
     };
     orderFactory = new OrderFactory(defaultOrderParams);
   });

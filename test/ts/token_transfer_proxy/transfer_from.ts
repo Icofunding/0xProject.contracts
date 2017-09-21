@@ -1,7 +1,6 @@
 import * as chai from 'chai';
 import {chaiSetup} from '../utils/chai_setup';
 import {Balances } from '../../../util/balances';
-import {BNUtil} from '../../../util/bn_util';
 import {ContractInstance } from '../../../util/types';
 import {Artifacts} from '../../../util/artifacts';
 import {constants} from '../../../util/constants';
@@ -13,8 +12,6 @@ const {
   DummyToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
-
-const {add, sub} = BNUtil;
 
 contract('TokenTransferProxy', (accounts: string[]) => {
   const INIT_BAL = 100000000;
@@ -60,9 +57,9 @@ contract('TokenTransferProxy', (accounts: string[]) => {
 
       const newBalances = await dmyBalances.getAsync();
       expect(newBalances[accounts[0]][rep.address])
-        .to.be.bignumber.equal(sub(balances[accounts[0]][rep.address], transferAmt));
+        .to.be.bignumber.equal(balances[accounts[0]][rep.address].minus(transferAmt));
       expect(newBalances[accounts[1]][rep.address])
-        .to.be.bignumber.equal(sub(balances[accounts[1]][rep.address], transferAmt));
+        .to.be.bignumber.equal(balances[accounts[1]][rep.address].minus(transferAmt));
     });
   });
 });

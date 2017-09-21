@@ -21,7 +21,7 @@ export class Balances {
         if (_.isUndefined(balancesByOwner[ownerAddress])) {
           balancesByOwner[ownerAddress] = {};
         }
-        balancesByOwner[ownerAddress][tokenContractInstance.address] = balance.toString();
+        balancesByOwner[ownerAddress][tokenContractInstance.address] = balance;
       }
     }
     return balancesByOwner;

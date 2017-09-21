@@ -4,14 +4,12 @@ import Web3 = require('web3');
 import {ZeroEx, ZeroExError} from '0x.js';
 import * as BigNumber from 'bignumber.js';
 import promisify = require('es6-promisify');
-import {BNUtil} from '../../util/bn_util';
 import {Artifacts} from '../../util/artifacts';
 
 const {EtherToken} = new Artifacts(artifacts);
 
 chaiSetup.configure();
 const expect = chai.expect;
-const {add, sub, mul, cmp} = BNUtil;
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
 // with type `any` to a variable of type `Web3`.
@@ -55,12 +53,12 @@ contract('EtherToken', (accounts: string[]) => {
       const txHash = await zeroEx.etherToken.depositAsync(ethToDeposit, account);
       const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
-      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+      const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
       const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      expect(finalEthBalance).to.be.bignumber.equal(sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
-      expect(finalEthTokenBalance).to.be.bignumber.equal(add(initEthTokenBalance, ethToDeposit));
+      expect(finalEthBalance).to.be.bignumber.equal(initEthBalance.minus(ethToDeposit.plus(ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.plus(ethToDeposit));
     });
   });
 
@@ -81,12 +79,12 @@ contract('EtherToken', (accounts: string[]) => {
       const txHash = await zeroEx.etherToken.withdrawAsync(ethTokensToWithdraw, account);
       const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
-      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+      const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
       const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      expect(finalEthBalance).to.be.bignumber.equal(add(initEthBalance, sub(ethTokensToWithdraw, ethSpentOnGas)));
-      expect(finalEthTokenBalance).to.be.bignumber.equal(sub(initEthTokenBalance, ethTokensToWithdraw));
+      expect(finalEthBalance).to.be.bignumber.equal(initEthBalance.plus(ethTokensToWithdraw.minus(ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.minus(ethTokensToWithdraw));
     });
   });
 
@@ -106,12 +104,12 @@ contract('EtherToken', (accounts: string[]) => {
 
       const receipt = await zeroEx.awaitTransactionMinedAsync(txHash);
 
-      const ethSpentOnGas = mul(receipt.gasUsed, gasPrice);
+      const ethSpentOnGas = gasPrice.times(receipt.gasUsed);
       const finalEthBalance = await getEthBalanceAsync(account);
       const finalEthTokenBalance = await zeroEx.token.getBalanceAsync(etherTokenAddress, account);
 
-      expect(finalEthBalance).to.be.bignumber.equal(sub(initEthBalance, add(ethToDeposit, ethSpentOnGas)));
-      expect(finalEthTokenBalance).to.be.bignumber.equal(add(initEthTokenBalance, ethToDeposit));
+      expect(finalEthBalance).to.be.bignumber.equal(initEthBalance.minus(ethToDeposit.plus(ethSpentOnGas)));
+      expect(finalEthTokenBalance).to.be.bignumber.equal(initEthTokenBalance.plus(ethToDeposit));
     });
   });
 });
