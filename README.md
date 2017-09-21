@@ -18,6 +18,7 @@
 * [Contracts](#contracts)
     * [Deployed Addresses](#deployed-addresses)
         * [Kovan](#kovan)
+        * [Ropsten](#ropsten)
         * [Mainnet](#mainnet)
     * [Contract Interactions](#contract-interactions)
 * [Protocol Specification](#protocol-specification)
@@ -87,6 +88,15 @@ TokenRegistry stores metadata associated with ERC20 tokens. TokenRegistry entrie
 * EtherToken.sol: [0x05d090b51c40b020eab3bfcb6a2dff130df22e9c](https://kovan.etherscan.io/address/0x05d090b51c40b020eab3bfcb6a2dff130df22e9c)
 * MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x9301A2B0dCA791Ba27B1A074Aba3Bf47bcd80Cb9](https://kovan.etherscan.io/address/0x9301A2B0dCA791Ba27B1A074Aba3Bf47bcd80Cb9)
 * TokenRegistry.sol: [0xf18e504561f4347bea557f3d4558f559dddbae7f](https://kovan.etherscan.io/address/0xf18e504561f4347bea557f3d4558f559dddbae7f)
+
+#### Ropsten
+
+* Exchange.sol: [0x479cc461fecd078f766ecc58533d6f69580cf3ac](https://ropsten.etherscan.io/address/0x479cc461fecd078f766ecc58533d6f69580cf3ac)
+* TokenTransferProxy.sol: [0x4e9aad8184de8833365fea970cd9149372fdf1e6](https://ropsten.etherscan.io/address/0x4e9aad8184de8833365fea970cd9149372fdf1e6)
+* ZRXToken.sol: [0xa8e9fa8f91e5ae138c74648c9c304f1c75003a8d](https://ropsten.etherscan.io/address/0xa8e9fa8f91e5ae138c74648c9c304f1c75003a8d)
+* EtherToken.sol: [0xc00fd9820cd2898cc4c054b7bf142de637ad129a](https://ropsten.etherscan.io/address/0xc00fd9820cd2898cc4c054b7bf142de637ad129a)
+* MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.sol: [0x4f7a0ca862448c6457076cf3c86fa7a1f17988e0](https://ropsten.etherscan.io/address/0x4f7a0ca862448c6457076cf3c86fa7a1f17988e0)
+* TokenRegistry.sol: [0x6b1a50f0bb5a7995444bd3877b22dc89c62843ed](https://ropsten.etherscan.io/address/0x6b1a50f0bb5a7995444bd3877b22dc89c62843ed)
 
 #### Mainnet
 
