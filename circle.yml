@@ -13,3 +13,4 @@ test:
     - yarn testrpc:
         background: true
     - yarn test
+    - yarn lint
