@@ -59,7 +59,7 @@ contract('TokenTransferProxy', (accounts: string[]) => {
       expect(newBalances[accounts[0]][rep.address])
         .to.be.bignumber.equal(balances[accounts[0]][rep.address].minus(transferAmt));
       expect(newBalances[accounts[1]][rep.address])
-        .to.be.bignumber.equal(balances[accounts[1]][rep.address].minus(transferAmt));
+        .to.be.bignumber.equal(balances[accounts[1]][rep.address].add(transferAmt));
     });
   });
 });
