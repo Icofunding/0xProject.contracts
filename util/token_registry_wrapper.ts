@@ -1,5 +1,5 @@
-import { Token } from './types';
-import { ContractInstance } from './types';
+import {Token} from './types';
+import {ContractInstance} from './types';
 
 export class TokenRegWrapper {
   private tokenReg: ContractInstance;
@@ -14,7 +14,7 @@ export class TokenRegWrapper {
       token.decimals,
       token.ipfsHash,
       token.swarmHash,
-      { from },
+      {from},
     );
     return tx;
   }

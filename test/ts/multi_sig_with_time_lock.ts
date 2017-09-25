@@ -60,7 +60,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
     });
 
     it('should set confirmation time with enough confirmations', async () => {
-      const res = await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const res = await multiSig.confirmTransaction(txId, {from: owners[1]});
       expect(res.logs).to.have.length(2);
       const blockNum = await promisify(web3.eth.getBlockNumber)();
       const blockInfo = await promisify(web3.eth.getBlock)(blockNum);
@@ -92,7 +92,7 @@ contract('MultiSigWalletWithTimeLock', (accounts: string[]) => {
       const subRes = await multiSigWrapper.submitTransactionAsync(destination, from, dataParams);
 
       txId = subRes.logs[0].args.transactionId.toNumber();
-      const confRes = await multiSig.confirmTransaction(txId, { from: owners[1] });
+      const confRes = await multiSig.confirmTransaction(txId, {from: owners[1]});
       expect(confRes.logs).to.have.length(2);
 
       return expect(multiSig.executeTransaction(txId)).to.be.rejectedWith(constants.INVALID_OPCODE);

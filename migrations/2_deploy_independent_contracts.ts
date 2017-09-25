@@ -1,5 +1,5 @@
-import { MultiSigConfigByNetwork, ContractInstance } from '../util/types';
-import { Artifacts } from '../util/artifacts';
+import {MultiSigConfigByNetwork, ContractInstance} from '../util/types';
+import {Artifacts} from '../util/artifacts';
 const {
   MultiSigWalletWithTimeLock,
   TokenTransferProxy,

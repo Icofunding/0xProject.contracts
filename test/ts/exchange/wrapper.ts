@@ -99,7 +99,7 @@ contract('Exchange', (accounts: string[]) => {
         takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
       });
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrKillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrKillOrderAsync(order, taker, {fillTakerTokenAmount});
 
       const newBalances = await dmyBalances.getAsync();
 
@@ -241,7 +241,7 @@ contract('Exchange', (accounts: string[]) => {
     describe('fillOrdersUpTo', () => {
       it('should stop when the entire fillTakerTokenAmount is filled', async () => {
         const fillTakerTokenAmount = orders[0].params.takerTokenAmount.plus(orders[1].params.takerTokenAmount.div(2));
-        await exWrapper.fillOrdersUpToAsync(orders, taker, {fillTakerTokenAmount });
+        await exWrapper.fillOrdersUpToAsync(orders, taker, {fillTakerTokenAmount});
 
         const newBalances = await dmyBalances.getAsync();
 
@@ -281,7 +281,7 @@ contract('Exchange', (accounts: string[]) => {
                                                 .add(order.params.makerFee
                                                 .add(order.params.takerFee));
         });
-        await exWrapper.fillOrdersUpToAsync(orders, taker, {fillTakerTokenAmount });
+        await exWrapper.fillOrdersUpToAsync(orders, taker, {fillTakerTokenAmount});
 
         const newBalances = await dmyBalances.getAsync();
         expect(newBalances).to.be.deep.equal(balances);

@@ -1,15 +1,15 @@
 import * as _ from 'lodash';
 import * as Bluebird from 'bluebird';
-import { ContractInstance, TokenInfoByNetwork, Token } from '../util/types';
-import { Artifacts } from '../util/artifacts';
+import {ContractInstance, TokenInfoByNetwork, Token} from '../util/types';
+import {Artifacts} from '../util/artifacts';
 const {
   DummyToken,
   EtherToken,
   ZRXToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
-import { tokenInfo } from './config/token_info';
-import { constants } from '../util/constants';
+import {tokenInfo} from './config/token_info';
+import {constants} from '../util/constants';
 
 module.exports = (deployer: any, network: string) => {
   const tokens = network === 'live' ? tokenInfo.live : tokenInfo.development;

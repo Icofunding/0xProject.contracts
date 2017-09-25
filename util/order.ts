@@ -3,7 +3,7 @@ import ethUtil = require('ethereumjs-util');
 import promisify = require('es6-promisify');
 import Web3 = require('web3');
 import {ZeroEx, ECSignature, Order as ZeroExOrder} from '0x.js';
-import { OrderParams } from './types';
+import {OrderParams} from './types';
 import * as BigNumber from 'bignumber.js';
 
 // In order to benefit from type-safety, we re-assign the global web3 instance injected by Truffle
@@ -18,7 +18,7 @@ export class Order {
     this.params = params;
   }
   public isValidSignature() {
-    const { v, r, s } = this.params;
+    const {v, r, s} = this.params;
     if (_.isUndefined(v) || _.isUndefined(r) || _.isUndefined(s)) {
       throw new Error('Cannot call isValidSignature on unsigned order');
     }

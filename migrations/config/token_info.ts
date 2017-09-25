@@ -1,5 +1,5 @@
-import { TokenInfoByNetwork } from '../../util/types';
-import { constants } from '../../util/constants';
+import {TokenInfoByNetwork} from '../../util/types';
+import {constants} from '../../util/constants';
 
 export const tokenInfo: TokenInfoByNetwork = {
   development: [

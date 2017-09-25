@@ -1,8 +1,8 @@
 import * as BigNumber from 'bignumber.js';
 import * as _ from 'lodash';
-import { formatters } from './formatters';
-import { Order } from './order';
-import { ContractInstance } from './types';
+import {formatters} from './formatters';
+import {Order} from './order';
+import {ContractInstance} from './types';
 
 export class ExchangeWrapper {
   private exchange: ContractInstance;

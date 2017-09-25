@@ -81,7 +81,7 @@ contract('ZRXToken', (accounts: string[]) => {
     });
 
     it('should return true on a 0 value transfer', async () => {
-      const didReturnTrue = await zrx.transfer.call(spender, 0, { from: owner });
+      const didReturnTrue = await zrx.transfer.call(spender, 0, {from: owner});
       expect(didReturnTrue).to.be.true();
     });
   });
@@ -92,7 +92,7 @@ contract('ZRXToken', (accounts: string[]) => {
       const amountToTransfer = ownerBalance.plus(1);
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, amountToTransfer);
       zeroEx.awaitTransactionMinedAsync(txHash);
-      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
+      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, {from: spender});
       expect(didReturnTrue).to.be.false();
       // Reset allowance
       txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, new BigNumber(0));
@@ -107,13 +107,13 @@ contract('ZRXToken', (accounts: string[]) => {
       const spenderAllowanceIsInsufficient = spenderAllowance.cmp(amountToTransfer) < 0;
       expect(spenderAllowanceIsInsufficient).to.be.true();
 
-      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
+      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, {from: spender});
       expect(didReturnTrue).to.be.false();
     });
 
     it('should return true on a 0 value transfer', async () => {
       const amountToTransfer = 0;
-      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, { from: spender });
+      const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, {from: spender});
       expect(didReturnTrue).to.be.true();
     });
 

@@ -1,5 +1,5 @@
-import { ContractInstance } from '../util/types';
-import { Artifacts } from '../util/artifacts';
+import {ContractInstance} from '../util/types';
+import {Artifacts} from '../util/artifacts';
 const {
   TokenTransferProxy,
   MultiSigWalletWithTimeLock,

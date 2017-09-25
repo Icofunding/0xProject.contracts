@@ -4,13 +4,13 @@ import ethUtil = require('ethereumjs-util');
 import * as BigNumber from 'bignumber.js';
 import {ZeroEx} from '0x.js';
 import {chaiSetup} from '../utils/chai_setup';
-import {constants } from '../../../util/constants';
-import {Balances } from '../../../util/balances';
+import {constants} from '../../../util/constants';
+import {Balances} from '../../../util/balances';
 import {crypto} from '../../../util/crypto';
 import {ExchangeWrapper} from '../../../util/exchange_wrapper';
 import {OrderFactory} from '../../../util/order_factory';
 import {Order} from '../../../util/order';
-import {BalancesByOwner, ContractInstance, ExchangeContractErrs } from '../../../util/types';
+import {BalancesByOwner, ContractInstance, ExchangeContractErrs} from '../../../util/types';
 import {Artifacts} from '../../../util/artifacts';
 
 chaiSetup.configure();
@@ -135,13 +135,13 @@ contract('Exchange', (accounts: string[]) => {
       expect(filledTakerTokenAmountBefore).to.be.bignumber.equal(0);
 
       const fillTakerTokenAmount1 = new BigNumber(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: fillTakerTokenAmount1 });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: fillTakerTokenAmount1});
 
       const filledTakerTokenAmountAfter1 = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       expect(filledTakerTokenAmountAfter1).to.be.bignumber.equal(fillTakerTokenAmount1);
 
       const fillTakerTokenAmount2 = new BigNumber(1);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: fillTakerTokenAmount2 });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: fillTakerTokenAmount2});
 
       const filledTakerTokenAmountAfter2 = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       expect(filledTakerTokenAmountAfter2).to.be.bignumber.equal(filledTakerTokenAmountAfter1);
@@ -157,7 +157,7 @@ contract('Exchange', (accounts: string[]) => {
       expect(filledTakerTokenAmountBefore).to.be.bignumber.equal(0);
 
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount});
 
       const filledTakerTokenAmountAfter = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       expect(filledTakerTokenAmountAfter).to.be.bignumber.equal(fillTakerTokenAmount);
@@ -197,7 +197,7 @@ contract('Exchange', (accounts: string[]) => {
       expect(filledTakerTokenAmountBefore).to.be.bignumber.equal(0);
 
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount});
 
       const filledTakerTokenAmountAfter = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       expect(filledTakerTokenAmountAfter).to.be.bignumber.equal(fillTakerTokenAmount);
@@ -237,7 +237,7 @@ contract('Exchange', (accounts: string[]) => {
       expect(filledTakerTokenAmountBefore).to.be.bignumber.equal(0);
 
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount});
 
       const filledTakerTokenAmountAfter = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       expect(filledTakerTokenAmountAfter).to.be.bignumber.equal(fillTakerTokenAmount);
@@ -278,7 +278,7 @@ contract('Exchange', (accounts: string[]) => {
       expect(filledTakerTokenAmountBefore).to.be.bignumber.equal(0);
 
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount});
 
       const filledTakerTokenAmountAfter = await zeroEx.exchange.getFilledTakerAmountAsync(order.params.orderHashHex);
       const expectedFillAmountTAfter = fillTakerTokenAmount.add(filledTakerTokenAmountBefore);
@@ -311,9 +311,9 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should fill remaining value if fillTakerTokenAmount > remaining takerTokenAmount', async () => {
       const fillTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount});
 
-      const res = await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount });
+      const res = await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount});
 
       expect(res.logs[0].args.filledTakerTokenAmount)
         .to.be.bignumber.equal(order.params.takerTokenAmount.minus(fillTakerTokenAmount));
@@ -666,9 +666,9 @@ contract('Exchange', (accounts: string[]) => {
 
     it('should be able to cancel part of an order', async () => {
       const cancelTakerTokenAmount = order.params.takerTokenAmount.div(2);
-      await exWrapper.cancelOrderAsync(order, maker, {cancelTakerTokenAmount });
+      await exWrapper.cancelOrderAsync(order, maker, {cancelTakerTokenAmount});
 
-      const res = await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount });
+      const res = await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount});
       expect(res.logs[0].args.filledTakerTokenAmount)
         .to.be.bignumber.equal(order.params.takerTokenAmount.minus(cancelTakerTokenAmount));
 

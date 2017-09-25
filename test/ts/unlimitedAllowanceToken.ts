@@ -6,7 +6,7 @@ import * as BigNumber from 'bignumber.js';
 import {Artifacts} from '../../util/artifacts';
 import {ContractInstance} from '../../util/types';
 
-const {DummyToken } = new Artifacts(artifacts);
+const {DummyToken} = new Artifacts(artifacts);
 const web3: Web3 = (global as any).web3;
 chaiSetup.configure();
 const expect = chai.expect;

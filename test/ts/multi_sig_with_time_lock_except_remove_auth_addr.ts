@@ -4,7 +4,7 @@ import {Artifacts} from '../../util/artifacts';
 import {constants} from '../../util/constants';
 import {crypto} from '../../util/crypto';
 import {MultiSigWrapper} from '../../util/multi_sig_wrapper';
-import {ContractInstance, TransactionDataParams } from '../../util/types';
+import {ContractInstance, TransactionDataParams} from '../../util/types';
 import * as tokenTransferProxyJSON from '../../build/contracts/TokenTransferProxy.json';
 const {TokenTransferProxy, MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress} = new Artifacts(artifacts);
 const PROXY_ABI = (tokenTransferProxyJSON as any).abi;
@@ -29,11 +29,11 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
 
   beforeEach(async () => {
     const initialOwner = accounts[0];
-    tokenTransferProxy = await TokenTransferProxy.new({ from: initialOwner });
-    await tokenTransferProxy.addAuthorizedAddress(authorizedAddress, { from: initialOwner });
+    tokenTransferProxy = await TokenTransferProxy.new({from: initialOwner});
+    await tokenTransferProxy.addAuthorizedAddress(authorizedAddress, {from: initialOwner});
     multiSig = await MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress.new(
         owners, requiredApprovals, SECONDS_TIME_LOCKED, tokenTransferProxy.address);
-    await tokenTransferProxy.transferOwnership(multiSig.address, { from: initialOwner });
+    await tokenTransferProxy.transferOwnership(multiSig.address, {from: initialOwner});
     multiSigWrapper = new MultiSigWrapper(multiSig);
     validDestination = tokenTransferProxy.address;
   });
@@ -74,7 +74,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       };
       const res = await multiSigWrapper.submitTransactionAsync(invalidDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      await multiSig.confirmTransaction(txId, {from: owners[1]});
       const isConfirmed = await multiSig.isConfirmed.call(txId);
       expect(isConfirmed).to.be.true();
 
@@ -89,7 +89,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      await multiSig.confirmTransaction(txId, {from: owners[1]});
       const isConfirmed = await multiSig.isConfirmed.call(txId);
       expect(isConfirmed).to.be.true();
 
@@ -104,7 +104,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      await multiSig.confirmTransaction(txId, {from: owners[1]});
       const isConfirmed = await multiSig.isConfirmed.call(txId);
       expect(isConfirmed).to.be.true();
       await multiSig.executeRemoveAuthorizedAddress(txId);
@@ -121,7 +121,7 @@ contract('MultiSigWalletWithTimeLockExceptRemoveAuthorizedAddress', (accounts: s
       };
       const res = await multiSigWrapper.submitTransactionAsync(validDestination, owners[0], dataParams);
       const txId = res.logs[0].args.transactionId.toString();
-      await multiSig.confirmTransaction(txId, { from: owners[1] });
+      await multiSig.confirmTransaction(txId, {from: owners[1]});
       const isConfirmed = await multiSig.isConfirmed.call(txId);
       expect(isConfirmed).to.be.true();
       await multiSig.executeRemoveAuthorizedAddress(txId);
