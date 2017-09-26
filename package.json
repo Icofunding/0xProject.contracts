@@ -41,7 +41,7 @@
     "solc": "^0.4.11",
     "truffle": "3.4.3",
     "types-bn": "^0.0.1",
-    "types-ethereumjs-util": "^0.0.5",
+    "types-ethereumjs-util": "machinomy/types-ethereumjs-util",
     "typescript": "^2.5.2",
     "web3-typescript-typings": "^0.6.0"
   },
