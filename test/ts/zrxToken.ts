@@ -25,7 +25,7 @@ contract('ZRXToken', (accounts: string[]) => {
     zeroEx = new ZeroEx(web3.currentProvider, {
         exchangeContractAddress: Exchange.address,
     });
-    zrxAddress = await (zeroEx.exchange as any)._getZRXTokenAddressAsync();
+    zrxAddress = await zeroEx.exchange.getZRXTokenAddressAsync();
     zrx = await ZRXToken.at(zrxAddress);
     MAX_UINT = zeroEx.token.UNLIMITED_ALLOWANCE_IN_BASE_UNITS;
   });
