@@ -17,7 +17,7 @@ const web3: Web3 = (global as any).web3;
 
 contract('EtherToken', (accounts: string[]) => {
   const account = accounts[0];
-  const gasPrice = new BigNumber(web3.toWei(20, 'gwei'));
+  const gasPrice = ZeroEx.toBaseUnitAmount(new BigNumber(1), 18);
   let zeroEx: ZeroEx;
   let etherTokenAddress: string;
   before(async () => {
