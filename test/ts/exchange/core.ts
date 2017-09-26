@@ -340,7 +340,7 @@ contract('Exchange', (accounts: string[]) => {
     it('should log 1 event with the correct arguments when order has a feeRecipient', async () => {
       const divisor = 2;
       const res = await exWrapper.fillOrderAsync(order, taker,
-                                            {fillTakerTokenAmount: order.params.takerTokenAmount.div(divisor) });
+                                            {fillTakerTokenAmount: order.params.takerTokenAmount.div(divisor)});
       expect(res.logs).to.have.length(1);
 
       const logArgs = res.logs[0].args;
@@ -370,7 +370,7 @@ contract('Exchange', (accounts: string[]) => {
       });
       const divisor = 2;
       const res = await exWrapper.fillOrderAsync(order, taker,
-                                            {fillTakerTokenAmount: order.params.takerTokenAmount.div(divisor) });
+                                            {fillTakerTokenAmount: order.params.takerTokenAmount.div(divisor)});
       expect(res.logs).to.have.length(1);
 
       const logArgs = res.logs[0].args;
@@ -433,7 +433,7 @@ contract('Exchange', (accounts: string[]) => {
     it('should throw if fillTakerTokenAmount is 0', async () => {
       order = await orderFactory.newSignedOrderAsync();
 
-      return expect(exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: new BigNumber(0) }))
+      return expect(exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: new BigNumber(0)}))
         .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
 
@@ -652,13 +652,13 @@ contract('Exchange', (accounts: string[]) => {
     it('should throw if cancelTakerTokenAmount is 0', async () => {
       order = await orderFactory.newSignedOrderAsync();
 
-      return expect(exWrapper.cancelOrderAsync(order, maker, {cancelTakerTokenAmount: new BigNumber(0) }))
+      return expect(exWrapper.cancelOrderAsync(order, maker, {cancelTakerTokenAmount: new BigNumber(0)}))
         .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
 
     it('should be able to cancel a full order', async () => {
       await exWrapper.cancelOrderAsync(order, maker);
-      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });
+      await exWrapper.fillOrderAsync(order, taker, {fillTakerTokenAmount: order.params.takerTokenAmount.div(2)});
 
       const newBalances = await dmyBalances.getAsync();
       expect(newBalances).to.be.deep.equal(balances);
@@ -700,7 +700,7 @@ contract('Exchange', (accounts: string[]) => {
     it('should log 1 event with correct arguments', async () => {
       const divisor = 2;
       const res = await exWrapper.cancelOrderAsync(order, maker,
-                                              {cancelTakerTokenAmount: order.params.takerTokenAmount.div(divisor) });
+                                              {cancelTakerTokenAmount: order.params.takerTokenAmount.div(divisor)});
       expect(res.logs).to.have.length(1);
 
       const logArgs = res.logs[0].args;

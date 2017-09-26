@@ -104,8 +104,8 @@ contract('Exchange', (accounts: string[]) => {
       const newBalances = await dmyBalances.getAsync();
 
       const fillMakerTokenAmount = fillTakerTokenAmount
-                                    .times(order.params.makerTokenAmount)
-                                    .dividedToIntegerBy(order.params.takerTokenAmount);
+                                   .times(order.params.makerTokenAmount)
+                                   .dividedToIntegerBy(order.params.takerTokenAmount);
       const makerFee = order.params.makerFee
                        .times(fillMakerTokenAmount)
                        .dividedToIntegerBy(order.params.makerTokenAmount);
@@ -139,7 +139,7 @@ contract('Exchange', (accounts: string[]) => {
       const order = await orderFactory.newSignedOrderAsync();
 
       const from = taker;
-      await exWrapper.fillOrderAsync(order, from, {fillTakerTokenAmount: order.params.takerTokenAmount.div(2) });
+      await exWrapper.fillOrderAsync(order, from, {fillTakerTokenAmount: order.params.takerTokenAmount.div(2)});
 
       return expect(exWrapper.fillOrKillOrderAsync(order, taker))
         .to.be.rejectedWith(constants.INVALID_OPCODE);
