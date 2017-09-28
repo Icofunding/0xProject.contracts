@@ -21,7 +21,7 @@ export class Order {
       throw new Error('Cannot call isValidSignature on unsigned order');
     }
     const orderHash = this.getOrderHash();
-    const msgHash = ethUtil.hashPersonalMessage(orderHash);
+    const msgHash = ethUtil.hashPersonalMessage(ethUtil.toBuffer(orderHash));
     try {
       const pubKey = ethUtil.ecrecover(msgHash, v, ethUtil.toBuffer(r), ethUtil.toBuffer(s));
       const recoveredAddress = ethUtil.bufferToHex(ethUtil.pubToAddress(pubKey));
