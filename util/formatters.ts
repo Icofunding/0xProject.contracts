@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
-import { BatchFillOrders, BatchCancelOrders, FillOrdersUpTo } from './types';
-import { Order } from './order';
+import {BatchFillOrders, BatchCancelOrders, FillOrdersUpTo} from './types';
+import {Order} from './order';
 import * as BigNumber from 'bignumber.js';
 
 export const formatters = {

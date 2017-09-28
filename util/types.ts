@@ -1,8 +1,9 @@
 import * as BigNumber from 'bignumber.js';
+import * as Web3 from 'web3';
 
 export interface BalancesByOwner {
   [ownerAddress: string]: {
-    [tokenAddress: string]: string;
+    [tokenAddress: string]: BigNumber.BigNumber;
   };
 }
 
@@ -77,24 +78,9 @@ export interface OrderParams {
   s?: string;
 }
 
-export interface ABIEntity {
-  constant: boolean;
-  inputs: Array<{
-    name: string;
-    type: string;
-  }>;
-  name: string;
-  outputs: Array<{
-    name: string;
-    type: string;
-  }>;
-  payable: boolean;
-  type: string;
-}
-
 export interface TransactionDataParams {
   name: string;
-  abi: ABIEntity[];
+  abi: Web3.AbiDefinition[];
   args: any[];
 }
 

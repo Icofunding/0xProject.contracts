@@ -1,18 +1,20 @@
-import * as assert from 'assert';
+import * as chai from 'chai';
 import * as BigNumber from 'bignumber.js';
+import {chaiSetup} from '../utils/chai_setup';
 import ethUtil = require('ethereumjs-util');
-import { BNUtil } from '../../../util/bn_util';
-import { ExchangeWrapper } from '../../../util/exchange_wrapper';
-import { OrderFactory } from '../../../util/order_factory';
-import { Order } from '../../../util/order';
-import { Artifacts } from '../../../util/artifacts';
+import {ZeroEx} from '0x.js';
+import {ExchangeWrapper} from '../../../util/exchange_wrapper';
+import {OrderFactory} from '../../../util/order_factory';
+import {Order} from '../../../util/order';
+import {Artifacts} from '../../../util/artifacts';
+
+chaiSetup.configure();
+const expect = chai.expect;
 
 const {
   Exchange,
   TokenRegistry,
 } = new Artifacts(artifacts);
-
-const { toSmallestUnits } = BNUtil;
 
 contract('Exchange', (accounts: string[]) => {
   const maker = accounts[0];
@@ -38,10 +40,10 @@ contract('Exchange', (accounts: string[]) => {
       feeRecipient,
       makerToken: repAddress,
       takerToken: dgdAddress,
-      makerTokenAmount: toSmallestUnits(100),
-      takerTokenAmount: toSmallestUnits(200),
-      makerFee: toSmallestUnits(1),
-      takerFee: toSmallestUnits(1),
+      makerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(100), 18),
+      takerTokenAmount: ZeroEx.toBaseUnitAmount(new BigNumber(200), 18),
+      makerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
+      takerFee: ZeroEx.toBaseUnitAmount(new BigNumber(1), 18),
     };
     orderFactory = new OrderFactory(defaultOrderParams);
   });
@@ -53,7 +55,7 @@ contract('Exchange', (accounts: string[]) => {
   describe('getOrderHash', () => {
     it('should output the correct orderHash', async () => {
       const orderHashHex = await exchangeWrapper.getOrderHashAsync(order);
-      assert.equal(order.params.orderHashHex, orderHashHex);
+      expect(order.params.orderHashHex).to.be.equal(orderHashHex);
     });
   });
 
@@ -65,16 +67,16 @@ contract('Exchange', (accounts: string[]) => {
     it('should return true with a valid signature', async () => {
       const success = await exchangeWrapper.isValidSignatureAsync(order);
       const isValidSignature = order.isValidSignature();
-      assert(isValidSignature);
-      assert(success);
+      expect(isValidSignature).to.be.true();
+      expect(success).to.be.true();
     });
 
     it('should return false with an invalid signature', async () => {
       order.params.r = ethUtil.bufferToHex(ethUtil.sha3('invalidR'));
       order.params.s = ethUtil.bufferToHex(ethUtil.sha3('invalidS'));
       const success = await exchangeWrapper.isValidSignatureAsync(order);
-      assert(!order.isValidSignature());
-      assert(!success);
+      expect(order.isValidSignature()).to.be.false();
+      expect(success).to.be.false();
     });
   });
 
@@ -85,7 +87,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(50);
       // rounding error = ((20*50/999) - floor(20*50/999)) / (20*50/999) = 0.1%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, false);
+      expect(isRoundingError).to.be.false();
     });
 
     it('should return false if there is a rounding of 0.09%', async () => {
@@ -94,7 +96,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(500);
       // rounding error = ((20*500/9991) - floor(20*500/9991)) / (20*500/9991) = 0.09%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, false);
+      expect(isRoundingError).to.be.false();
     });
 
     it('should return true if there is a rounding error of 0.11%', async () => {
@@ -103,7 +105,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(500);
       // rounding error = ((20*500/9989) - floor(20*500/9989)) / (20*500/9989) = 0.011%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, true);
+      expect(isRoundingError).to.be.true();
     });
 
     it('should return true if there is a rounding error > 0.1%', async () => {
@@ -112,7 +114,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
       // rounding error = ((3*10/7) - floor(3*10/7)) / (3*10/7) = 6.67%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, true);
+      expect(isRoundingError).to.be.true();
     });
 
     it('should return false when there is no rounding error', async () => {
@@ -121,7 +123,7 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, false);
+      expect(isRoundingError).to.be.false();
     });
 
     it('should return false when there is rounding error <= 0.1%', async () => {
@@ -129,9 +131,10 @@ contract('Exchange', (accounts: string[]) => {
       const numerator = new BigNumber(76564);
       const denominator = new BigNumber(676373677);
       const target = new BigNumber(105762562);
-      // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) / (76564*105762562/676373677) = 0.0007%
+      // rounding error = ((76564*105762562/676373677) - floor(76564*105762562/676373677)) /
+      // (76564*105762562/676373677) = 0.0007%
       const isRoundingError = await exchangeWrapper.isRoundingErrorAsync(numerator, denominator, target);
-      assert.equal(isRoundingError, false);
+      expect(isRoundingError).to.be.false();
     });
   });
 
@@ -142,8 +145,8 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '5';
-      assert.equal(partialAmount.toString(), expectedPartialAmount);
+      const expectedPartialAmount = 5;
+      expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
 
     it('should round down', async () => {
@@ -152,8 +155,8 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '6';
-      assert.equal(partialAmount.toString(), expectedPartialAmount);
+      const expectedPartialAmount = 6;
+      expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
 
     it('should round .5 down', async () => {
@@ -162,8 +165,8 @@ contract('Exchange', (accounts: string[]) => {
       const target = new BigNumber(10);
 
       const partialAmount = await exchangeWrapper.getPartialAmountAsync(numerator, denominator, target);
-      const expectedPartialAmount = '0';
-      assert.equal(partialAmount.toString(), expectedPartialAmount);
+      const expectedPartialAmount = 0;
+      expect(partialAmount).to.be.bignumber.equal(expectedPartialAmount);
     });
   });
 });

@@ -1,15 +1,15 @@
 import * as _ from 'lodash';
 import * as Bluebird from 'bluebird';
-import { ContractInstance, TokenInfoByNetwork, Token } from '../util/types';
-import { Artifacts } from '../util/artifacts';
+import {ContractInstance, TokenInfoByNetwork, Token} from '../util/types';
+import {Artifacts} from '../util/artifacts';
 const {
   DummyToken,
   EtherToken,
   ZRXToken,
   TokenRegistry,
 } = new Artifacts(artifacts);
-import { tokenInfo } from './config/token_info';
-import { constants } from '../util/constants';
+import {tokenInfo} from './config/token_info';
+import {constants} from '../util/constants';
 
 module.exports = (deployer: any, network: string) => {
   const tokens = network === 'live' ? tokenInfo.live : tokenInfo.development;
@@ -17,7 +17,7 @@ module.exports = (deployer: any, network: string) => {
     return TokenRegistry.deployed();
   }).then((tokenRegistry: ContractInstance) => {
     if (network !== 'live') {
-      const totalSupply = 100000000 * Math.pow(10, 18);
+      const totalSupply = 1000000000 * Math.pow(10, 18);
       return Bluebird.each(tokens.map((token: Token) => DummyToken.new(
         token.name,
         token.symbol,

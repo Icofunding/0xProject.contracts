@@ -1,8 +1,10 @@
-import * as _ from 'lodash';
-import * as assert from 'assert';
-import { testUtil } from '../../../util/test_util';
-import { ContractInstance } from '../../../util/types';
+import * as chai from 'chai';
+import {chaiSetup} from '../utils/chai_setup';
+import {ContractInstance} from '../../../util/types';
+import {constants} from '../../../util/constants';
 
+chaiSetup.configure();
+const expect = chai.expect;
 const TokenTransferProxy = artifacts.require('./db/TokenTransferProxy.sol');
 
 contract('TokenTransferProxy', (accounts: string[]) => {
@@ -19,78 +21,62 @@ contract('TokenTransferProxy', (accounts: string[]) => {
 
   describe('addAuthorizedAddress', () => {
     it('should throw if not called by owner', async () => {
-      try {
-        await tokenTransferProxy.addAuthorizedAddress(notOwner, { from: notOwner });
-        throw new Error('addAuthorizedAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(tokenTransferProxy.addAuthorizedAddress(notOwner, {from: notOwner}))
+        .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
 
     it('should allow owner to add an authorized address', async () => {
-      await tokenTransferProxy.addAuthorizedAddress(notAuthorized, { from: owner });
+      await tokenTransferProxy.addAuthorizedAddress(notAuthorized, {from: owner});
       authorized = notAuthorized;
       notAuthorized = null;
       const isAuthorized = await tokenTransferProxy.authorized.call(authorized);
-      assert(isAuthorized);
+      expect(isAuthorized).to.be.true();
     });
 
     it('should throw if owner attempts to authorize a duplicate address', async () => {
-      try {
-        await tokenTransferProxy.addAuthorizedAddress(authorized, { from: owner });
-        throw new Error('addAuthorizedAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(tokenTransferProxy.addAuthorizedAddress(authorized, {from: owner}))
+        .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
   });
 
   describe('removeAuthorizedAddress', () => {
     it('should throw if not called by owner', async () => {
-      try {
-        await tokenTransferProxy.removeAuthorizedAddress(authorized, { from: notOwner });
-        throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(tokenTransferProxy.removeAuthorizedAddress(authorized, {from: notOwner}))
+        .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
 
     it('should allow owner to remove an authorized address', async () => {
-      await tokenTransferProxy.removeAuthorizedAddress(authorized, { from: owner });
+      await tokenTransferProxy.removeAuthorizedAddress(authorized, {from: owner});
       notAuthorized = authorized;
       authorized = null;
 
       const isAuthorized = await tokenTransferProxy.authorized.call(notAuthorized);
-      assert(!isAuthorized);
+      expect(isAuthorized).to.be.false();
     });
 
     it('should throw if owner attempts to remove an address that is not authorized', async () => {
-      try {
-        await tokenTransferProxy.removeAuthorizedAddress(notAuthorized, { from: owner });
-        throw new Error('removeAuthorizedAddress succeeded when it should have thrown');
-      } catch (err) {
-        testUtil.assertThrow(err);
-      }
+      return expect(tokenTransferProxy.removeAuthorizedAddress(notAuthorized, {from: owner}))
+        .to.be.rejectedWith(constants.INVALID_OPCODE);
     });
   });
 
   describe('getAuthorizedAddresses', () => {
     it('should return all authorized addresses', async () => {
       const initial = await tokenTransferProxy.getAuthorizedAddresses();
-      assert.equal(initial.length, 1);
-      await tokenTransferProxy.addAuthorizedAddress(notAuthorized, { from: owner });
+      expect(initial).to.have.length(1);
+      await tokenTransferProxy.addAuthorizedAddress(notAuthorized, {from: owner});
 
       authorized = notAuthorized;
       notAuthorized = null;
       const afterAdd = await tokenTransferProxy.getAuthorizedAddresses();
-      assert.equal(afterAdd.length, 2);
-      assert(_.includes(afterAdd, authorized));
+      expect(afterAdd).to.have.length(2);
+      expect(afterAdd).to.include(authorized);
 
-      await tokenTransferProxy.removeAuthorizedAddress(authorized, { from: owner });
+      await tokenTransferProxy.removeAuthorizedAddress(authorized, {from: owner});
       notAuthorized = authorized;
       authorized = null;
       const afterRemove = await tokenTransferProxy.getAuthorizedAddresses();
-      assert.equal(afterRemove.length, 1);
+      expect(afterRemove).to.have.length(1);
     });
   });
 });

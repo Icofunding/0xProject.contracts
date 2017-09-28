@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as BigNumber from 'bignumber.js';
-import { bigNumberConfigs } from './bignumber_config';
-import { BalancesByOwner, ContractInstance } from './types';
+import {bigNumberConfigs} from './bignumber_config';
+import {BalancesByOwner, ContractInstance} from './types';
 
 bigNumberConfigs.configure();
 
@@ -21,7 +21,7 @@ export class Balances {
         if (_.isUndefined(balancesByOwner[ownerAddress])) {
           balancesByOwner[ownerAddress] = {};
         }
-        balancesByOwner[ownerAddress][tokenContractInstance.address] = balance.toString();
+        balancesByOwner[ownerAddress][tokenContractInstance.address] = balance;
       }
     }
     return balancesByOwner;
