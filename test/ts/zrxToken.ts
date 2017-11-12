@@ -70,7 +70,7 @@ contract('ZRXToken', (accounts: string[]) => {
       const initOwnerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
       const amountToTransfer = new BigNumber(1);
       const txHash = await zeroEx.token.transferAsync(zrxAddress, owner, receiver, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
       const finalOwnerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
       const finalReceiverBalance = await zeroEx.token.getBalanceAsync(zrxAddress, receiver);
 
@@ -91,12 +91,12 @@ contract('ZRXToken', (accounts: string[]) => {
       const ownerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
       const amountToTransfer = ownerBalance.plus(1);
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
       const didReturnTrue = await zrx.transferFrom.call(owner, spender, amountToTransfer, {from: spender});
       expect(didReturnTrue).to.be.false();
       // Reset allowance
       txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, new BigNumber(0));
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
     });
 
     it('should return false if spender has insufficient allowance', async () => {
@@ -122,15 +122,15 @@ contract('ZRXToken', (accounts: string[]) => {
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = MAX_UINT;
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, initSpenderAllowance);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
       txHash = await zeroEx.token.transferFromAsync(zrxAddress, owner, spender, spender, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
 
       const newSpenderAllowance = await zeroEx.token.getAllowanceAsync(zrxAddress, owner, spender);
       expect(initSpenderAllowance).to.be.bignumber.equal(newSpenderAllowance);
       // Restore balance
       txHash = await zeroEx.token.transferAsync(zrxAddress, spender, owner, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
     });
 
     it('should transfer the correct balances if spender has sufficient allowance', async () => {
@@ -139,9 +139,9 @@ contract('ZRXToken', (accounts: string[]) => {
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, initSpenderAllowance);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
       txHash = await zeroEx.token.transferFromAsync(zrxAddress, owner, spender, spender, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
 
       const newOwnerBalance = await zeroEx.token.getBalanceAsync(zrxAddress, owner);
       const newSpenderBalance = await zeroEx.token.getBalanceAsync(zrxAddress, spender);
@@ -155,9 +155,9 @@ contract('ZRXToken', (accounts: string[]) => {
       const amountToTransfer = initOwnerBalance;
       const initSpenderAllowance = initOwnerBalance;
       let txHash = await zeroEx.token.setAllowanceAsync(zrxAddress, owner, spender, initSpenderAllowance);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
       txHash = await zeroEx.token.transferFromAsync(zrxAddress, owner, spender, spender, amountToTransfer);
-      zeroEx.awaitTransactionMinedAsync(txHash);
+      await zeroEx.awaitTransactionMinedAsync(txHash);
 
       const newSpenderAllowance = await zeroEx.token.getAllowanceAsync(zrxAddress, owner, spender);
       expect(newSpenderAllowance).to.be.bignumber.equal(0);
