@@ -1,16 +1,16 @@
 machine:
   node:
-    version: 6.1.0
+    version: 6.5.0
 
 dependencies:
-  pre:
-    - npm install -g npm@3.10.10
-    - npm install ethereumjs-testrpc
-    - npm install -g truffle@3.2.1
+  override:
+    - yarn
+  cache_directories:
+    - ~/.cache/yarn
 
 test:
   override:
-    - node node_modules/ethereumjs-testrpc/bin/testrpc:
+    - yarn testrpc:
         background: true
-    - truffle migrate
-    - npm run test
+    - yarn test
+    - yarn lint

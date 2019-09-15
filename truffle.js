@@ -5,12 +5,13 @@ module.exports = {
       port: 8545,
       network_id: '*', // Match any network id
     },
-    ropsten: {
+    kovan: {
       host: 'localhost',
       port: 8546,
-      network_id: '3',
+      network_id: '42',
       gas: 4612388,
     },
   },
   test_directory: 'transpiled/test',
+  migrations_directory: 'transpiled/migrations',
 };
